@@ -1,4 +1,4 @@
-package edu.pit.lrdc.cs.revision.gui;
+package edu.pitt.lrdc.cs.revision.gui;
 
 import java.io.BufferedWriter;
 import java.io.File;

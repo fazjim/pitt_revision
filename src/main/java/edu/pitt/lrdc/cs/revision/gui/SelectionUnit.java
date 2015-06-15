@@ -1,4 +1,4 @@
-package edu.pit.lrdc.cs.revision.gui;
+package edu.pitt.lrdc.cs.revision.gui;
 
 /**
  * Just a struct for the selection of gui

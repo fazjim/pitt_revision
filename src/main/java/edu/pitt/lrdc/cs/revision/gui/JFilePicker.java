@@ -1,17 +1,32 @@
-package edu.pit.lrdc.cs.revision.gui;
+package edu.pitt.lrdc.cs.revision.gui;
 
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
  
+
+import java.io.File;
+
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
- 
-public class FilePicker extends JPanel {
-    private String textFieldLabel;
+import javax.swing.filechooser.FileFilter;
+
+
+/**
+ * Borrowed from online: 
+ * http://www.codejava.net/java-se/swing/file-picker-component-in-swing
+ * @author zhf4pal
+ *
+ */
+public class JFilePicker extends JPanel {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private String textFieldLabel;
     private String buttonLabel;
      
     private JLabel label;
@@ -20,29 +35,20 @@ public class FilePicker extends JPanel {
      
     private JFileChooser fileChooser;
      
-    private int mode = MODE_SAVE;
+    private int mode;
     public static final int MODE_OPEN = 1;
     public static final int MODE_SAVE = 2;
     
-    public void disable() {
-    	this.button.setEnabled(false);
-    	this.textField.setEnabled(false);
-    }
-    
-    public void enable() {
-    	this.button.setEnabled(true);
-    	this.textField.setEnabled(true);
-    }
-    
     public void setFileSelectionMode(int mode) {
-        this.fileChooser.setFileSelectionMode(mode);
+    	fileChooser.setFileSelectionMode(mode);
     }
-     
-    public FilePicker(String textFieldLabel, String buttonLabel) {
+    
+    public JFilePicker(String textFieldLabel, String buttonLabel) {
         this.textFieldLabel = textFieldLabel;
         this.buttonLabel = buttonLabel;
          
         fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
          
         setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
  
@@ -59,6 +65,7 @@ public class FilePicker extends JPanel {
             }
         });
          
+        mode = MODE_OPEN;
         add(label);
         add(textField);
         add(button);
@@ -76,7 +83,12 @@ public class FilePicker extends JPanel {
             }
         }
     }
- 
+ /*
+    public void addFileTypeFilter(String extension, String description) {
+        FileTypeFilter filter = new FileTypeFilter(extension, description);
+        fileChooser.addChoosableFileFilter(filter);
+    }*/
+     
     public void setMode(int mode) {
         this.mode = mode;
     }
@@ -89,3 +101,26 @@ public class FilePicker extends JPanel {
         return this.fileChooser;
     }
 }
+/*
+ class FileTypeFilter extends FileFilter {
+	 
+    private String extension;
+    private String description;
+     
+    public FileTypeFilter(String extension, String description) {
+        this.extension = extension;
+        this.description = description;
+    }
+     
+    @Override
+    public boolean accept(File file) {
+        if (!file.isDirectory()) {
+            return true;
+        }
+        return file.getName().toLowerCase().endsWith(extension);
+    }
+     
+    public String getDescription() {
+        return description + String.format(" (*%s)", extension);
+    }
+ }*/
