@@ -8,7 +8,7 @@ public class LDCalculator extends SimCalculator{
 	public static int DELCOST = 1;
 	public static int MODICOST = 1;
 
-	public double calcSen(Sentence src, Sentence dst) {
+	public static double calcSen(Sentence src, Sentence dst) {
 		String srcText = src.getContent();
 		String dstText = dst.getContent();
 		int length = srcText.split(" ").length;
@@ -16,7 +16,7 @@ public class LDCalculator extends SimCalculator{
 		return val*1.0/length;
 	}
 	
-	public int calc(String src, String dst) {
+	public static int calc(String src, String dst) {
 		src = src.toLowerCase();
 		dst = dst.toLowerCase();
 		src = src.replaceAll("\\.", " ");

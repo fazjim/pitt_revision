@@ -39,8 +39,12 @@ public class DiscourseSegmenter {
 	public void addSingleEdu(ArrayList<String> edus, String text) {
 		if (mergeBelow == true && edus.size() != 0) {
 			String mergedText = edus.get(edus.size() - 1) + " " + text;
+			//mergedText = mergedText.replaceAll("( ", "(");
+			//mergedText = mergedText.replaceAll(" )", ")");
 			edus.set(edus.size() - 1, mergedText);
 		} else {
+			//text = text.replaceAll("( ", "(");
+			//text = text.replaceAll(" )", ")");
 			edus.add(text);
 		}
 	}
@@ -73,6 +77,8 @@ public class DiscourseSegmenter {
 		return false;
 	}
 
+	int breakBound = 20;
+
 	public void addEdus(ArrayList<String> edus, DiscourseTree dt) {
 		if (dt.children() == null) {
 			String rawText = dt.rawText();
@@ -80,10 +86,10 @@ public class DiscourseSegmenter {
 			rawText = rawText.replaceAll(" -RRB-", ")");
 			rawText = rawText.replaceAll(" \\.", ".");
 			rawText = rawText.replaceAll(" ,", ",");
-			rawText = rawText.replaceAll( " \\?", "?");
-			rawText = rawText.replaceAll( " \\!", "!");
+			rawText = rawText.replaceAll(" \\?", "?");
+			rawText = rawText.replaceAll(" \\!", "!");
 			rawText = rawText.trim();
-			if (rawText.length() < 20) {
+			if (rawText.length() < breakBound) {
 				// Avoid checking everycase, for this case, check if needs merge
 				mergeAdd(edus, rawText);
 			} else {
@@ -93,7 +99,8 @@ public class DiscourseSegmenter {
 				// breakers from: coordinating conjunctions and subordinating
 				// conjunctions
 				// http://www.yourdictionary.com/index.php/pdf/articles/149.conjunctionschart.pdf
-				// for such a huge list, might think about optimizing the algorithm and only break the related ones
+				// for such a huge list, might think about optimizing the
+				// algorithm and only break the related ones
 				String[] breakers = { ",", ";", " and ", " or ", "(", ")",
 						" for ", " nor ", " but ", " yet ", " so ",
 						" because ", " before ", " even ", " even if ",
@@ -114,10 +121,10 @@ public class DiscourseSegmenter {
 				 * breakClauses(edus, rawText); } else { addSingleEdu(edus,
 				 * rawText); mergeBelow = false; }
 				 */
-				//if (contains(rawText, breakers)) {
-					// System.out.println("BREAKING:"+rawText);
-					breakClauses(edus, rawText, breakers);
-				//}
+				// if (contains(rawText, breakers)) {
+				// System.out.println("BREAKING:"+rawText);
+				breakClauses(edus, rawText, breakers);
+				// }
 			}
 		} else {
 			DiscourseTree[] childs = dt.children();
@@ -130,12 +137,9 @@ public class DiscourseSegmenter {
 
 	public int mergeCode(String text) {
 		/*
-		int numOfspace = 0;
-		for (int i = 0; i < text.length(); i++) {
-			if (text.charAt(i) == ' ') {
-				numOfspace++;
-			}
-		}*/
+		 * int numOfspace = 0; for (int i = 0; i < text.length(); i++) { if
+		 * (text.charAt(i) == ' ') { numOfspace++; } }
+		 */
 		int numOfspace = text.split(" ").length;
 		if (numOfspace <= 3) {
 			// merge
@@ -239,13 +243,18 @@ public class DiscourseSegmenter {
 
 	public void breakSegment(ArrayList<String> segments, String text,
 			String breaker) {
-		if (breaker.equals(",") || breaker.equals(";") || breaker.equals(")")) { // only
-																					// these
-																					// two
-																					// punctuations
-			breakSegmentPunctuation(segments, text, breaker);
+		if (text.length() > breakBound) {
+			if (breaker.equals(",") || breaker.equals(";")
+					|| breaker.equals(")")) { // only
+												// these
+												// two
+												// punctuations
+				breakSegmentPunctuation(segments, text, breaker);
+			} else {
+				breakSegmentConjunction(segments, text, breaker);
+			}
 		} else {
-			breakSegmentConjunction(segments, text, breaker);
+			segments.add(text);
 		}
 	}
 

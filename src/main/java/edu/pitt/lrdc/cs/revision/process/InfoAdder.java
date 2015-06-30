@@ -15,9 +15,13 @@ import edu.pitt.lrdc.cs.revision.io.RevisionDocumentWriter;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
 
 /**
- * Process the file to get the paragraphNo information Adding the automatic
- * alignment information
+ * @deprecated Process the file to get the paragraphNo information Adding the
+ *             automatic alignment information
  * 
+ *             Update: Now we put the paragraph info adding into the
+ *             PhraseSentenceMerger class and the alignment and classification
+ *             are done in the GUI interface. Considering rewrite an API for
+ *             directly aligning and classifying the revisions later
  * 
  * @author zhangfan
  * @version 1.0
@@ -75,7 +79,7 @@ public class InfoAdder {
 		docName = docName.substring(docName.lastIndexOf("Annotation_") + 11);
 		docName = docName.substring(0, docName.indexOf(".xlsx"));
 		docName = docName.trim();
-	
+
 		File d1 = null, d2 = null;
 		for (File f : refD1s) {
 			if (getRealFileName(f.getName()).equals(docName)) {
@@ -115,9 +119,9 @@ public class InfoAdder {
 		String docName = doc.getDocumentName();
 		docName = docName.substring(docName.lastIndexOf("Annotation_") + 11);
 		docName = docName.substring(0, docName.indexOf(".xlsx"));
-		docName = docName.substring(docName.indexOf("-")+1);
+		docName = docName.substring(docName.indexOf("-") + 1);
 		docName = docName.trim();
-		//System.out.println("DOCName:"+docName);
+		// System.out.println("DOCName:"+docName);
 		File d1 = null, d2 = null;
 		for (File f : refD1s) {
 			if (getRealFileName(f.getName()).equals(docName)) {
@@ -184,6 +188,8 @@ public class InfoAdder {
 			line2 = d2Reader.readLine();
 		}
 		addParagraphInfo(doc, lines, lines2);
+		d1Reader.close();
+		d2Reader.close();
 	}
 
 	public void addParagraphInfoDiscourse(RevisionDocument doc, File d1, File d2)
@@ -200,7 +206,7 @@ public class InfoAdder {
 		}
 
 		String discourseTxt1 = buffer.toString();
-		
+
 		String line2 = d2Reader.readLine();
 		buffer = new StringBuffer();
 		while (line2 != null) {
@@ -212,6 +218,8 @@ public class InfoAdder {
 		String discourseTxt2 = buffer.toString();
 
 		addParagraphInfoDiscourse(doc, discourseTxt1, discourseTxt2);
+		d1Reader.close();
+		d2Reader.close();
 	}
 
 	public void indexParagraphs(ArrayList<Integer> indices, String txt) {
@@ -257,7 +265,8 @@ public class InfoAdder {
 
 		for (int i = 1; i <= oldSents.length; i++) {
 			String sent = oldSents[i - 1].trim();
-			if(sent.endsWith(" .")) sent = sent.replace(" .", "");
+			if (sent.endsWith(" ."))
+				sent = sent.replace(" .", "");
 			int oldParaNo = findIndex(txt1, sent, indices1);
 			if (oldParaNo != -1) {
 				currentParaNo = oldParaNo;
@@ -324,7 +333,9 @@ public class InfoAdder {
 	}
 
 	/**
-	 * One thing that concerns me a lot is that these naming mechanisms can have problems if somebody really name their files like this
+	 * One thing that concerns me a lot is that these naming mechanisms can have
+	 * problems if somebody really name their files like this
+	 * 
 	 * @param name
 	 * @return
 	 */
@@ -332,15 +343,15 @@ public class InfoAdder {
 		String info = name.substring(name.indexOf("-") + 1);
 		// info = info.substring(0,info.indexOf(".txt"));
 		info = info.replaceAll("-sentences.txt", "");
-		//info = info.replaceAll(".txt","");
-		//System.out.println(info);
+		// info = info.replaceAll(".txt","");
+		// System.out.println(info);
 		return info.trim();
 	}
 
 	String batchPath = "batch";
 
 	/**
-	 * Adding all the info
+	 * @deprecated Adding all the info
 	 * 
 	 * @param srcFolder
 	 * @param destFolder

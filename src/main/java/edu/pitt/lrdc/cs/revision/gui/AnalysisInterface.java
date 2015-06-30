@@ -34,6 +34,7 @@ import edu.pitt.cs.revision.batch.BatchFeatureWriter;
 import edu.pitt.cs.revision.purpose.RevisionPurposeClassifier;
 import edu.pitt.cs.revision.purpose.RevisionPurposePredicter;
 import edu.pitt.lrdc.cs.revision.alignment.Aligner;
+import edu.pitt.lrdc.cs.revision.alignment.PhraseSentenceMerger;
 import edu.pitt.lrdc.cs.revision.io.PredictedRevisionStat;
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentReader;
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentWriter;
@@ -391,6 +392,7 @@ public class AnalysisInterface extends JPanel {
 					header1 = extractHeaderName(f.getName());
 				}
 				t2l.processFileDiscourse(f.getAbsolutePath(), "");
+				//t2l.processFile(f.getAbsolutePath(), "");
 			}
 			for (File f : subD2) {
 				if(!f.getName().endsWith(".txt")) continue;
@@ -398,6 +400,7 @@ public class AnalysisInterface extends JPanel {
 					header2 = extractHeaderName(f.getName());
 				}
 				t2l.processFileDiscourse(f.getAbsolutePath(), "");
+				//t2l.processFile(f.getAbsolutePath(), "");
 			}
 
 			// Step 2. Generating excel files
@@ -425,7 +428,8 @@ public class AnalysisInterface extends JPanel {
 					.readDocs(srcFolderPath + "/data_processed");
 			for (RevisionDocument doc : docs) {
 				System.out.println("Adding paragraph:" + doc.getDocumentName());
-				ia.addParagraphInfoDiscourse(doc, srcFolderPath);
+				//ia.addParagraphInfoDiscourse(doc, srcFolderPath);
+				ia.addParagraphInfo(doc, srcFolderPath);
 			}
 
 //			folderCreater = new File(dstFolder);
@@ -501,11 +505,13 @@ public class AnalysisInterface extends JPanel {
 			if (fileOption.equals("TXT")) {
 				srcPath = documentPath;
 			}
+			referenceFolder = srcPath; //Set the variable for future reference
 			transformExcel(srcPath, outputPath);
 			return outputPath;
 		}
 	}
 
+	String referenceFolder = null;
 	/**
 	 * Loading the binary or train the binary features then\
 	 * 
@@ -533,6 +539,11 @@ public class AnalysisInterface extends JPanel {
 					Aligner aligner = new Aligner();
 					addMessage("Aligning...");
 					aligner.align(docs);
+					
+					addMessage("First round alignment finished");
+					PhraseSentenceMerger.adjustAlignment(docs, referenceFolder);
+					addMessage("Second round alignment fixing complete");
+					
 					for (RevisionDocument doc : docs) {
 						doc.materializeAlignment();
 					}
@@ -569,6 +580,10 @@ public class AnalysisInterface extends JPanel {
 						// aligner.align(trainDocs, docs, 2);
 						aligner.align(train, docs);// This will also persist the
 													// aligner
+						
+						addMessage("First round alignment finished");
+						PhraseSentenceMerger.adjustAlignment(docs, referenceFolder);
+						addMessage("Second round alignment fixing complete");
 						for (RevisionDocument doc : docs) {
 							doc.materializeAlignment();
 						}
@@ -631,6 +646,9 @@ public class AnalysisInterface extends JPanel {
 					addMessage("Aligning...");
 					Aligner aligner = new Aligner();
 					aligner.align(docs);
+					addMessage("First round alignment finished");
+					PhraseSentenceMerger.adjustAlignment(docs, referenceFolder);
+					addMessage("Second round alignment fixing complete");
 					for (RevisionDocument doc : docs) {
 						doc.materializeAlignment();
 					}
@@ -674,6 +692,9 @@ public class AnalysisInterface extends JPanel {
 						for (RevisionDocument doc : docs) {
 							doc.materializeAlignment();
 						}
+						addMessage("First round alignment finished");
+						PhraseSentenceMerger.adjustAlignment(docs, referenceFolder);
+						addMessage("Second round alignment fixing complete");
 						addMessage("Alignment complete!");
 						addMessage("Predicting revision...");
 						if (useLightWeight.isSelected()) {
