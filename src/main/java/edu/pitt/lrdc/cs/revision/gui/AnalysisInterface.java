@@ -540,13 +540,14 @@ public class AnalysisInterface extends JPanel {
 					addMessage("Aligning...");
 					aligner.align(docs);
 					
-					addMessage("First round alignment finished");
-					PhraseSentenceMerger.adjustAlignment(docs, referenceFolder);
-					addMessage("Second round alignment fixing complete");
 					
 					for (RevisionDocument doc : docs) {
 						doc.materializeAlignment();
 					}
+					addMessage("First round alignment finished");
+					PhraseSentenceMerger.adjustAlignment(docs, referenceFolder);
+					addMessage("Second round alignment fixing complete");
+					
 					addMessage("Alignment done!");
 					addMessage("Predict revisions...");
 					if (useLightWeight.isSelected()) {
@@ -581,12 +582,14 @@ public class AnalysisInterface extends JPanel {
 						aligner.align(train, docs);// This will also persist the
 													// aligner
 						
-						addMessage("First round alignment finished");
-						PhraseSentenceMerger.adjustAlignment(docs, referenceFolder);
-						addMessage("Second round alignment fixing complete");
+						
 						for (RevisionDocument doc : docs) {
 							doc.materializeAlignment();
 						}
+						
+						addMessage("First round alignment finished");
+						PhraseSentenceMerger.adjustAlignment(docs, referenceFolder);
+						addMessage("Second round alignment fixing complete");
 						addMessage("Alignment complete!");
 						if (useLightWeight.isSelected()) {
 							rpc.generateLightWeightClassifier(trainDocs,
@@ -646,12 +649,14 @@ public class AnalysisInterface extends JPanel {
 					addMessage("Aligning...");
 					Aligner aligner = new Aligner();
 					aligner.align(docs);
-					addMessage("First round alignment finished");
-					PhraseSentenceMerger.adjustAlignment(docs, referenceFolder);
-					addMessage("Second round alignment fixing complete");
+					
 					for (RevisionDocument doc : docs) {
 						doc.materializeAlignment();
 					}
+					addMessage("First round alignment finished");
+					PhraseSentenceMerger.adjustAlignment(docs, referenceFolder);
+					addMessage("Second round alignment fixing complete");
+					
 					addMessage("Alignment complete!");
 					addMessage("Predicting revision...");
 					if (useLightWeight.isSelected()) {

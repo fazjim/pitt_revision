@@ -266,6 +266,14 @@ public class RevisionDocument {
 		this.predictedRoot = root;
 	}
 
+	public ArrayList<String> getNewDraftSentences() {
+		return newDraftSentences;
+	}
+	
+	public ArrayList<String> getOldDraftSentences() {
+		return oldDraftSentences;
+	}
+	
 	/**
 	 * For GUI design
 	 * 
@@ -456,6 +464,30 @@ public class RevisionDocument {
 		arr.add(index);
 	}
 
+	public void mergeOldSentences(int oldIndexStart, int num) {
+		String mergedText = "";
+		for(int i = oldIndexStart;i<oldIndexStart+num;i++) {
+			mergedText += oldDraftSentences.get(i)+ " ";
+		}
+		mergedText = mergedText.trim();
+		for(int i = 0;i<num-1;i++) {
+			oldDraftSentences.remove(oldIndexStart);
+		}
+		oldDraftSentences.set(oldIndexStart, mergedText);
+	}
+	
+	public void mergeNewSentences(int newIndexStart, int num) {
+		String mergedText = "";
+		for(int i = newIndexStart;i<newIndexStart + num;i++)  {
+			mergedText += newDraftSentences.get(i);
+		}
+		mergedText = mergedText.trim();
+		for(int i = 0;i<num-1;i++) {
+			newDraftSentences.remove(newIndexStart);
+		}
+		newDraftSentences.set(newIndexStart, mergedText);
+	}
+	
 	/**
 	 * Change the alignment of the new sentence
 	 * 
