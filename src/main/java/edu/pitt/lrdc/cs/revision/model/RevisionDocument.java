@@ -19,11 +19,9 @@ public class RevisionDocument {
 	 */
 	private String documentName;
 
-	//The prompt information
+	// The prompt information
 	private String promptContent;
-	
-	
-	
+
 	public String getPromptContent() {
 		return promptContent;
 	}
@@ -94,7 +92,9 @@ public class RevisionDocument {
 	 * @return
 	 */
 	public int getParaNoOfOldSentence(int oldIndex) {
-		if(this.oldParagraphMap==null||this.oldParagraphMap.size()==0||!this.oldParagraphMap.containsKey(oldIndex)) return 0;
+		if (this.oldParagraphMap == null || this.oldParagraphMap.size() == 0
+				|| !this.oldParagraphMap.containsKey(oldIndex))
+			return 0;
 		return this.oldParagraphMap.get(oldIndex);
 	}
 
@@ -115,7 +115,9 @@ public class RevisionDocument {
 	 * @return
 	 */
 	public int getParaNoOfNewSentence(int newIndex) {
-		if(this.newParagraphMap==null||this.newParagraphMap.size()==0||!this.newParagraphMap.containsKey(newIndex)) return 0;
+		if (this.newParagraphMap == null || this.newParagraphMap.size() == 0
+				|| !this.newParagraphMap.containsKey(newIndex))
+			return 0;
 		return this.newParagraphMap.get(newIndex);
 	}
 
@@ -139,6 +141,52 @@ public class RevisionDocument {
 	 */
 	public String getNewSentence(int index) {
 		return newDraftSentences.get(index - 1);
+	}
+
+	/**
+	 * For the alignment of new draft, shift upwards num alignments
+	 * 
+	 * @param startIndex
+	 * @param num
+	 */
+	public void shiftAlignmentOfNew(int startIndex, int num) {
+		Iterator<Integer> it = mapNewtoOld.keySet().iterator();
+		ArrayList<Integer> newIndices = new ArrayList<Integer>();
+		while (it.hasNext()) {
+			int newIndex = it.next();
+			newIndices.add(newIndex);
+		}
+
+		for (Integer newIndex : newIndices) {
+			ArrayList<Integer> alignments = mapNewtoOld.get(newIndex);
+			for (int i = 0; i < alignments.size(); i++) {
+				int val = alignments.get(i);
+				if (val > startIndex)
+					val = val - num; // move up by num
+				alignments.set(i, val);
+			}
+			changeNewAlignment(newIndex, alignments);
+		}
+	}
+
+	public void shiftAlignmentofOld(int startIndex, int num) {
+		Iterator<Integer> it = mapOldtoNew.keySet().iterator();
+		ArrayList<Integer> oldIndices = new ArrayList<Integer>();
+		while (it.hasNext()) {
+			int oldIndex = it.next();
+			oldIndices.add(oldIndex);
+		}
+
+		for (Integer oldIndex : oldIndices) {
+			ArrayList<Integer> alignments = mapOldtoNew.get(oldIndex);
+			for (int i = 0; i < alignments.size(); i++) {
+				int val = alignments.get(i);
+				if (val > startIndex)
+					val = val - num;
+				alignments.set(i, val);
+			}
+			changeOldAlignment(oldIndex, alignments);
+		}
 	}
 
 	/**
@@ -571,8 +619,7 @@ public class RevisionDocument {
 	}
 
 	/**
-	 * Get the predicted alignment pairs
-	 * Pair looks as Old, New
+	 * Get the predicted alignment pairs Pair looks as Old, New
 	 * 
 	 * @return
 	 */
@@ -580,23 +627,26 @@ public class RevisionDocument {
 		ArrayList<ArrayList<ArrayList<Integer>>> allVals = new ArrayList<ArrayList<ArrayList<Integer>>>();
 		int newSentNum = this.newDraftSentences.size();
 		int oldSentNum = this.oldDraftSentences.size();
-		HashSet<Integer> usedOld = new HashSet<Integer>(); //mark the ones that has been aligned
+		HashSet<Integer> usedOld = new HashSet<Integer>(); // mark the ones that
+															// has been aligned
 		for (int i = 1; i <= newSentNum; i++) {
 			ArrayList<Integer> oldAligns = this.getPredictedOldFromNew(i);
 			ArrayList<Integer> newAligns = new ArrayList<Integer>();
-			if (oldAligns != null && oldAligns.size() > 0) {  //new sentence is aligned
+			if (oldAligns != null && oldAligns.size() > 0) { // new sentence is
+																// aligned
 				HashSet<Integer> tempNewAligns = new HashSet<Integer>();
 				for (Integer oldAlign : oldAligns) {
 					usedOld.add(oldAlign);
 					ArrayList<Integer> newA = this
 							.getPredictedNewFromOld(oldAlign);
-					for (Integer temp : newA) {    //Get the aligned sentences of the old sentence
+					for (Integer temp : newA) { // Get the aligned sentences of
+												// the old sentence
 						tempNewAligns.add(temp);
 					}
 				}
 				for (Integer temp : tempNewAligns) {
 					if (temp != -1) {
-						newAligns.add(temp); //collected all the new alignments
+						newAligns.add(temp); // collected all the new alignments
 					}
 				}
 
@@ -615,7 +665,8 @@ public class RevisionDocument {
 				allVals.add(alignPair);
 			}
 		}
-		// For those that has not be covered in the step above, should be deletes
+		// For those that has not be covered in the step above, should be
+		// deletes
 		for (int i = 1; i <= oldSentNum; i++) {
 			if (!usedOld.contains(i)) {
 				ArrayList<ArrayList<Integer>> alignPair = new ArrayList<ArrayList<Integer>>();
@@ -630,7 +681,7 @@ public class RevisionDocument {
 
 		return allVals;
 	}
-	
+
 	/**
 	 * Materialize the predicted alignment
 	 * 
@@ -640,58 +691,57 @@ public class RevisionDocument {
 		this.mapOldtoNew = this.predicted_mapOldtoNew;
 		this.mapNewtoOld = this.predicted_mapNewtoOld;
 	}
-	
+
 	/**
 	 * Materialize revision classification
 	 */
 	public void materializeRevisionPurpose() {
 		this.root = this.predictedRoot;
 	}
-	
+
 	public StatisticInfo toStatisticInfo() {
 		StatisticInfo info = new StatisticInfo();
 		String docName = this.getDocumentName();
 		docName = docName.substring(docName.indexOf("Annotation_"));
-		//System.out.println(docName);
-		docName = docName.substring(0,docName.indexOf(".txt.xlsx"));
-		docName = docName.substring(docName.indexOf("_")+1);
+		// System.out.println(docName);
+		docName = docName.substring(0, docName.indexOf(".txt.xlsx"));
+		docName = docName.substring(docName.indexOf("_") + 1);
 		info.setPseudoname(docName);
-		
+
 		int totalOldLength = this.getOldSentencesArray().length;
 		int totalNewLength = this.getNewSentencesArray().length;
-		
+
 		ArrayList<RevisionUnit> rus = this.getRoot().getRevisionUnitAtLevel(0);
 		int totalAdds = 0;
 		int totalDels = 0;
 		HashSet<Integer> modis = new HashSet<Integer>();
-		
+
 		int surfaceEdits = 0;
 		int contentEdits = 0;
-		
-		for(RevisionUnit ru: rus) {
-			if(ru.getRevision_op() == RevisionOp.ADD) {
-				totalAdds ++;
-			} else if(ru.getRevision_op() == RevisionOp.DELETE) {
-				totalDels ++;
+
+		for (RevisionUnit ru : rus) {
+			if (ru.getRevision_op() == RevisionOp.ADD) {
+				totalAdds++;
+			} else if (ru.getRevision_op() == RevisionOp.DELETE) {
+				totalDels++;
 			} else {
 				ArrayList<Integer> oldIndices = ru.getOldSentenceIndex();
-				for(Integer oldIndex: oldIndices) {
+				for (Integer oldIndex : oldIndices) {
 					modis.add(oldIndex);
 				}
 			}
-			
-			if(ru.getRevision_purpose() == RevisionPurpose.CLAIMS_IDEAS) {
+
+			if (ru.getRevision_purpose() == RevisionPurpose.CLAIMS_IDEAS) {
 				contentEdits++;
 			} else {
 				surfaceEdits++;
 			}
 		}
-		
-		
+
 		double addRatio = totalAdds * 1.0 / totalNewLength;
-		double deleteRatio = totalDels * 1.0 /totalOldLength;
-		double modifyRatio = modis.size() * 1.0/totalOldLength;
-		
+		double deleteRatio = totalDels * 1.0 / totalOldLength;
+		double modifyRatio = modis.size() * 1.0 / totalOldLength;
+
 		info.setAdditions(totalAdds);
 		info.setAddPercent(addRatio);
 		info.setContentEdits(contentEdits);
