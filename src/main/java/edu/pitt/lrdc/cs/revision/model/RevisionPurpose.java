@@ -10,6 +10,7 @@ public class RevisionPurpose {
 	public static final int ORGANIZATION = 6;
 	public static final int CONVENTIONS_GRAMMAR_SPELLING = 7;
 	public static final int WORDUSAGE_CLARITY = 8;
+	public static final int HEAVY_EDIT = 11;
 	public static final int STYLE = 9;
 	public static final int WHOLEPAPER = 10;
 	public static final int END = 8;
@@ -36,6 +37,8 @@ public class RevisionPurpose {
 			return "Style";
 		} else if(index == RevisionPurpose.WHOLEPAPER) {
 			return "Whole paper";
+		} else if(index == RevisionPurpose.HEAVY_EDIT) {
+			return "Heavy edit";
 		}
 		return "Dummy";
 	}
