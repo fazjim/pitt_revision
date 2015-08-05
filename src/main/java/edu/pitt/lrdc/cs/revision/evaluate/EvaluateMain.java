@@ -36,7 +36,7 @@ public class EvaluateMain {
 	static int CROSSVALIDATION = 2;
 
 	public static void main(String[] args) throws Exception {
-		int option = ALIGN; // modify later to allow human input
+		int option = CLASSIFY; // modify later to allow human input
 		int evaluateMethod = 4;
 		// String trainPath = "D:/annotationTool/annotated/class3";
 		// String trainPath = "/Users/faz23/Desktop/34/annotated/allData";
@@ -59,7 +59,7 @@ public class EvaluateMain {
 		//allData.addAll(trainFolder);
 		//allData.addAll(testFolder);
 		// allData.addAll(anotherFolder);
-		allData.addAll(clauseFolder);
+		allData.addAll(trainFolder);
 		String resultPath = "dummy";
 		if (option == ALIGN) {
 			evaluateMethod = 2;// modify later to allow human input
@@ -287,7 +287,9 @@ public class EvaluateMain {
 //			 System.out.println("FOLDER:" + folder); 
 
 			RevisionPurposeClassifier rpc = new RevisionPurposeClassifier();
-
+			Evaluation eval;
+			String experiment;
+/*
 			System.out
 					.println("*****************Unigram baseline*******************");
 			String experiment = "Unigram";
@@ -319,7 +321,7 @@ public class EvaluateMain {
 			experiment = "language";
 			resultRow.addExperiment(experiment);
 			resultRow.getResult(experiment).fromEvaluation(eval);
-
+*/
 			System.out
 					.println("*****************All features*******************");
 			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
@@ -328,14 +330,14 @@ public class EvaluateMain {
 			resultRow.addExperiment(experiment);
 			resultRow.getResult(experiment).fromEvaluation(eval);
 
-			System.out.println("*****************Majority*******************");
+/*			System.out.println("*****************Majority*******************");
 			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
 					usingNgram, 5);
 			experiment = "Majority";
 			resultRow.addExperiment(experiment);
 			resultRow.getResult(experiment).fromEvaluation(eval);
 
-			results.add(resultRow);
+			results.add(resultRow);*/
 
 			/*
 			 * These belong to history System.out

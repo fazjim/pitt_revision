@@ -863,7 +863,7 @@ public class RevisionPurposeClassifier {
 			throws Exception {
 		WekaAssist wa = new WekaAssist();
 		FeatureExtractor fe = new FeatureExtractor();
-		fe.openBatchMode(batchPath);
+		//fe.openBatchMode(batchPath);
 		ArrayList<String> categories = new ArrayList<String>();
 
 		/*
@@ -878,8 +878,8 @@ public class RevisionPurposeClassifier {
 		 * .add(RevisionPurpose.getPurposeName(RevisionPurpose.EVIDENCE));
 		 */
 
-		addPurposeCategories2(categories);
-		// addPurposeCategoriesBinary(categories);
+		//addPurposeCategories2(categories);
+		 addPurposeCategoriesBinary(categories);
 		/*
 		 * for (int i = RevisionPurpose.START; i <= RevisionPurpose.END; i++) {
 		 * categories.add(RevisionPurpose.getPurposeName(i)); }
@@ -909,12 +909,12 @@ public class RevisionPurposeClassifier {
 				if (filterRevision(ru, buildOp)) {
 					Object[] features = fe.extractFeatures(doc, ru, usingNgram,
 							remove);
-					// wa.addInstance(features, fe.features, usingNgram,
-					// trainData,
-					// transformPurposeBinary(ru,RevisionPurpose.WORDUSAGE_CLARITY),
-					// "dummy");
-					wa.addInstance(features, fe.features, usingNgram,
-							trainData, transformPurpose2(ru), "dummy");
+					 wa.addInstance(features, fe.features, usingNgram,
+					 trainData,
+					 transformPurposeBinary(ru,RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING),
+					 ru.getDetailContent(doc));
+					/*wa.addInstance(features, fe.features, usingNgram,
+							trainData, transformPurpose2(ru), ru.getDetailContent(doc));*/
 					// System.out.println("Instance added");
 				}
 			}
@@ -931,8 +931,12 @@ public class RevisionPurposeClassifier {
 					// testData,
 					// transformPurposeBinary(ru,RevisionPurpose.WORDUSAGE_CLARITY),
 					// "dummy");
-					wa.addInstance(features, fe.features, usingNgram, testData,
-							transformPurpose2(ru), "dummy");
+					 wa.addInstance(features, fe.features, usingNgram,
+							 testData,
+							 transformPurposeBinary(ru,RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING),
+							 ru.getDetailContent(doc));
+					//wa.addInstance(features, fe.features, usingNgram, testData,
+					//		transformPurpose2(ru), ru.getDetailContent(doc));
 				}
 			}
 		}

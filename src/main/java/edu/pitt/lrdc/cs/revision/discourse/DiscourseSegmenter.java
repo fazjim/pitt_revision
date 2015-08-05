@@ -88,6 +88,7 @@ public class DiscourseSegmenter {
 			rawText = rawText.replaceAll(" ,", ",");
 			rawText = rawText.replaceAll(" \\?", "?");
 			rawText = rawText.replaceAll(" \\!", "!");
+			rawText = rawText.replaceAll(" ;", ";");
 			rawText = rawText.trim();
 			if (rawText.length() < breakBound) {
 				// Avoid checking everycase, for this case, check if needs merge

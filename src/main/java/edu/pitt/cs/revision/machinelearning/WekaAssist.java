@@ -397,6 +397,9 @@ public class WekaAssist {
 		return eval;
 	}
 
+	
+	
+	
 	public static Evaluation crossTrainTest(Instances trainset,
 			Instances testset) throws Exception {
 		Classifier classifier = new RandomForest();
@@ -414,10 +417,37 @@ public class WekaAssist {
 		classifier.buildClassifier(trainset);
 		System.out.println("Classifier is done!");
 		Evaluation eval = new Evaluation(trainset);
-		eval.evaluateModel(classifier, testset);
+		//eval.evaluateModel(classifier, testset);
+		detailedErrorAnalysis(eval, classifier, testset);
 		return eval;
 	}
 
+	
+	public static void detailedErrorAnalysis(Evaluation eval, Classifier classifier, Instances testSet) throws Exception {
+		int falsePositive = 0;
+		int trueNegative = 0;
+		int textIndex = 0;
+		int index = testSet.attribute("ID").index();
+		int classIndex = testSet.classAttribute().index();
+		System.out.println("+++++++++++++++++++++++++++++++++++++++++++");
+		for(int i = 0;i<testSet.numInstances();i++) {
+			Instance inst = testSet.instance(i);
+			double predict = eval.evaluateModelOnce(classifier, inst);
+			if(predict == 0.0 && inst.value(classIndex) == 1.0) {
+				falsePositive ++;
+				System.out.println("False positive");
+				System.out.println(inst.stringValue(index));
+			} else if(predict == 1.0 && inst.value(classIndex) == 0.0) {
+				trueNegative ++;
+				System.out.println("True negative");
+				System.out.println(inst.stringValue(index));
+			} 
+		}
+		System.out.println("FP COUNT: "+falsePositive);
+		System.out.println("TN COUNT: "+trueNegative);
+	}
+	
+	
 	public static void trainTest(Instances trainset, Instances testset,
 			String test) throws Exception {
 		Classifier[] classifiers = {

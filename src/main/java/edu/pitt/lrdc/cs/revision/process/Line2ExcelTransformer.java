@@ -23,7 +23,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public class Line2ExcelTransformer {
 	public boolean isSameAuthor(String srcName, String dstName, String d1Name,
 			String d2Name) {
-		return srcName.replace(d1Name, d2Name).equals(dstName);
+		//return srcName.replace(d1Name, d2Name).equals(dstName);
+		return srcName.equals(dstName); //Now we have it as perfect match
 	}
 
 	public void genAnnFile(String d1_Path, String d2_Path, String rootPath,

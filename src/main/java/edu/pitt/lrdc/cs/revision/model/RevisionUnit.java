@@ -451,11 +451,13 @@ public class RevisionUnit {
 			RevisionUnit ru = basicUnits.get(i);
 			if (ru.getNewSentenceIndex() != null && ru.getNewSentenceIndex().size()!=0) {
 				for(Integer index: ru.getNewSentenceIndex())
-				content += RevisionOp.getOpName(ru.getRevision_op()) + ":"
+				content += "NEW:"+ RevisionOp.getOpName(ru.getRevision_op()) + ":"
 						+ doc.getNewSentence(index) + "\n";
-			} else if (ru.getOldSentenceIndex() !=null && ru.getOldSentenceIndex().size() != 0) {
+			} 
+			
+			if (ru.getOldSentenceIndex() !=null && ru.getOldSentenceIndex().size() != 0) {
 				for(Integer index: ru.getOldSentenceIndex())
-				content += RevisionOp.getOpName(ru.getRevision_op()) + ":"
+				content += "OLD:"+ RevisionOp.getOpName(ru.getRevision_op()) + ":"
 						+ doc.getOldSentence(index) + "\n";
 			}
 		}

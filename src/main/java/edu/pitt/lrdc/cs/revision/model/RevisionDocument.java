@@ -1,6 +1,7 @@
 package edu.pitt.lrdc.cs.revision.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -158,14 +159,16 @@ public class RevisionDocument {
 		}
 
 		for (Integer newIndex : newIndices) {
-			ArrayList<Integer> alignments = mapNewtoOld.get(newIndex);
+			ArrayList<Integer> alignments = mapNewtoOld.get(newIndex); //Has already changed!!!!
+			ArrayList<Integer> newAlignments = new ArrayList<Integer>();
 			for (int i = 0; i < alignments.size(); i++) {
 				int val = alignments.get(i);
 				if (val > startIndex)
 					val = val - num; // move up by num
-				alignments.set(i, val);
+				//alignments.set(i, val);
+				newAlignments.add(val);
 			}
-			changeNewAlignment(newIndex, alignments);
+			changeNewAlignment(newIndex, newAlignments);
 		}
 	}
 
@@ -179,13 +182,15 @@ public class RevisionDocument {
 
 		for (Integer oldIndex : oldIndices) {
 			ArrayList<Integer> alignments = mapOldtoNew.get(oldIndex);
+			ArrayList<Integer> newAlignments = new ArrayList<Integer>();
 			for (int i = 0; i < alignments.size(); i++) {
 				int val = alignments.get(i);
 				if (val > startIndex)
 					val = val - num;
-				alignments.set(i, val);
+				//alignments.set(i, val);
+				newAlignments.add(val);
 			}
-			changeOldAlignment(oldIndex, alignments);
+			changeOldAlignment(oldIndex, newAlignments);
 		}
 	}
 
@@ -197,10 +202,12 @@ public class RevisionDocument {
 	 */
 	public String getNewSentences(ArrayList<Integer> indices) {
 		String sent = "";
+		Collections.sort(indices);
 		if (indices != null) {
 			for (Integer i : indices) {
 				if (i != -1)
-					sent += getNewSentence(i) + "\n";
+					sent += getNewSentence(i) + " ";
+					//sent += getNewSentence(i) + "\n";
 			}
 		}
 		return sent.trim();
@@ -208,10 +215,12 @@ public class RevisionDocument {
 
 	public String getOldSentences(ArrayList<Integer> indices) {
 		String sent = "";
+		Collections.sort(indices);
 		if (indices != null) {
 			for (Integer i : indices) {
-				if (i != -1)
-					sent += getOldSentence(i) + "\n";
+				if (i > 0)
+					sent += getOldSentence(i) + " ";
+					//sent += getOldSentence(i) + "\n";
 			}
 		}
 		return sent.trim();
@@ -465,27 +474,29 @@ public class RevisionDocument {
 	}
 
 	public void mergeOldSentences(int oldIndexStart, int num) {
+		if(num == 1) return;
 		String mergedText = "";
 		for(int i = oldIndexStart;i<oldIndexStart+num;i++) {
-			mergedText += oldDraftSentences.get(i)+ " ";
+			mergedText += oldDraftSentences.get(i-1)+ " ";
 		}
 		mergedText = mergedText.trim();
 		for(int i = 0;i<num-1;i++) {
-			oldDraftSentences.remove(oldIndexStart);
+			oldDraftSentences.remove(oldIndexStart-1);
 		}
-		oldDraftSentences.set(oldIndexStart, mergedText);
+		oldDraftSentences.set(oldIndexStart-1, mergedText);
 	}
 	
 	public void mergeNewSentences(int newIndexStart, int num) {
+		if(num == 1) return; //do nothing;
 		String mergedText = "";
 		for(int i = newIndexStart;i<newIndexStart + num;i++)  {
-			mergedText += newDraftSentences.get(i);
+			mergedText += newDraftSentences.get(i-1) + " ";
 		}
 		mergedText = mergedText.trim();
 		for(int i = 0;i<num-1;i++) {
-			newDraftSentences.remove(newIndexStart);
+			newDraftSentences.remove(newIndexStart-1);
 		}
-		newDraftSentences.set(newIndexStart, mergedText);
+		newDraftSentences.set(newIndexStart-1, mergedText);
 	}
 	
 	/**
