@@ -1,6 +1,10 @@
 package edu.pitt.lrdc.cs.revision.alignment;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import edu.pitt.lrdc.cs.revision.alignment.distance.LDCalculator;
@@ -23,7 +27,7 @@ public class PhraseSentenceMerger {
 	}
 
 	public static void adjustAlignment(RevisionDocument doc,
-			String referenceFolder) {
+			String referenceFolder) throws IOException {
 		String refDraft1Folder = referenceFolder + "/draft1";
 		String refDraft2Folder = referenceFolder + "/draft2";
 
@@ -70,18 +74,58 @@ public class PhraseSentenceMerger {
 	 * @param doc
 	 * @param d1
 	 * @param d2
+	 * @throws IOException 
 	 */
-	public static void adjustAlignment(RevisionDocument doc, File d1, File d2) {
+	public static void adjustAlignment(RevisionDocument doc, File d1, File d2) throws IOException {
 		// Adding paragraph info first
 		addParagraphInfo(doc, d1, d2);
-		adjustNew(doc);
-		adjustOld(doc);
+		//adjustNew(doc);
+		//adjustOld(doc);
 	}
 
-	public static void addParagraphInfo(RevisionDocument doc, File d1, File d2) {
-
+	public static void addParagraphInfo(RevisionDocument doc, File d1, File d2) throws IOException {
+		ArrayList<String> paras1 = new ArrayList<String>();
+		ArrayList<String> paras2 = new ArrayList<String>();
+		BufferedReader reader = new BufferedReader(new FileReader(d1));
+		BufferedReader reader2 = new BufferedReader(new FileReader(d2));
+		String line = reader.readLine();
+		while(line!=null) {
+			paras1.add(line);
+			line = reader.readLine();
+		}
+		line = null;
+		line = reader2.readLine();
+		while(line!=null) {
+			paras2.add(line);
+			line = reader2.readLine();
+		}
+		
+		ArrayList<String> lines = doc.getOldDraftSentences();
+		ArrayList<String> newLines = doc.getNewDraftSentences();
+		int oldParaStart = 0;
+		for(int i = 0;i<lines.size();i++) {
+			for(int j = oldParaStart;j<paras1.size();j++) {
+				if(paras1.get(j).contains(lines.get(i))) {
+					doc.addOldSentenceParaMap(i+1, j+1);
+					oldParaStart = j;
+					break;
+				}
+			}
+		}
+		
+		int newParaStart = 0;
+		for(int i = 0;i<newLines.size();i++) {
+			for(int j = newParaStart;j<paras2.size();j++) {
+				if(paras2.get(j).contains(newLines.get(i))) {
+					doc.addNewSentenceParaMap(i+1, j+1);
+					newParaStart = j;
+					break;
+				}
+			}
+		}
 	}
 
+	
 	public static void adjustNew(RevisionDocument doc) {
 		int i = 1; // My previous bizzare setting that the document index starts
 					// from 1
@@ -303,7 +347,7 @@ public class PhraseSentenceMerger {
 
 	// Use the referenceFolder to find the text
 	public static void adjustAlignment(ArrayList<RevisionDocument> docs,
-			String referenceFolder) {
+			String referenceFolder) throws IOException {
 		for (RevisionDocument doc : docs) {
 			adjustAlignment(doc, referenceFolder);
 		}

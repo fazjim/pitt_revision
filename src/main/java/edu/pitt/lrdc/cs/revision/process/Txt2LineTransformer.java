@@ -30,14 +30,14 @@ import edu.stanford.nlp.process.WordTokenFactory;
 public class Txt2LineTransformer {
 
 	boolean onOldFile = false;
-	boolean sentenceLevel = false;
+	boolean sentenceLevel = true;
 
 	public String genSenFromList(List<HasWord> sentence) {
 		String sentenceStr = "";
 		for (HasWord word : sentence) {
 			String wordStr = word.toString();
 			if (wordStr.equals(".") || wordStr.equals(",")
-					|| wordStr.equals("!") || wordStr.equals("?")) {
+					|| wordStr.equals("!") || wordStr.equals("?") || wordStr.equals(";") || wordStr.equals(":")) {
 				sentenceStr += wordStr;
 			} else {
 				sentenceStr += " " + wordStr;
