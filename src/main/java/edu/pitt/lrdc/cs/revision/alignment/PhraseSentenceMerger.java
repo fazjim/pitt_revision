@@ -5,7 +5,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+
+import com.google.common.io.Files;
 
 import edu.pitt.lrdc.cs.revision.alignment.distance.LDCalculator;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
@@ -18,7 +21,8 @@ public class PhraseSentenceMerger {
 	}
 
 	public static String getRealFileName(String name) {
-		String info = name.substring(name.indexOf("-") + 1);
+		String info = name;
+		//String info = name.substring(name.indexOf("-") + 1);
 		// info = info.substring(0,info.indexOf(".txt"));
 		info = info.replaceAll("-sentences.txt", "");
 		// info = info.replaceAll(".txt","");
@@ -46,6 +50,7 @@ public class PhraseSentenceMerger {
 		docName = docName.trim();
 
 		File d1 = null, d2 = null;
+		System.out.println(refDraft1.getAbsolutePath());
 		for (File f : refD1s) {
 			if (getRealFileName(f.getName()).equals(docName)) {
 				d1 = f;
@@ -86,28 +91,37 @@ public class PhraseSentenceMerger {
 	public static void addParagraphInfo(RevisionDocument doc, File d1, File d2) throws IOException {
 		ArrayList<String> paras1 = new ArrayList<String>();
 		ArrayList<String> paras2 = new ArrayList<String>();
-		BufferedReader reader = new BufferedReader(new FileReader(d1));
-		BufferedReader reader2 = new BufferedReader(new FileReader(d2));
+		BufferedReader reader = Files.newReader(d1,getCorrectCharsetToApply());
+		BufferedReader reader2 = Files.newReader(d2,getCorrectCharsetToApply());
 		String line = reader.readLine();
+		boolean titleTrimmed= false; //add the tag to trim all the titles
 		while(line!=null) {
-			paras1.add(line);
+			if(!titleTrimmed&& (line.endsWith(".")||line.endsWith("!")||line.endsWith("?")||line.trim().split(" ").length>4)) titleTrimmed = true;
+			if(titleTrimmed && line.trim().length()>0&&!line.equals("\r")&&!line.equals("\n")&&!line.equals("\r\n")) {
+			 paras1.add(line);}
 			line = reader.readLine();
 		}
 		line = null;
+		titleTrimmed = false;
 		line = reader2.readLine();
 		while(line!=null) {
-			paras2.add(line);
+			if(!titleTrimmed&& (line.endsWith(".")||line.endsWith("!")||line.endsWith("?")||line.trim().split(" ").length>4)) titleTrimmed = true;
+			if(titleTrimmed&& line.trim().length()>0&&!line.equals("\r")&&!line.equals("\n")&&!line.equals("\r\n"))
+				paras2.add(line);
 			line = reader2.readLine();
 		}
 		
 		ArrayList<String> lines = doc.getOldDraftSentences();
 		ArrayList<String> newLines = doc.getNewDraftSentences();
 		int oldParaStart = 0;
+		System.out.println("LINE SIZE:"+lines.size());
 		for(int i = 0;i<lines.size();i++) {
 			for(int j = oldParaStart;j<paras1.size();j++) {
 				if(paras1.get(j).contains(lines.get(i))) {
 					doc.addOldSentenceParaMap(i+1, j+1);
 					oldParaStart = j;
+					System.out.println("INDEX: "+i);
+					System.out.println("PARAGRAPH: "+j);
 					break;
 				}
 			}
@@ -126,6 +140,11 @@ public class PhraseSentenceMerger {
 	}
 
 	
+	private static Charset getCorrectCharsetToApply() {
+		// TODO Auto-generated method stub
+		return Charset.forName("Windows-1252");
+	}
+
 	public static void adjustNew(RevisionDocument doc) {
 		int i = 1; // My previous bizzare setting that the document index starts
 					// from 1

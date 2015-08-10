@@ -13,6 +13,10 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import com.google.common.io.Files;
+
+import edu.pitt.cs.revision.util.StringConverter;
+
 /**
  * Tranform the line files into the excel files containing old and new draft
  * 
@@ -48,8 +52,8 @@ public class Line2ExcelTransformer {
 		ArrayList<String> srcLines = new ArrayList<String>();
 		ArrayList<String> dstLines = new ArrayList<String>();
 
-		BufferedReader srcReader = new BufferedReader(new FileReader(src));
-		BufferedReader dstReader = new BufferedReader(new FileReader(dst));
+		BufferedReader srcReader = Files.newReader(src,StringConverter.getCorrectCharsetToApply());
+		BufferedReader dstReader =  Files.newReader(dst,StringConverter.getCorrectCharsetToApply());
 
 		String line = srcReader.readLine();
 		while (line != null) {

@@ -40,7 +40,7 @@ public class EvaluateMain {
 		int evaluateMethod = 4;
 		// String trainPath = "D:/annotationTool/annotated/class3";
 		// String trainPath = "/Users/faz23/Desktop/34/annotated/allData";
-		String trainPath = "C:\\Not Backed Up\\data\\trainData";
+		String trainPath = "C:\\Not Backed Up\\data\\selectedNew";
 		// String testPath = "D:/annotationTool/annotated/class4";
 		// String testPath = "/Users/faz23/Desktop/34/annotated/allData2";
 		String testPath = "C:\\Not Backed Up\\data\\trainData3";

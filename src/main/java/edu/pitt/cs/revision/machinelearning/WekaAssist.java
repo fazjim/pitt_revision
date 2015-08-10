@@ -117,14 +117,16 @@ public class WekaAssist {
 						(String) features[i]);
 			} else if (featureTable.getType(i).equals(Boolean.TYPE)) {
 				String name = featureTable.getFeatureName(i);
-				vals[i+1] = insts.attribute(name).indexOfValue((String) features[i]);
+				vals[i + 1] = insts.attribute(name).indexOfValue(
+						(String) features[i]);
 			} else if (featureTable.getType(i).equals(ArrayList.class)) {
 				String name = featureTable.getFeatureName(i);
-				vals[i+1] = insts.attribute(name).indexOfValue((String) features[i]);
+				vals[i + 1] = insts.attribute(name).indexOfValue(
+						(String) features[i]);
 			} else {
-				//System.out.println(featureTable.getFeatureName(i));
-				//System.out.println(featureTable.getType(i).toString());
-				vals[i+1] = (Double) features[i];
+				// System.out.println(featureTable.getFeatureName(i));
+				// System.out.println(featureTable.getType(i).toString());
+				vals[i + 1] = (Double) features[i];
 			}
 		}
 		vals[vals.length - 1] = insts.attribute(vals.length - 1)
@@ -150,10 +152,12 @@ public class WekaAssist {
 				}
 			} else if (featureTable.getType(i).equals(Boolean.class)) {
 				String name = featureTable.getFeatureName(i);
-				vals[i] = insts.attribute(name).indexOfValue((String) features[i]);
+				vals[i] = insts.attribute(name).indexOfValue(
+						(String) features[i]);
 			} else if (featureTable.getType(i).equals(ArrayList.class)) {
 				String name = featureTable.getFeatureName(i);
-				vals[i] = insts.attribute(name).indexOfValue((String) features[i]);
+				vals[i] = insts.attribute(name).indexOfValue(
+						(String) features[i]);
 			} else {
 				vals[i] = (Double) features[i];
 			}
@@ -366,7 +370,7 @@ public class WekaAssist {
 	public static double getWeight(Instances trainset) {
 		int w1 = 0;
 		int total = trainset.numInstances();
-		for (int i = 0;i<total;i++) {
+		for (int i = 0; i < total; i++) {
 			Instance instance = trainset.instance(i);
 			if (instance.classValue() == 0) {
 				w1++;
@@ -397,57 +401,58 @@ public class WekaAssist {
 		return eval;
 	}
 
-	
-	
-	
 	public static Evaluation crossTrainTest(Instances trainset,
 			Instances testset) throws Exception {
 		Classifier classifier = new RandomForest();
-		CostSensitiveClassifier csc = new CostSensitiveClassifier();
-		csc.setClassifier(classifier);
-		double w = getWeight(trainset);
-		System.out.println("Weight:" + w);
-		CostMatrix newCostMatrix = new CostMatrix(2);
-		newCostMatrix.setCell(0, 1, w);
-		newCostMatrix.setCell(1, 0, 1.0);
-		csc.setCostMatrix(newCostMatrix);
-		classifier = csc;
+		boolean sample = false;
+		if (sample == true) {
+			CostSensitiveClassifier csc = new CostSensitiveClassifier();
+			csc.setClassifier(classifier);
+			double w = getWeight(trainset);
+			System.out.println("Weight:" + w);
+			CostMatrix newCostMatrix = new CostMatrix(2);
+			newCostMatrix.setCell(0, 1, w);
+			newCostMatrix.setCell(1, 0, 1.0);
+			csc.setCostMatrix(newCostMatrix);
+			classifier = csc;
+		}
 		// -----end of balancing------------//
 		classifier = setTagFilter(classifier, trainset);
 		classifier.buildClassifier(trainset);
 		System.out.println("Classifier is done!");
 		Evaluation eval = new Evaluation(trainset);
-		//eval.evaluateModel(classifier, testset);
+		 eval.evaluateModel(classifier, testset);
+		WekaAssist.printResult(eval);
 		detailedErrorAnalysis(eval, classifier, testset);
 		return eval;
 	}
 
-	
-	public static void detailedErrorAnalysis(Evaluation eval, Classifier classifier, Instances testSet) throws Exception {
+	public static void detailedErrorAnalysis(Evaluation eval,
+			Classifier classifier, Instances testSet) throws Exception {
 		int falsePositive = 0;
 		int trueNegative = 0;
 		int textIndex = 0;
 		int index = testSet.attribute("ID").index();
 		int classIndex = testSet.classAttribute().index();
+		
 		System.out.println("+++++++++++++++++++++++++++++++++++++++++++");
-		for(int i = 0;i<testSet.numInstances();i++) {
+		for (int i = 0; i < testSet.numInstances(); i++) {
 			Instance inst = testSet.instance(i);
 			double predict = eval.evaluateModelOnce(classifier, inst);
-			if(predict == 0.0 && inst.value(classIndex) == 1.0) {
-				falsePositive ++;
+			if (predict == 0.0 && inst.value(classIndex) == 1.0) {
+				falsePositive++;
 				System.out.println("False positive");
 				System.out.println(inst.stringValue(index));
-			} else if(predict == 1.0 && inst.value(classIndex) == 0.0) {
-				trueNegative ++;
+			} else if (predict == 1.0 && inst.value(classIndex) == 0.0) {
+				trueNegative++;
 				System.out.println("True negative");
 				System.out.println(inst.stringValue(index));
-			} 
+			}
 		}
-		System.out.println("FP COUNT: "+falsePositive);
-		System.out.println("TN COUNT: "+trueNegative);
+		System.out.println("FP COUNT: " + falsePositive);
+		System.out.println("TN COUNT: " + trueNegative);
 	}
-	
-	
+
 	public static void trainTest(Instances trainset, Instances testset,
 			String test) throws Exception {
 		Classifier[] classifiers = {

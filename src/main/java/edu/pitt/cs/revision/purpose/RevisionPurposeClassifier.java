@@ -879,7 +879,8 @@ public class RevisionPurposeClassifier {
 		 */
 
 		//addPurposeCategories2(categories);
-		 addPurposeCategoriesBinary(categories);
+		 //addPurposeCategoriesBinary(categories);
+		addPurposeCategories(categories);
 		/*
 		 * for (int i = RevisionPurpose.START; i <= RevisionPurpose.END; i++) {
 		 * categories.add(RevisionPurpose.getPurposeName(i)); }
@@ -909,13 +910,19 @@ public class RevisionPurposeClassifier {
 				if (filterRevision(ru, buildOp)) {
 					Object[] features = fe.extractFeatures(doc, ru, usingNgram,
 							remove);
-					 wa.addInstance(features, fe.features, usingNgram,
+					 /*wa.addInstance(features, fe.features, usingNgram,
 					 trainData,
 					 transformPurposeBinary(ru,RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING),
-					 ru.getDetailContent(doc));
+					 ru.getDetailContent(doc));*/
+					
 					/*wa.addInstance(features, fe.features, usingNgram,
 							trainData, transformPurpose2(ru), ru.getDetailContent(doc));*/
 					// System.out.println("Instance added");
+					
+					wa.addInstance(features, fe.features, usingNgram,
+							 trainData,
+							 RevisionPurpose.getPurposeName(ru.getRevision_purpose()),
+							 ru.getDetailContent(doc));
 				}
 			}
 		}
@@ -931,12 +938,16 @@ public class RevisionPurposeClassifier {
 					// testData,
 					// transformPurposeBinary(ru,RevisionPurpose.WORDUSAGE_CLARITY),
 					// "dummy");
-					 wa.addInstance(features, fe.features, usingNgram,
+					/* wa.addInstance(features, fe.features, usingNgram,
 							 testData,
 							 transformPurposeBinary(ru,RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING),
-							 ru.getDetailContent(doc));
+							 ru.getDetailContent(doc));*/
 					//wa.addInstance(features, fe.features, usingNgram, testData,
 					//		transformPurpose2(ru), ru.getDetailContent(doc));
+					wa.addInstance(features, fe.features, usingNgram,
+							 testData,
+							 RevisionPurpose.getPurposeName(ru.getRevision_purpose()),
+							 ru.getDetailContent(doc));
 				}
 			}
 		}
@@ -1069,6 +1080,8 @@ public class RevisionPurposeClassifier {
 				.readDocs("C:\\Not Backed Up\\data\\annotated\\revisedClass3");
 		ArrayList<RevisionDocument> testDocs = reader
 				.readDocs("C:\\Not Backed Up\\data\\annotated\\revisedClass4");
+		
+		ArrayList<RevisionDocument> allDocs = reader.readDocs("C:\\Not Backed Up\\data\\selectedNew");
 		// ArrayList<RevisionDocument> testDocs = reader
 		// .readDocs("D:\\annotationTool\\annotated\\class4");
 		/*
@@ -1078,7 +1091,9 @@ public class RevisionPurposeClassifier {
 		// testDocs.addAll(testDocs2);
 		RevisionPurposeClassifier rpc = new RevisionPurposeClassifier();
 		WekaAssist wa = new WekaAssist();
-		rpc.classifyADRevisionPurpose(trainDocs, testDocs, false);
+		//rpc.classifyADRevisionPurpose(trainDocs, testDocs, false);
+		rpc.classifyADRevisionPurpose(allDocs, testDocs, false);
+		
 		/*
 		 * int[] revPurposes = { RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT,
 		 * RevisionPurpose.CD_WARRANT_REASONING_BACKING,

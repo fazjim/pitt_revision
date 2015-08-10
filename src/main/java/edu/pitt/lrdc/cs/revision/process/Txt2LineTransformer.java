@@ -10,14 +10,23 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+import com.google.common.io.Files;
+
+import edu.pitt.cs.revision.util.StringConverter;
 import edu.pitt.lrdc.cs.revision.discourse.DiscourseSegmenter;
+import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.ling.HasWord;
 import edu.stanford.nlp.ling.Sentence;
+import edu.stanford.nlp.process.CoreLabelTokenFactory;
 import edu.stanford.nlp.process.DocumentPreprocessor;
 import edu.stanford.nlp.process.PTBTokenizer;
+import edu.stanford.nlp.process.TokenizerFactory;
 import edu.stanford.nlp.process.WordTokenFactory;
 
 /**
@@ -32,18 +41,70 @@ public class Txt2LineTransformer {
 	boolean onOldFile = false;
 	boolean sentenceLevel = true;
 
+	//This should be the compatible version
+	public String getSentFromList(List<HasWord> sentence) {
+		boolean printSpace = false;
+		String text = "";
+        for (HasWord word : sentence) {
+          
+            CoreLabel cl = (CoreLabel) word;
+            if ( ! printSpace) {
+              text += cl.get(CoreAnnotations.BeforeAnnotation.class);
+              printSpace = true;
+            }
+            text += cl.get(CoreAnnotations.OriginalTextAnnotation.class);
+            text += cl.get(CoreAnnotations.AfterAnnotation.class);
+        }
+        text = text.replaceAll("\r\n", "\n");
+        return trimAdvanced(text.trim());
+	}
+	
+	
+	public static String trimAdvanced(String value) {
+
+        Objects.requireNonNull(value);
+
+        int strLength = value.length();
+        int len = value.length();
+        int st = 0;
+        char[] val = value.toCharArray();
+
+        if (strLength == 0) {
+            return "";
+        }
+
+        while ((st < len) && (val[st] <= ' ') || (val[st] == '\u00A0')) {
+            st++;
+            if (st == strLength) {
+                break;
+            }
+        }
+        while ((st < len) && (val[len - 1] <= ' ') || (val[len - 1] == '\u00A0')) {
+            len--;
+            if (len == 0) {
+                break;
+            }
+        }
+
+
+        return (st > len) ? "" : ((st > 0) || (len < strLength)) ? value.substring(st, len) : value;
+    }
 	public String genSenFromList(List<HasWord> sentence) {
 		String sentenceStr = "";
+		boolean noaddSpace = false;
 		for (HasWord word : sentence) {
 			String wordStr = word.toString();
 			if (wordStr.equals(".") || wordStr.equals(",")
-					|| wordStr.equals("!") || wordStr.equals("?") || wordStr.equals(";") || wordStr.equals(":")) {
+					|| wordStr.equals("!") || wordStr.equals("?") || wordStr.equals(";") || wordStr.equals(":")||wordStr.equals("\"")||wordStr.equals("'")||noaddSpace == true) {
 				sentenceStr += wordStr;
+				if(wordStr.equals("'")||wordStr.equals("`")||wordStr.equals("\"")) noaddSpace = true;
+				else noaddSpace = false;
 			} else {
 				sentenceStr += " " + wordStr;
+				noaddSpace = false;
 			}
 		}
-		return sentenceStr.trim();
+		return StringConverter.convertString(sentenceStr.trim());
 	}
 
 	// Prepare the files
@@ -54,8 +115,9 @@ public class Txt2LineTransformer {
 	public void processFileDiscourse(String path, String destination)
 			throws IOException {
 		File file = new File(path);
-		BufferedReader br = new BufferedReader(new InputStreamReader(
-				new FileInputStream(file), "UTF8"));
+		/*BufferedReader br = new BufferedReader(new InputStreamReader(
+				new FileInputStream(file), "UTF8"));*/
+		BufferedReader br = Files.newReader(new File(path),getCorrectCharsetToApply());
 		String line, linePrevious = "";
 		String buffer = "";
 		String fileName = file
@@ -63,6 +125,7 @@ public class Txt2LineTransformer {
 				.substring(file.toString().indexOf("-") + 1,
 						file.toString().indexOf(".txt")).trim();
 		String originalText = "";
+		boolean titleTrimmed = false;
 		while ((line = br.readLine()) != null) {
 			// this part remover headers and footer from raw text files
 			if (line.startsWith(fileName + " - ") && line.contains(". Page ")) {
@@ -74,8 +137,11 @@ public class Txt2LineTransformer {
 
 			if (line.trim().endsWith(".") || line.trim().endsWith("?")
 					|| line.trim().endsWith("!")) {
+				if(!titleTrimmed) titleTrimmed = true; 
 				originalText += line.trim() + "\n";
 			} else {
+				if(!titleTrimmed &&line.split(" ").length>4) titleTrimmed = true; //Length > 4 is just to avoid the case where the document text is not the format we want
+				if(titleTrimmed)
 				originalText += line.trim() + " ";
 			}
 			// remove section headers such as Abstract,Introduction ,...
@@ -90,6 +156,8 @@ public class Txt2LineTransformer {
 				else
 					line = line.trim() + ". ";
 			}
+			
+			if(titleTrimmed)
 			buffer = buffer + line + "\n";
 			linePrevious = line.trim();
 		}
@@ -111,11 +179,14 @@ public class Txt2LineTransformer {
 			}
 			DocumentPreprocessor docPreprocessor = new DocumentPreprocessor(
 					reader);
+			
 
 			boolean printSentenceLengths = false;
-			String options = "normalizeParentheses=false,normalizeOtherBrackets=false,escapeForwardSlashAsterisk=false";
-			docPreprocessor.setTokenizerFactory(PTBTokenizer.factory(
-					new WordTokenFactory(), options));
+			//String options = "normalizeParentheses=false,normalizeOtherBrackets=false,escapeForwardSlashAsterisk=false,invertible=true";
+			//docPreprocessor.setTokenizerFactory(PTBTokenizer.factory(
+			//		new WordTokenFactory(), options));
+			TokenizerFactory<? extends HasWord> tf = PTBTokenizer.factory(new CoreLabelTokenFactory(), "invertible=true");
+			docPreprocessor.setTokenizerFactory(tf);
 
 			int numSents = 0;
 			System.out.println(file.toString());
@@ -131,17 +202,18 @@ public class Txt2LineTransformer {
 
 			Writer out = new BufferedWriter(new OutputStreamWriter(
 					new FileOutputStream(preProcessedFileName
-							+ "-sentences.txt"), "UTF-8"));
+							+ "-sentences.txt"), getCorrectCharsetToApply()));
 			Writer out2 = new BufferedWriter(new OutputStreamWriter(
 					new FileOutputStream(preProcessedFileName2
-							+ "-sentences.txt"), "UTF-8"));
+							+ "-sentences.txt"), getCorrectCharsetToApply()));
 
 			for (List<HasWord> sentence : docPreprocessor) {
+				
 				numSents++;
 				if (printSentenceLengths) {
 					System.err.println("Length:\t" + sentence.size());
 				}
-				String tmpSentence = genSenFromList(sentence);
+				String tmpSentence = getSentFromList(sentence);
 				out.write(tmpSentence);
 				int followingIndex = originalText.indexOf(tmpSentence)
 						+ tmpSentence.length();
@@ -185,10 +257,10 @@ public class Txt2LineTransformer {
 
 			Writer out = new BufferedWriter(new OutputStreamWriter(
 					new FileOutputStream(preProcessedFileName
-							+ "-sentences.txt"), "UTF-8"));
+							+ "-sentences.txt"), getCorrectCharsetToApply()));
 			Writer out2 = new BufferedWriter(new OutputStreamWriter(
 					new FileOutputStream(preProcessedFileName2
-							+ "-sentences.txt"), "UTF-8"));
+							+ "-sentences.txt"), getCorrectCharsetToApply()));
 
 			int numClauses = 0;
 			for (String clause : clauses) {
@@ -205,10 +277,15 @@ public class Txt2LineTransformer {
 
 	}
 
+	//change this later to let it be specified by the gui user
+	private Charset getCorrectCharsetToApply() {
+		// TODO Auto-generated method stub
+		return Charset.forName("Windows-1252"); //For this new dataset, usually should be utf-8
+	}
+
 	public void processFile(String path, String destination) throws IOException {
 		File file = new File(path);
-		BufferedReader br = new BufferedReader(new InputStreamReader(
-				new FileInputStream(file), "UTF8"));
+		BufferedReader br = Files.newReader(new File(path),getCorrectCharsetToApply());
 		String line, linePrevious = "";
 		String buffer = "";
 		String fileName = file

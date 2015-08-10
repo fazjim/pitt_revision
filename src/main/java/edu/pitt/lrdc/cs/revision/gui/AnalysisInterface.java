@@ -426,11 +426,12 @@ public class AnalysisInterface extends JPanel {
 			InfoAdder ia = new InfoAdder();
 			ArrayList<RevisionDocument> docs = RevisionDocumentReader
 					.readDocs(srcFolderPath + "/data_processed");
+			/*
 			for (RevisionDocument doc : docs) {
 				System.out.println("Adding paragraph:" + doc.getDocumentName());
 				//ia.addParagraphInfoDiscourse(doc, srcFolderPath);
 				ia.addParagraphInfo(doc, srcFolderPath);
-			}
+			}*/
 
 //			folderCreater = new File(dstFolder);
 //			if (!folderCreater.exists())
