@@ -174,14 +174,15 @@ public class MainFrame extends JFrame {
 			panel = new AdvBaseLevelPanel(rd);
 			//this.add(panel);
 		}
-		displayPanel = new DraftDisplayPanel("old","new");
+		String[] drafts = rd.regenerateDrafts();
+		displayPanel = new DraftDisplayPanel(drafts[0],drafts[1]);
 		
 		panel.setDisplay(displayPanel);
 		if(splitPane!=null)
 		this.remove(splitPane);
 		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, panel, displayPanel);
-		splitPane.setDividerLocation(0.65);
-		splitPane.setResizeWeight(.65d);
+		splitPane.setDividerLocation(900);
+		//splitPane.setResizeWeight(0.5);
 		this.add(splitPane);
 		this.setTitle(rd.getDocumentName());
 		this.show();

@@ -93,7 +93,7 @@ public class AlignmentChangePanel extends JPanel {
 
 				});
 
-		Box sentenceBox = new Box(BoxLayout.X_AXIS);
+		Box sentenceBox = new Box(BoxLayout.Y_AXIS);
 		Box buttonBox = new Box(BoxLayout.Y_AXIS);
 
 		confirmButton.addActionListener(new ActionListener() {

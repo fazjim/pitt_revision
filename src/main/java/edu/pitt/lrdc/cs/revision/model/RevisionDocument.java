@@ -796,4 +796,38 @@ public class RevisionDocument {
 		info.setContentEdits(contentEdits);
 		return info;
 	}
+	
+	public String[] regenerateDrafts() {
+		String[] drafts = new String[2];
+		String draft1 = "";
+		String draft2 = "";
+		int paraNum = 1;
+		for(int i = 0;i<oldDraftSentences.size();i++) {
+			int index = i+1;
+			int currParaNo = this.getParaNoOfOldSentence(index);
+			if(currParaNo > paraNum) {
+				draft1 += "\n";
+				draft1 += oldDraftSentences.get(i) + " ";
+				paraNum = currParaNo;
+			} else {
+				draft1 += oldDraftSentences.get(i)+ " ";
+			}
+		}
+		
+		paraNum = 1;
+		for(int i = 0;i<newDraftSentences.size();i++) {
+			int index = i+1;
+			int currParaNo = this.getParaNoOfNewSentence(index);
+			if(currParaNo > paraNum) {
+				draft2 += "\n";
+				draft2 += newDraftSentences.get(i) + " ";
+				paraNum = currParaNo;
+			} else {
+				draft2 += newDraftSentences.get(i) + " ";
+			}
+		}
+		drafts[0] = draft1;
+		drafts[1] = draft2;
+		return drafts;
+	}
 }

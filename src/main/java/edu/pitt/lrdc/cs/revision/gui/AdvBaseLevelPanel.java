@@ -43,11 +43,12 @@ public class AdvBaseLevelPanel extends JPanel implements LevelPanel {
 		this.ddp = ddp;
 	}
 	
+	String highlightOld = "";
+	String highlightNew = "";
 	public void highlight() {
-		String oldSentence = "o";
-		String newSentence = "l";
-		ddp.highLight(true, oldSentence);
-		ddp.highLight(false, newSentence);
+
+		ddp.highLight(true, highlightOld);
+		ddp.highLight(false, highlightNew);
 	}
 	
 	public void registerRevision() {
@@ -305,23 +306,27 @@ public class AdvBaseLevelPanel extends JPanel implements LevelPanel {
 				ArrayList<RevisionUnit> rus = new ArrayList<RevisionUnit>();
 				for (Integer oldIndex : oldSelectIndices) {
 					if (oldIndex != -1) {
-						oldSentence += doc.getOldSentence(oldIndex + 1) + "\n";
+						oldSentence += doc.getOldSentence(oldIndex + 1) + " ";
 						rus.addAll(doc.getRoot().getRevisionUnitOldAtLevel(0,
 								oldIndex + 1));
 					} else {
 						oldSentence = "Add";
 					}
 				}
+				highlightOld = oldSentence.trim();
+				if(highlightOld.equals("Add")) highlightOld = "";
 
 				for (Integer newIndex : newSelectIndices) {
 					if (newIndex != -1) {
-						newSentence += doc.getNewSentence(newIndex + 1) + "\n";
+						newSentence += doc.getNewSentence(newIndex + 1) + " ";
 						rus.addAll(doc.getRoot().getRevisionUnitNewAtLevel(0,
 								newIndex + 1));
 					} else {
 						newSentence = "Delete";
 					}
 				}
+				highlightNew = newSentence.trim();
+				if(highlightNew.equals("Delete")) highlightNew = "";
 
 				currentRU = rus;
 				annotateBox.reload(rus);

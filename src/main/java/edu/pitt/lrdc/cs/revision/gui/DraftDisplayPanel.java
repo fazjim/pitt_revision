@@ -39,8 +39,10 @@ public class DraftDisplayPanel extends JPanel{
 			Highlighter hl;
 			if(isOld) {
 				hl = oldDraftPane.getHighlighter();
+				//oldDraftPane.requestFocusInWindow();
 			} else {
 				hl = newDraftPane.getHighlighter();
+				//newDraftPane.requestFocusInWindow();
 			}
 		  
 		    hl.removeAllHighlights();
@@ -56,6 +58,8 @@ public class DraftDisplayPanel extends JPanel{
 		    int p1 = p0+find.length();
 		    try {
 				hl.addHighlight(p0, p1,  DefaultHighlighter.DefaultPainter);
+				//if(isOld) oldDraftPane.requestFocusInWindow();
+				//else newDraftPane.requestFocusInWindow();
 			} catch (BadLocationException e) {
 				// TODO Auto-generated catch block
 				//e.printStackTrace();
