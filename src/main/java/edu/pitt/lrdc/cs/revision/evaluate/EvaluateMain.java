@@ -40,7 +40,7 @@ public class EvaluateMain {
 		int evaluateMethod = 4;
 		// String trainPath = "D:/annotationTool/annotated/class3";
 		// String trainPath = "/Users/faz23/Desktop/34/annotated/allData";
-		String trainPath = "C:\\Not Backed Up\\data\\selectedNew";
+		String trainPath = "C:\\Not Backed Up\\data\\newSample";
 		// String testPath = "D:/annotationTool/annotated/class4";
 		// String testPath = "/Users/faz23/Desktop/34/annotated/allData2";
 		String testPath = "C:\\Not Backed Up\\data\\trainData3";
@@ -79,9 +79,9 @@ public class EvaluateMain {
 			int folder = 10;
 			crossValidateAlignClassify(allData, folder, 2);
 		} else if (option == CLASSIFY) {
-			int folder = 10;
+			int folder = 7;
 			//Open this for cross surface classification
-			resultPath = "/Users/faz23/Desktop/34/annotated/surfaceAllOp.xlsx";
+			resultPath = "C:\\Not Backed Up\\data\\surfaceAllOp.xlsx";
 			crossValidateClassify(allData, folder, true, resultPath);
 			
 			//Open this for jumbo classification

@@ -900,7 +900,7 @@ public class RevisionPurposeClassifier {
 
 		Instances testData = wa.buildInstances(fe.features, usingNgram);
 
-		int buildOp = MODIFYOPONLY;
+		int buildOp = ALLOP;
 		// Collect all the revision units
 		// ArrayList<RevisionUnit> rus = new ArrayList<RevisionUnit>();
 		for (RevisionDocument doc : trainDocs) {

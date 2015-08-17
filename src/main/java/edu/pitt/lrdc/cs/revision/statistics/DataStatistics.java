@@ -185,6 +185,7 @@ public class DataStatistics {
 		//ArrayList<RevisionDocument> docs3 = rd.readDocs(class2);
 		docs.addAll(docs2);
 		//docs.addAll(docs3);*/
-		ds.stat(RevisionDocumentReader.readDocs("/Users/faz23/Desktop/34/annotated/allData"));
+		String path = "C:\\Not Backed Up\\data\\newSample";
+		ds.stat(RevisionDocumentReader.readDocs(path));
 	}
 }
