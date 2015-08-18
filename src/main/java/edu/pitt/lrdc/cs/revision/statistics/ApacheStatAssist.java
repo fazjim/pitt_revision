@@ -2,6 +2,7 @@ package edu.pitt.lrdc.cs.revision.statistics;
 
 import java.util.ArrayList;
 
+import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.inference.ChiSquareTest;
 import org.apache.commons.math3.stat.inference.OneWayAnova;
@@ -62,6 +63,26 @@ public class ApacheStatAssist {
 	
 	public static double pearsonCorrelation(double[] arr1, double[] arr2) {
 		return pctester.correlation(arr1, arr2);
+	}
+	
+	public static double[] pearsonCorrelationP(double[] arr1, double[] arr2) {
+		int length = arr1.length;
+		double[][] matrix = new double[length][2];
+		for(int i = 0;i<length;i++) {
+			matrix[i][0] = arr1[i];
+			matrix[i][1] = arr2[i];
+		}
+		PearsonsCorrelation pc = new PearsonsCorrelation(matrix);
+		RealMatrix corrMatrix = pc.getCorrelationMatrix();
+		RealMatrix pMatrix = pc.getCorrelationPValues();
+		
+	
+		double[] results = new double[2];
+		//results[0] = pctester.correlation(arr1, arr2);
+		//results[1] = 0.05;//modify it later
+		results[0] = corrMatrix.getEntry(0, 1);
+		results[1] = pMatrix.getEntry(0, 1);
+		return results;
 	}
 	
 	public static double getCorrSignificance(double val, int size) {

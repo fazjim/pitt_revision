@@ -56,8 +56,8 @@ public class EvaluateMain {
 		// RevisionDocumentReader.readDocs(anotherPath);
 
 		ArrayList<RevisionDocument> allData = new ArrayList<RevisionDocument>();
-		//allData.addAll(trainFolder);
-		//allData.addAll(testFolder);
+		// allData.addAll(trainFolder);
+		// allData.addAll(testFolder);
 		// allData.addAll(anotherFolder);
 		allData.addAll(trainFolder);
 		String resultPath = "dummy";
@@ -80,13 +80,15 @@ public class EvaluateMain {
 			crossValidateAlignClassify(allData, folder, 2);
 		} else if (option == CLASSIFY) {
 			int folder = 7;
-			//Open this for cross surface classification
+			// Open this for cross surface classification
 			resultPath = "C:\\Not Backed Up\\data\\surfaceAllOp.xlsx";
-			crossValidateClassify(allData, folder, true, resultPath);
-			
-			//Open this for jumbo classification
-			//resultPath = "/Users/faz23/Desktop/34/annotated/allResults2";
-			//crossValidateClassifyJumbo(allData, folder, true, resultPath);
+			// crossValidateClassify(allData, folder, true, resultPath);
+			boolean autoAligned = false;
+			boolean highLevel = false;
+			crossValidateClassifyCorrelation(allData, folder, 1, autoAligned, highLevel);
+			// Open this for jumbo classification
+			// resultPath = "/Users/faz23/Desktop/34/annotated/allResults2";
+			// crossValidateClassifyJumbo(allData, folder, true, resultPath);
 		}
 	}
 
@@ -100,8 +102,10 @@ public class EvaluateMain {
 			Aligner aligner = new Aligner();
 			aligner.align(trainDocs, testDocs, distOption);
 		}
-		System.out.println("ACCURACY:"+AlignmentEvaluator.getAlignmentAccuracyAvg(docs));
-		System.out.println("KAPPA:"+AlignmentEvaluator.getAlignmentKappaAvg(docs));
+		System.out.println("ACCURACY:"
+				+ AlignmentEvaluator.getAlignmentAccuracyAvg(docs));
+		System.out.println("KAPPA:"
+				+ AlignmentEvaluator.getAlignmentKappaAvg(docs));
 	}
 
 	public static void allAddRow(Hashtable<String, LatexTableWriter> writers,
@@ -147,9 +151,8 @@ public class EvaluateMain {
 		for (String column : columns)
 			allAddColumn(writers, column);
 	}
-	
-	public static void allMakeTable(
-			Hashtable<String, LatexTableWriter> writers) {
+
+	public static void allMakeTable(Hashtable<String, LatexTableWriter> writers) {
 		Iterator<String> it = writers.keySet().iterator();
 		while (it.hasNext()) {
 			String key = it.next();
@@ -157,7 +160,6 @@ public class EvaluateMain {
 			writer.makeTable();
 		}
 	}
-
 
 	/**
 	 * All the revision purposes in a jumbo
@@ -190,7 +192,7 @@ public class EvaluateMain {
 			String purposeName = RevisionPurpose.getPurposeName(i);
 			allAddColumn(writers, purposeName);
 		}
-		
+
 		ArrayList<String> experiments = new ArrayList<String>();
 		ArrayList<Integer> options = new ArrayList<Integer>();
 		experiments.add("Majority");
@@ -213,10 +215,11 @@ public class EvaluateMain {
 																				// each
 																				// rev
 																				// purpose
-			if (i == RevisionPurpose.CD_REBUTTAL_RESERVATION||i==RevisionPurpose.ORGANIZATION)
+			if (i == RevisionPurpose.CD_REBUTTAL_RESERVATION
+					|| i == RevisionPurpose.ORGANIZATION)
 				continue;
 			purposes.add(RevisionPurpose.getPurposeName(i));
-			System.out.println("Running:"+RevisionPurpose.getPurposeName(i));
+			System.out.println("Running:" + RevisionPurpose.getPurposeName(i));
 			ArrayList<ResultInfoRow> results = new ArrayList<ResultInfoRow>();
 			for (int j = 0; j < folder; j++) { // Do a cross validation
 				ResultInfoRow resultRow = new ResultInfoRow();
@@ -269,59 +272,56 @@ public class EvaluateMain {
 			ArrayList<RevisionDocument> trainDocs = crossCuts.get(i).get(0);
 			ArrayList<RevisionDocument> testDocs = crossCuts.get(i).get(1);
 
-			// ---------------Open this when trying to use this for pipelined approach
-			 Aligner aligner = new Aligner(); 
-//			 aligner.align(trainDocs,
-//			 testDocs, 2, usingNgram); 
-//			 //---This is the gold standard alignments
-//			aligner.repeatAlign(testDocs);
-//			 RevisionPurposePredicter predictor = new
-//			 RevisionPurposePredicter(); predictor.predictRevisions(trainDocs,
-//			 testDocs, true, 1);
-//			
-//			 Eval eval =
-//			 PurposeEvaluator.evaluatePurposeBinaryTotal(testDocs);
-//			 System.out.println("PREC:" + eval.unweightedP);
-//			 System.out.println("RECALL:" + eval.unweightedR); prec +=
-//			 eval.unweightedP; recall += eval.unweightedR;
-//			 System.out.println("FOLDER:" + folder); 
+			// ---------------Open this when trying to use this for pipelined
+			// approach
+			Aligner aligner = new Aligner();
+			// aligner.align(trainDocs,
+			// testDocs, 2, usingNgram);
+			// //---This is the gold standard alignments
+			// aligner.repeatAlign(testDocs);
+			// RevisionPurposePredicter predictor = new
+			// RevisionPurposePredicter(); predictor.predictRevisions(trainDocs,
+			// testDocs, true, 1);
+			//
+			// Eval eval =
+			// PurposeEvaluator.evaluatePurposeBinaryTotal(testDocs);
+			// System.out.println("PREC:" + eval.unweightedP);
+			// System.out.println("RECALL:" + eval.unweightedR); prec +=
+			// eval.unweightedP; recall += eval.unweightedR;
+			// System.out.println("FOLDER:" + folder);
 
 			RevisionPurposeClassifier rpc = new RevisionPurposeClassifier();
 			Evaluation eval;
 			String experiment;
-/*
-			System.out
-					.println("*****************Unigram baseline*******************");
-			String experiment = "Unigram";
-			Evaluation eval = rpc.classifyADRevisionPurpose(trainDocs,
-					testDocs, usingNgram, -1);
-			resultRow.addExperiment(experiment);
-			resultRow.getResult(experiment).fromEvaluation(eval);
-
-			System.out
-					.println("*****************Removing location*******************");
-			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
-					usingNgram, 0);
-			experiment = " Location";
-			resultRow.addExperiment(experiment);
-			resultRow.getResult(experiment).fromEvaluation(eval);
-
-			System.out
-					.println("*****************Removing text*******************");
-			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
-					usingNgram, 1);
-			experiment = " text";
-			resultRow.addExperiment(experiment);
-			resultRow.getResult(experiment).fromEvaluation(eval);
-
-			System.out
-					.println("*****************Removing language*******************");
-			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
-					usingNgram, 2);
-			experiment = "language";
-			resultRow.addExperiment(experiment);
-			resultRow.getResult(experiment).fromEvaluation(eval);
-*/
+			/*
+			 * System.out
+			 * .println("*****************Unigram baseline*******************");
+			 * String experiment = "Unigram"; Evaluation eval =
+			 * rpc.classifyADRevisionPurpose(trainDocs, testDocs, usingNgram,
+			 * -1); resultRow.addExperiment(experiment);
+			 * resultRow.getResult(experiment).fromEvaluation(eval);
+			 * 
+			 * System.out
+			 * .println("*****************Removing location*******************"
+			 * ); eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
+			 * usingNgram, 0); experiment = " Location";
+			 * resultRow.addExperiment(experiment);
+			 * resultRow.getResult(experiment).fromEvaluation(eval);
+			 * 
+			 * System.out
+			 * .println("*****************Removing text*******************");
+			 * eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
+			 * usingNgram, 1); experiment = " text";
+			 * resultRow.addExperiment(experiment);
+			 * resultRow.getResult(experiment).fromEvaluation(eval);
+			 * 
+			 * System.out
+			 * .println("*****************Removing language*******************"
+			 * ); eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
+			 * usingNgram, 2); experiment = "language";
+			 * resultRow.addExperiment(experiment);
+			 * resultRow.getResult(experiment).fromEvaluation(eval);
+			 */
 			System.out
 					.println("*****************All features*******************");
 			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
@@ -330,14 +330,15 @@ public class EvaluateMain {
 			resultRow.addExperiment(experiment);
 			resultRow.getResult(experiment).fromEvaluation(eval);
 
-/*			System.out.println("*****************Majority*******************");
-			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
-					usingNgram, 5);
-			experiment = "Majority";
-			resultRow.addExperiment(experiment);
-			resultRow.getResult(experiment).fromEvaluation(eval);
-
-			results.add(resultRow);*/
+			/*
+			 * System.out.println("*****************Majority*******************")
+			 * ; eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
+			 * usingNgram, 5); experiment = "Majority";
+			 * resultRow.addExperiment(experiment);
+			 * resultRow.getResult(experiment).fromEvaluation(eval);
+			 * 
+			 * results.add(resultRow);
+			 */
 
 			/*
 			 * These belong to history System.out
@@ -348,13 +349,41 @@ public class EvaluateMain {
 			 * resultRow.getResult(experiment).fromEvaluation(eval);
 			 */
 		}
-//		double avgP = prec /
-//				 folder; double avgR = recall / folder;
-//				 System.out.println("AVG PREC:" + avgP);
-//				 System.out.println("AVG RECALL:" + avgR);
-//				 PredictedRevisionStat.persistToFile(docs, resultPath);
+		// double avgP = prec /
+		// folder; double avgR = recall / folder;
+		// System.out.println("AVG PREC:" + avgP);
+		// System.out.println("AVG RECALL:" + avgR);
+		// PredictedRevisionStat.persistToFile(docs, resultPath);
 		ResultInfoWriter.persist(results, resultPath);
 
+	}
+
+	public static void crossValidateClassifyCorrelation(
+			ArrayList<RevisionDocument> docs, int folder, int distOption,
+			boolean autoAligned, boolean highLevel) throws Exception {
+		ArrayList<ArrayList<ArrayList<RevisionDocument>>> crossCuts = EvaluateTool
+				.getCrossCut(docs, folder);
+		for (int i = 0; i < folder; i++) {
+			ArrayList<RevisionDocument> trainDocs = crossCuts.get(i).get(0);
+			ArrayList<RevisionDocument> testDocs = crossCuts.get(i).get(1);
+			Aligner aligner = new Aligner();
+			if (!autoAligned) {
+				aligner.repeatAlign(testDocs); // Gold
+			} else {
+				aligner.align(trainDocs, testDocs, distOption);
+			}
+			RevisionPurposePredicter predictor = new RevisionPurposePredicter();
+			if (highLevel) {
+				predictor.predictRevisions(trainDocs, testDocs, false, 1);
+			} else {
+				predictor.predictRevisionsSolo(trainDocs, testDocs, false, 1);
+			}
+		}
+		// System.out.println(AlignmentEvaluator.getAlignmentAccuracyTotal(docs));
+		// Eval eval = PurposeEvaluator.evaluatePurposeBinaryTotal(docs);
+		// System.out.println("PREC:" + eval.precision);
+		// System.out.println("RECALL:" + eval.recall);
+		PurposeEvaluator.evaluatePurposeCorrelation(docs);
 	}
 
 	public static void crossValidateAlignClassify(
@@ -446,13 +475,14 @@ public class EvaluateMain {
 			 * 
 			 * results.add(resultRow); }
 			 */
-			Eval eval = PurposeEvaluator.evaluatePurposeBinaryTotal(docs);
-			System.out.println("PREC:" + eval.precision);
-			System.out.println("RECALL:" + eval.recall);
-			prec += eval.precision;
-			recall += eval.recall;
+			// Eval eval = PurposeEvaluator.evaluatePurposeBinaryTotal(docs);
+			// System.out.println("PREC:" + eval.precision);
+			// System.out.println("RECALL:" + eval.recall);
+			// prec += eval.precision;
+			// recall += eval.recall;
 		}
 		// ResultInfoWriter.persist(results, resultPath);
+		PurposeEvaluator.evaluatePurposeBinaryTotal(docs);
 		System.out.println("AVG PREC:" + prec / folder);
 		System.out.println("AVG RECALL:" + recall / folder);
 	}

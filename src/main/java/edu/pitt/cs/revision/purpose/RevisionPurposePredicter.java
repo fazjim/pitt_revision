@@ -40,6 +40,99 @@ public class RevisionPurposePredicter {
 	String batchPath = "batch";
 
 	/**
+	 * Where the revisions only has one major revision type
+	 * @param trainDocs
+	 * @param testDocs
+	 * @param usingNgram
+	 * @param option
+	 * @throws Exception 
+	 */
+	public void predictRevisionsSolo(ArrayList<RevisionDocument> trainDocs,
+			ArrayList<RevisionDocument> testDocs, boolean usingNgram, int option) throws Exception {
+		Hashtable<String, RevisionDocument> table = new Hashtable<String, RevisionDocument>();
+		FeatureExtractor fe = new FeatureExtractor();
+		ArrayList<String> categories = new ArrayList<String>();
+		WekaAssist wa = new WekaAssist();
+		boolean modifyOnly = false;
+
+		for (RevisionDocument doc : testDocs) {
+			// RevisionUnit predictedRoot = new RevisionUnit(true);
+			// predictedRoot.setRevision_level(3); // Default level to 3
+			// doc.setPredictedRoot(predictedRoot);
+			table.put(doc.getDocumentName(), doc);
+		}
+		//rpc.addPurposeCategories2(categories);
+		rpc.addPurposeCategories(categories);
+		fe.buildFeatures(usingNgram, categories);
+		Instances trainData = wa.buildInstances(fe.features, usingNgram);
+		Instances testData = wa.buildInstances(fe.features, usingNgram);
+		for (RevisionDocument doc : trainDocs) {
+			ArrayList<RevisionUnit> basicUnits = doc.getRoot()
+					.getRevisionUnitAtLevel(0);
+			for (RevisionUnit ru : basicUnits) {
+				if (modifyOnly) {
+					if (ru.getRevision_op() == RevisionOp.MODIFY) {
+						Object[] features = fe.extractFeatures(doc, ru,
+								usingNgram);
+						wa.addInstance(features, fe.features, usingNgram,
+								trainData, RevisionPurpose.getPurposeName(ru.getRevision_purpose()), "dummy");
+					}
+				} else {
+					Object[] features = fe.extractFeatures(doc, ru, usingNgram);
+					wa.addInstance(features, fe.features, usingNgram,
+							trainData, RevisionPurpose.getPurposeName(ru.getRevision_purpose()), "dummy");
+				}
+			}
+		}
+		for (RevisionDocument doc : testDocs) {
+			ArrayList<RevisionUnit> basicUnits = doc.getPredictedRoot()
+					.getUnits();
+			for (RevisionUnit ru : basicUnits) {
+				/*
+				 * if (modifyOnly) { if (ru.getRevision_op() ==
+				 * RevisionOp.MODIFY) { Object[] features =
+				 * fe.extractFeatures(doc, ru, usingNgram);
+				 * wa.addInstance(features, fe.features, usingNgram, testData,
+				 * rpc.transformPurpose2(ru), buildID(doc, ru)); } } else {
+				 */
+				Object[] features = fe.extractFeatures(doc, ru, usingNgram);
+				wa.addInstance(features, fe.features, usingNgram, testData,
+						RevisionPurpose.getPurposeName(ru.getRevision_purpose()), buildID(doc, ru));
+				// }
+			}
+		}
+
+		if (usingNgram) {
+			System.out.println("Adding ngrams");
+			Instances[] inst = wa.addNgram(trainData, testData);
+			trainData = inst[0];
+			testData = inst[1];
+		}
+		boolean autoBalance = false;
+		Classifier cl = wa.train(trainData, autoBalance);
+		int ID_index = testData.attribute("ID").index();
+		int testDataSize = testData.numInstances();
+		for (int i = 0; i < testDataSize; i++) {
+			Instance instance = testData.instance(i);
+			double category = cl.classifyInstance(instance);
+
+			// String ID =
+			// data.instance(ID_index).stringValue(instance.attribute(ID_index));
+			String ID = instance.stringValue(instance.attribute(ID_index));
+			String[] info = parseID(ID);
+			RevisionDocument doc = table.get(info[0]);
+			for (RevisionUnit ru : doc.getPredictedRoot().getUnits()) {
+				if (ru.getRevision_index() == Integer.parseInt(info[1])) {
+					int purpose = (int)category + 1;
+					ru.setRevision_purpose(purpose);
+					break;
+				}
+			}
+		}
+
+	}
+	
+	/**
 	 * Predict revisions with training and testing data
 	 * 
 	 * @param trainDocs

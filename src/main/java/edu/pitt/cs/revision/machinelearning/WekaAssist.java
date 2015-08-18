@@ -367,6 +367,42 @@ public class WekaAssist {
 		// return classifier;
 	}
 
+	/**
+	 * Now autoBalance are only available for binary classifications
+	 * 
+	 * @param trainSet
+	 * @param autoBalance
+	 * @return
+	 * @throws Exception
+	 */
+	public static Classifier train(Instances trainSet, boolean autoBalance)
+			throws Exception {
+		/*
+		 * Classifier[] classifiers = { // new Bagging(), // new AdaBoostM1(),
+		 * // new IBk(), // new IBk(3), // new IBk(5), // new NaiveBayes(), //
+		 * new J48(), new SMO(), // newVote(), // new R1() };
+		 */
+		Classifier classifier = new RandomForest();
+		classifier = setTagFilter(classifier, trainSet);
+		if (autoBalance) {
+			CostSensitiveClassifier csc = new CostSensitiveClassifier();
+			csc.setClassifier(classifier);
+			double w = getWeight(trainSet);
+			System.out.println("Weight:" + w);
+			CostMatrix newCostMatrix = new CostMatrix(2);
+			newCostMatrix.setCell(0, 1, w);
+			newCostMatrix.setCell(1, 0, 1.0);
+			csc.setCostMatrix(newCostMatrix);
+			classifier = csc;
+		}
+		classifier.buildClassifier(trainSet);
+		// classifier.buildClassifier(trainSet);
+
+		return classifier;
+
+		// return classifier;
+	}
+
 	public static double getWeight(Instances trainset) {
 		int w1 = 0;
 		int total = trainset.numInstances();
@@ -421,7 +457,7 @@ public class WekaAssist {
 		classifier.buildClassifier(trainset);
 		System.out.println("Classifier is done!");
 		Evaluation eval = new Evaluation(trainset);
-		 eval.evaluateModel(classifier, testset);
+		eval.evaluateModel(classifier, testset);
 		WekaAssist.printResult(eval);
 		detailedErrorAnalysis(eval, classifier, testset);
 		return eval;
@@ -434,7 +470,7 @@ public class WekaAssist {
 		int textIndex = 0;
 		int index = testSet.attribute("ID").index();
 		int classIndex = testSet.classAttribute().index();
-		
+
 		System.out.println("+++++++++++++++++++++++++++++++++++++++++++");
 		for (int i = 0; i < testSet.numInstances(); i++) {
 			Instance inst = testSet.instance(i);
