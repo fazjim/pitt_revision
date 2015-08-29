@@ -1,6 +1,7 @@
 package edu.pitt.cs.revision.util;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ class HeatMapUnit implements Comparable {
 	public int compareTo(Object o) {
 		// TODO Auto-generated method stub
 		HeatMapUnit compared = (HeatMapUnit) o;
-		if (this.pD1 == -1 || compared.pD1 == -1) {
+		if (this.pD1 == -1 || compared.pD1 == -1) { //Put this in front so that the deleted are always ahead of the adds
 			if (this.pD2 != compared.pD2) {
 				return this.pD2 - compared.pD2;
 			} else {
@@ -87,8 +88,18 @@ public class RevisionMapFileGenerator {
 	public static void main(String[] args) throws Exception {
 		String path = "C:\\Not Backed Up\\data\\newSample\\Annotation_A4effort - 18178.txt.xlsx";
 		String outputPath = "C:\\Not Backed Up\\data\\newSample.txt";
-		RevisionDocument doc = RevisionDocumentReader.readDoc(path);
-		generateHeatMapFile(doc, outputPath);
+		//RevisionDocument doc = RevisionDocumentReader.readDoc(path);
+		//generateHeatMapFile(doc, outputPath);
+		String root = "C:\\Not Backed Up\\data\\newSample";
+		String outputPathRoot = "C:\\Not Backed Up\\data\\newSampleMap";
+		File folder = new File(root);
+		File[] files = folder.listFiles();
+		for(File tempFile:files){
+			RevisionDocument doc = RevisionDocumentReader.readDoc(tempFile.getAbsolutePath());
+			String fileName = tempFile.getName();
+			String outPath = outputPathRoot +"/" + fileName.substring(0,fileName.length()-5);
+			generateHeatMapFile(doc, outPath);
+		}
 	}
 
 	public static String addHeader(String txt) {

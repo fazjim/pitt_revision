@@ -55,8 +55,9 @@ public class PurposeEvaluator {
 	static boolean printVerbose = false;
 
 	public static String printCorr(double[] vals) {
-		return "Correlation: "+vals[0]+", p-value:"+vals[1];
+		return "Correlation: " + vals[0] + ", p-value:" + vals[1];
 	}
+
 	public static double[] getCorr(CorrEval ce) {
 		if (printVerbose) {
 			System.out.println("===========PREDICTED=============");
@@ -77,7 +78,7 @@ public class PurposeEvaluator {
 		for (int i = 0; i < ce.getRealNum(); i++) {
 			reals[i] = ce.getReal(i) * 1.0;
 		}
-		
+
 		try {
 			return ApacheStatAssist.pearsonCorrelationP(predicts, reals);
 		} catch (Exception exp) {
@@ -154,19 +155,19 @@ public class PurposeEvaluator {
 			if (!newParaMapping.containsKey(newParaIndex))
 				newParaMapping.put(newParaIndex, new HashSet<Integer>());
 			ArrayList<Integer> oldMappings = doc.getOldFromNew(index);
-			if (oldMappings!=null && oldMappings.size() != 0) {
-				for(Integer oldIndex: oldMappings) {
+			if (oldMappings != null && oldMappings.size() != 0) {
+				for (Integer oldIndex : oldMappings) {
 					int oldParaIndex = doc.getParaNoOfOldSentence(oldIndex);
 					newParaMapping.get(newParaIndex).add(oldParaIndex);
 				}
 			}
 		}
-		
+
 		Iterator<Integer> it = newParaMapping.keySet().iterator();
-		while(it.hasNext()) {
+		while (it.hasNext()) {
 			int newParaIndex = it.next();
-			if(newParaMapping.get(newParaIndex).isEmpty()) {
-				String paraTag = "NEW:"+newParaIndex;
+			if (newParaMapping.get(newParaIndex).isEmpty()) {
+				String paraTag = "NEW:" + newParaIndex;
 				paraRevs.put(paraTag, 0);
 			}
 		}
@@ -174,40 +175,45 @@ public class PurposeEvaluator {
 		for (RevisionUnit rev : revisions) {
 			String tag = "";
 			ArrayList<Integer> oldIndices = rev.getOldSentenceIndex();
-			if(oldIndices==null||oldIndices.size()==0||(oldIndices.size()==1&&oldIndices.get(0)==-1)) {
+			if (oldIndices == null || oldIndices.size() == 0
+					|| (oldIndices.size() == 1 && oldIndices.get(0) == -1)) {
 				ArrayList<Integer> newIndices = rev.getNewSentenceIndex();
 				HashSet<Integer> mappedOlds = new HashSet<Integer>();
 				int paraIndex = -1;
-				for(Integer newIndex: newIndices) {
-					if(newIndex!=-1) {
+				for (Integer newIndex : newIndices) {
+					if (newIndex != -1) {
 						int newParaIndex = doc.getParaNoOfNewSentence(newIndex);
-						if(newParaIndex > paraIndex) paraIndex = newParaIndex;
-						HashSet<Integer> olds = newParaMapping.get(newParaIndex);
-						for(Integer oldP: olds) {
+						if (newParaIndex > paraIndex)
+							paraIndex = newParaIndex;
+						HashSet<Integer> olds = newParaMapping
+								.get(newParaIndex);
+						for (Integer oldP : olds) {
 							mappedOlds.add(oldP);
 						}
 					}
 				}
-				if(mappedOlds.size()==0) {//A new paragraph
-					 tag = "NEW:"+paraIndex;
+				if (mappedOlds.size() == 0) {// A new paragraph
+					tag = "NEW:" + paraIndex;
 				} else {
 					paraIndex = -1;
-					for(Integer oldP: mappedOlds) {
-						if(oldP > paraIndex) paraIndex = oldP;
+					for (Integer oldP : mappedOlds) {
+						if (oldP > paraIndex)
+							paraIndex = oldP;
 					}
-					tag = "OLD:"+paraIndex;
+					tag = "OLD:" + paraIndex;
 				}
 			} else {
 				int paraIndex = -1;
-				for(Integer oldIndex: oldIndices) {
-					if(oldIndex!=-1) {
+				for (Integer oldIndex : oldIndices) {
+					if (oldIndex != -1) {
 						int oldParaIndex = doc.getParaNoOfOldSentence(oldIndex);
-						if(oldParaIndex > paraIndex) paraIndex = oldParaIndex;
+						if (oldParaIndex > paraIndex)
+							paraIndex = oldParaIndex;
 					}
 				}
-				tag = "OLD:"+paraIndex;
+				tag = "OLD:" + paraIndex;
 			}
-			
+
 			int count = 0;
 			if (paraRevs.containsKey(tag))
 				count = paraRevs.get(tag);
@@ -241,7 +247,8 @@ public class PurposeEvaluator {
 			} else if (revType == -2) {
 				// Content only
 				if (rev.getRevision_purpose() != RevisionPurpose.WORDUSAGE_CLARITY
-						&& rev.getRevision_purpose() != RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING) {
+						&& rev.getRevision_purpose() != RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING
+						&& rev.getRevision_purpose() != RevisionPurpose.WORDUSAGE_CLARITY_CASCADED) {
 					count++;
 				}
 			} else {

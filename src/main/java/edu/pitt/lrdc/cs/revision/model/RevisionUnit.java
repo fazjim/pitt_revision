@@ -330,7 +330,21 @@ public class RevisionUnit {
 		return rus;
 	}
 
-
+	/**
+	 * Get the sentence-level revision units, filtering the multiple purpose cases
+	 * @return
+	 */
+	public ArrayList<RevisionUnit> getSentenceRevisionUnitsForML() {
+		ArrayList<RevisionUnit> rus = this.getRevisionUnitAtLevel(0);
+		ArrayList<RevisionUnit> filteredRus = new ArrayList<RevisionUnit>();
+		for(RevisionUnit ru: rus) {
+			if(ru.getRevision_purpose() == RevisionPurpose.WORDUSAGE_CLARITY_CASCADED) {
+			
+			}
+		}
+		return rus;
+	}
+	
 	/**
 	 * Get the revision units at a specified level with the sentence index in
 	 * the new draft heavy weight function, might cause bad performance
