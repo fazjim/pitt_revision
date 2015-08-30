@@ -9,61 +9,13 @@ import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Iterator;
 
+import edu.pitt.lrdc.cs.revision.alignment.model.HeatMapUnit;
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentReader;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
 import edu.pitt.lrdc.cs.revision.model.RevisionOp;
 import edu.pitt.lrdc.cs.revision.model.RevisionPurpose;
 import edu.pitt.lrdc.cs.revision.model.RevisionUnit;
 
-class HeatMapUnit implements Comparable {
-	int pD1;
-	int pD2;
-	int sD1;
-	int sD2;
-	String scD1;
-	String scD2;
-	int aR; // adjusted Row index
-	int aC; // adjusted Column index
-	int aVR; //adjusted Row index in vertical view
-	String revType;
-	String revPurpose;
-
-	@Override
-	public int compareTo(Object o) {
-		// TODO Auto-generated method stub
-		HeatMapUnit compared = (HeatMapUnit) o;
-		if (this.pD1 == -1 || compared.pD1 == -1) { //Put this in front so that the deleted are always ahead of the adds
-			if (this.pD2 != compared.pD2) {
-				return this.pD2 - compared.pD2;
-			} else {
-				return this.sD2 - compared.sD2;
-			}
-		}
-
-		if (this.pD2 == -1 || compared.pD2 == -1) {
-			if (this.pD1 != compared.pD1) {
-				return this.pD1 - compared.pD1;
-			} else {
-				return this.sD1 - compared.sD1; // there must be one sD2 == -1
-			}
-		}
-
-		// when there is not -1 existing, compare paragraph and then sentences
-		if (this.pD1 != compared.pD1) {
-			return this.pD1 - compared.pD1;
-		} else {
-			if (this.pD2 != compared.pD2) {
-				return this.pD2 - compared.pD2;
-			} else {
-				if (this.sD1 != compared.sD1) {
-					return this.sD1 - compared.sD1;
-				} else {
-					return this.sD2 - compared.sD2;
-				}
-			}
-		}
-	}
-}
 
 public class RevisionMapFileGenerator {
 	public static String generateTxt(RevisionDocument doc) {
@@ -75,6 +27,25 @@ public class RevisionMapFileGenerator {
 			txt = addLine(unit, txt);
 		}
 		return txt;
+	}
+	
+	public static ArrayList<ArrayList<HeatMapUnit>> getUnits4CRF(RevisionDocument doc) {
+		ArrayList<HeatMapUnit> units = generateUnits(doc);
+		adjustUnits(units);
+		ArrayList<ArrayList<HeatMapUnit>> segmentedUnits = new ArrayList<ArrayList<HeatMapUnit>>();
+		int currentP = -1;
+		ArrayList<HeatMapUnit> currentList = null;
+		for(HeatMapUnit unit:units) {
+			if(unit.aVR - currentP > 1) {
+				if(currentList!=null) 
+				segmentedUnits.add(currentList);
+				currentList = new ArrayList<HeatMapUnit>();
+			}
+			currentP = unit.aVR;
+			currentList.add(unit);
+		}
+		segmentedUnits.add(currentList);
+		return segmentedUnits;
 	}
 
 	public static void generateHeatMapFile(RevisionDocument doc, String filePath)
@@ -98,7 +69,17 @@ public class RevisionMapFileGenerator {
 			RevisionDocument doc = RevisionDocumentReader.readDoc(tempFile.getAbsolutePath());
 			String fileName = tempFile.getName();
 			String outPath = outputPathRoot +"/" + fileName.substring(0,fileName.length()-5);
-			generateHeatMapFile(doc, outPath);
+			//generateHeatMapFile(doc, outPath);
+			ArrayList<ArrayList<HeatMapUnit>> units = getUnits4CRF(doc);
+			System.out.println(units.size());
+			for(ArrayList<HeatMapUnit> unitArr: units) {
+				for(HeatMapUnit unit: unitArr) {
+					System.out.println("REV:"+unit.revPurpose);
+					System.out.println("S1:"+unit.scD1);
+					System.out.println("S2:"+unit.scD2);
+				}
+				System.out.println("==============");
+			}
 		}
 	}
 
