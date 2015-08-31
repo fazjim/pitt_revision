@@ -1,5 +1,12 @@
 package edu.pitt.lrdc.cs.revision.alignment.model;
 
+/**
+ * Model for HeatMap visualization
+ * 
+ * Update: Also used in CRF sequential tagging
+ * @author zhangfan
+ *
+ */
 public class HeatMapUnit implements Comparable {
 	public int getpD1() {
 		return pD1;

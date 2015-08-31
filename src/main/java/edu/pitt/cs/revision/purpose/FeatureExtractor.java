@@ -16,6 +16,7 @@ import edu.pitt.cs.revision.batch.SentenceInfo;
 import edu.pitt.cs.revision.machinelearning.FeatureName;
 import edu.pitt.cs.revision.machinelearning.JOrthoAssist;
 import edu.pitt.cs.revision.machinelearning.StanfordParserAssist;
+import edu.pitt.lrdc.cs.revision.alignment.model.HeatMapUnit;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
 import edu.pitt.lrdc.cs.revision.model.RevisionOp;
 import edu.pitt.lrdc.cs.revision.model.RevisionPurpose;
@@ -168,6 +169,7 @@ public class FeatureExtractor {
 	// --------------------------incoprate Johannes Daxenberger ad Iryna
 	// Gurevych ----------------------------------
 	public void insertDaTextualFeature() {
+		features.insertFeature("DIFF_CHANGED", Boolean.TYPE);
 		features.insertFeature("DIFF_CAPITAL", Double.TYPE);
 		features.insertFeature("DIFF_DIGIT", Double.TYPE);
 		features.insertFeature("DIFF_SPECIAL", Double.TYPE);
@@ -190,8 +192,15 @@ public class FeatureExtractor {
 		 * I believe putting these together into one function would save a lot
 		 * of computation cost
 		 * 
-		 * But right now I trust the power of the machine
+		 * But right now I choose to trust the power of the machine
 		 */
+		int DIFF_CHANGED = features.getIndex("DIFF_CHANGED");
+		if(oldSentence.equals(newSentence)) {
+			featureVector[DIFF_CHANGED] = Boolean.toString(true);
+		} else {
+			featureVector[DIFF_CHANGED] = Boolean.toString(false);
+		}
+		
 		int oldCapitalNum = OtherAssist.getCapitalNum(oldSentence);
 		int newCapitalNum = OtherAssist.getCapitalNum(newSentence);
 		int numDiffCapital = Math.abs(newCapitalNum - oldCapitalNum);
@@ -1476,6 +1485,7 @@ public class FeatureExtractor {
 
 	}
 
+	
 	// extract features
 	public Object[] extractFeatures(RevisionDocument doc, RevisionUnit ru,
 			boolean usingNgram) {
