@@ -42,6 +42,7 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 					if(unit.pD1>pD1Num) {
 						sentences1.add(tempS1Num);
 						pD1Num = unit.pD1;
+						tempS1Num = unit.sD1;
 					} else {
 						if(unit.sD1>tempS1Num) tempS1Num = unit.sD1;
 					}
@@ -49,11 +50,15 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 					if(unit.pD2>pD2Num) {
 						sentences2.add(tempS2Num);
 						pD2Num = unit.pD2;
+						tempS2Num = unit.sD2;
 					} else {
 						if(unit.sD2>tempS2Num) tempS2Num = unit.sD2;
 					}
 				}
 			}
+			sentences1.add(tempS1Num);
+			sentences2.add(tempS2Num);
+			
 			essayInfo.pD1Num = pD1Num;
 			essayInfo.pD2Num = pD2Num;
 			
@@ -67,6 +72,7 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 			}
 			essayInfo.pS1Num = pS1Num;
 			essayInfo.pS2Num = pS2Num;
+			essayInfo.parsed = true;
 		} 
 			return essayInfo;
 	}
@@ -171,7 +177,7 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 
 		double val_par_old = 0.0;
 		double val_whole_old = 0.0;
-		if (hmu.sD1 != 0) {
+		if (hmu.sD1 != -1) {
 			int paragraphNo = hmu.pD1;
 			val_par_old = hmu.pD1 /  getEssayInfo(essay).pS1Num[paragraphNo-1];
 			val_whole_old = paragraphNo * 1.0 / getEssayInfo(essay).pD1Num;
@@ -499,6 +505,8 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 
 	public ArrayList<Object[]> extractFeatures(ArrayList<ArrayList<HeatMapUnit>> essay,
 			boolean usingNgram) {
+		essayInfo = new EssayInfo();
+		essayInfo.parsed = false;
 		ArrayList<Object[]> features = new ArrayList<Object[]>();
 		for(ArrayList<HeatMapUnit> paragraph: essay) {
 			for(HeatMapUnit hmu: paragraph) {

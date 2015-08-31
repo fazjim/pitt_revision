@@ -1,8 +1,11 @@
 package edu.pitt.cs.revision.purpose;
 
-import cc.mallet.fst.SimpleTagger;
+import java.util.ArrayList;
+
+//Prepare to use crfsuite
 
 public class CRFAssist {
-	private SimpleTagger stagger;
+	
+	
 
 }
