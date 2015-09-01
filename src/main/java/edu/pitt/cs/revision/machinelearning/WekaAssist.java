@@ -69,7 +69,7 @@ public class WekaAssist {
 			int index = featureTable.getIndex(name);
 			if (featureTable.getType(index).equals(String.class)) {
 				atts.addElement(new Attribute(name, (FastVector) null));
-			} else if (featureTable.getType(index).equals(Boolean.class)) {
+			} else if (featureTable.getType(index).equals(Boolean.TYPE)) {
 				FastVector attValBinary = new FastVector();
 				attValBinary.addElement(Boolean.toString(true));
 				attValBinary.addElement(Boolean.toString(false));
@@ -117,11 +117,12 @@ public class WekaAssist {
 						(String) features[i]);
 			} else if (featureTable.getType(i).equals(Boolean.TYPE)) {
 				String name = featureTable.getFeatureName(i);
-				vals[i + 1] = insts.attribute(name).indexOfValue(
+				//System.out.println(features[i]);
+				vals[i + 1] = 1.0 * insts.attribute(name).indexOfValue(
 						(String) features[i]);
 			} else if (featureTable.getType(i).equals(ArrayList.class)) {
 				String name = featureTable.getFeatureName(i);
-				vals[i + 1] = insts.attribute(name).indexOfValue(
+				vals[i + 1] = 1.0 * insts.attribute(name).indexOfValue(
 						(String) features[i]);
 			} else {
 				// System.out.println(featureTable.getFeatureName(i));
@@ -150,7 +151,7 @@ public class WekaAssist {
 					vals[i] = insts.attribute(i).addStringValue(
 							(String) features[i]);
 				}
-			} else if (featureTable.getType(i).equals(Boolean.class)) {
+			} else if (featureTable.getType(i).equals(Boolean.TYPE)) {
 				String name = featureTable.getFeatureName(i);
 				vals[i] = insts.attribute(name).indexOfValue(
 						(String) features[i]);

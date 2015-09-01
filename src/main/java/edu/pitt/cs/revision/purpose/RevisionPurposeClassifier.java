@@ -419,6 +419,7 @@ public class RevisionPurposeClassifier {
 				.getPurposeName(RevisionPurpose.CLAIMS_IDEAS));
 		categories
 				.add(RevisionPurpose.getPurposeName(RevisionPurpose.EVIDENCE));
+		
 		fe.buildFeatures(usingNgram, categories);// do not use ngram
 
 		// First step, build up instances

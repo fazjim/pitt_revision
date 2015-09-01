@@ -129,7 +129,7 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 		if (hmu.sD2!=-1) {
 			
 				int paragraphNo = hmu.pD2;
-				val_par = hmu.sD2 / getEssayInfo(essay).pS2Num[paragraphNo-1];
+				val_par = hmu.sD2 * 1.0/ getEssayInfo(essay).pS2Num[paragraphNo-1];
 				val_whole = paragraphNo * 1.0 / getEssayInfo(essay).pD2Num;
 
 				if (paragraphNo == 1) {
@@ -179,7 +179,7 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 		double val_whole_old = 0.0;
 		if (hmu.sD1 != -1) {
 			int paragraphNo = hmu.pD1;
-			val_par_old = hmu.pD1 /  getEssayInfo(essay).pS1Num[paragraphNo-1];
+			val_par_old = hmu.sD1 * 1.0/  getEssayInfo(essay).pS1Num[paragraphNo-1];
 			val_whole_old = paragraphNo * 1.0 / getEssayInfo(essay).pD1Num;
 
 			if (paragraphNo == 1) {
@@ -380,8 +380,11 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 			val = 1;
 		} else if (hmu.revType.equals("Delete")) {
 			val = 0;
-		} else {
+		} else if(hmu.revType.equals("Modify")) {
 			val = -1;
+		}
+		else {
+			val = 2;
 		}
 		featureVector[featureIndex] = val;
 	}

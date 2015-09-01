@@ -16,8 +16,19 @@ import edu.pitt.lrdc.cs.revision.model.RevisionOp;
 import edu.pitt.lrdc.cs.revision.model.RevisionPurpose;
 import edu.pitt.lrdc.cs.revision.model.RevisionUnit;
 
-
 public class RevisionMapFileGenerator {
+	// If true, then do not distinguish between surfaces
+	public static boolean ignoreSurface = true;
+
+	/**
+	 * If true, then do not distinguish between surfaces
+	 * 
+	 * @param ignoreSurface
+	 */
+	public static void setSurfaceIgnore(boolean ignoreSurface) {
+		ignoreSurface = ignoreSurface;
+	}
+
 	public static String generateTxt(RevisionDocument doc) {
 		String txt = "";
 		txt = addHeader(txt);
@@ -28,17 +39,18 @@ public class RevisionMapFileGenerator {
 		}
 		return txt;
 	}
-	
-	public static ArrayList<ArrayList<HeatMapUnit>> getUnits4CRF(RevisionDocument doc) {
+
+	public static ArrayList<ArrayList<HeatMapUnit>> getUnits4CRF(
+			RevisionDocument doc) {
 		ArrayList<HeatMapUnit> units = generateUnits(doc);
 		adjustUnits(units);
 		ArrayList<ArrayList<HeatMapUnit>> segmentedUnits = new ArrayList<ArrayList<HeatMapUnit>>();
 		int currentP = -1;
 		ArrayList<HeatMapUnit> currentList = null;
-		for(HeatMapUnit unit:units) {
-			if(unit.aVR - currentP > 1) {
-				if(currentList!=null) 
-				segmentedUnits.add(currentList);
+		for (HeatMapUnit unit : units) {
+			if (unit.aVR - currentP > 1) {
+				if (currentList != null)
+					segmentedUnits.add(currentList);
 				currentList = new ArrayList<HeatMapUnit>();
 			}
 			currentP = unit.aVR;
@@ -59,24 +71,26 @@ public class RevisionMapFileGenerator {
 	public static void main(String[] args) throws Exception {
 		String path = "C:\\Not Backed Up\\data\\newSample\\Annotation_A4effort - 18178.txt.xlsx";
 		String outputPath = "C:\\Not Backed Up\\data\\newSample.txt";
-		//RevisionDocument doc = RevisionDocumentReader.readDoc(path);
-		//generateHeatMapFile(doc, outputPath);
+		// RevisionDocument doc = RevisionDocumentReader.readDoc(path);
+		// generateHeatMapFile(doc, outputPath);
 		String root = "C:\\Not Backed Up\\data\\newSample";
 		String outputPathRoot = "C:\\Not Backed Up\\data\\newSampleMap";
 		File folder = new File(root);
 		File[] files = folder.listFiles();
-		for(File tempFile:files){
-			RevisionDocument doc = RevisionDocumentReader.readDoc(tempFile.getAbsolutePath());
+		for (File tempFile : files) {
+			RevisionDocument doc = RevisionDocumentReader.readDoc(tempFile
+					.getAbsolutePath());
 			String fileName = tempFile.getName();
-			String outPath = outputPathRoot +"/" + fileName.substring(0,fileName.length()-5);
-			//generateHeatMapFile(doc, outPath);
+			String outPath = outputPathRoot + "/"
+					+ fileName.substring(0, fileName.length() - 5);
+			// generateHeatMapFile(doc, outPath);
 			ArrayList<ArrayList<HeatMapUnit>> units = getUnits4CRF(doc);
 			System.out.println(units.size());
-			for(ArrayList<HeatMapUnit> unitArr: units) {
-				for(HeatMapUnit unit: unitArr) {
-					System.out.println("REV:"+unit.revPurpose);
-					System.out.println("S1:"+unit.scD1);
-					System.out.println("S2:"+unit.scD2);
+			for (ArrayList<HeatMapUnit> unitArr : units) {
+				for (HeatMapUnit unit : unitArr) {
+					System.out.println("REV:" + unit.revPurpose);
+					System.out.println("S1:" + unit.scD1);
+					System.out.println("S2:" + unit.scD2);
 				}
 				System.out.println("==============");
 			}
@@ -122,7 +136,7 @@ public class RevisionMapFileGenerator {
 		int currentP2 = 1;
 
 		int aVR = 0;
-		
+
 		for (HeatMapUnit hmu : units) {
 			int pD1 = hmu.pD1;
 			int sD1 = hmu.sD1;
@@ -144,7 +158,8 @@ public class RevisionMapFileGenerator {
 			} else {
 				if (pD1 > currentP1) {
 					currentP1 = pD1;
-					if(pD2>currentP2) currentP2 = pD2;
+					if (pD2 > currentP2)
+						currentP2 = pD2;
 					aR++;
 					aVR += 3;
 					aC = sD1;
@@ -157,9 +172,9 @@ public class RevisionMapFileGenerator {
 			hmu.aC = aC;
 			hmu.aVR = aVR;
 		}
-		
-		//Adding another step of vertical view processing
-		
+
+		// Adding another step of vertical view processing
+
 	}
 
 	/**
@@ -215,7 +230,13 @@ public class RevisionMapFileGenerator {
 			String revisionPurpose = RevisionPurpose.getPurposeName(ru
 					.getRevision_purpose());
 
-			if (oldIndices ==null || oldIndices.size() == 0
+			if (ignoreSurface == true
+					&& (ru.getRevision_purpose() == RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING
+							|| ru.getRevision_purpose() == RevisionPurpose.WORDUSAGE_CLARITY || ru
+							.getRevision_purpose() == RevisionPurpose.WORDUSAGE_CLARITY_CASCADED)) {
+				revisionPurpose = "Surface";
+			}
+			if (oldIndices == null || oldIndices.size() == 0
 					|| (oldIndices.size() == 1 && oldIndices.get(0) == -1)) {
 				// Should be add
 				int oldIndex = -1;
