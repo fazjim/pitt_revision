@@ -1,5 +1,6 @@
 package edu.pitt.lrdc.cs.revision.gui;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -37,6 +38,37 @@ public class EditUnit extends JPanel {
 		}
 	};
 
+	public EditUnit(String name, Color color) {
+		this.name = new JLabel();
+		this.name.setText(name);
+		this.name.setBackground(color);
+		//this.name.setForeground(color);
+		checkBox = new JCheckBox();
+		checkBox.addItemListener(itemListener);
+		this.purpose = name;
+
+		addButton.setEnabled(false);
+		addButton.setBackground(color);
+		deleteButton.setEnabled(false);
+		deleteButton.setBackground(color);
+		modifyButton.setEnabled(false);
+		modifyButton.setBackground(color);
+		nochangeButton.setEnabled(false);
+		nochangeButton.setBackground(color);;
+
+		bgroup.add(addButton);
+		bgroup.add(deleteButton);
+		bgroup.add(modifyButton);
+		bgroup.add(nochangeButton);
+		
+		add(checkBox);
+		add(this.name);
+		add(addButton);
+		add(deleteButton);
+		add(modifyButton);
+		add(nochangeButton);
+	}
+	
 	public EditUnit(String name) {
 		this.name = new JLabel();
 		this.name.setText(name);

@@ -39,9 +39,9 @@ public class AlignmentChangePanel extends JPanel {
 	public AlignmentChangePanel(RevisionDocument doc,
 			ArrayList<Integer> oldIndices, ArrayList<Integer> newIndices) {
 		this.doc = doc;
-		confirmButton = new JButton("Confirm");
+		confirmButton = new JButton("Confirm new alignment");
 		confirmButton.setToolTipText("Confirm and save the current selection");
-		cancelButton = new JButton("Cancel");
+		cancelButton = new JButton("Remove alignment");
 		cancelButton.setToolTipText("Cancel the current selections");
 		oldSentenceList = new JList(doc.getOldSentencesArray());
 		newSentenceList = new JList(doc.getNewSentencesArray());
@@ -221,6 +221,7 @@ public class AlignmentChangePanel extends JPanel {
 		} catch(Exception exp) {
 			JOptionPane.showMessageDialog(this, "Alignment could not be changed.\n"+"Trace: "+exp.getMessage());
 		}
+		doc.check();
 	}
 
 	
@@ -250,6 +251,7 @@ public class AlignmentChangePanel extends JPanel {
 		} catch(Exception exp) {
 			JOptionPane.showMessageDialog(this, "Alignment could not be changed.\n"+"Trace: "+exp.getMessage());
 		}
+		doc.check();
 	}
 	
 	public void cancel() {

@@ -126,6 +126,7 @@ public class AdvBaseLevelPanel extends JPanel implements LevelPanel {
 			}
 		}
 		doc.getRoot().clear();
+		ddp.reload();
 	}
 
 	boolean changeAlignment = false;
@@ -402,8 +403,8 @@ public class AdvBaseLevelPanel extends JPanel implements LevelPanel {
 		sentenceList = new JList(oldSentences);
 		newSentenceList = new JList(newSentences);
 
-		sentenceList.setVisibleRowCount(15);
-		newSentenceList.setVisibleRowCount(15);
+		sentenceList.setVisibleRowCount(5);
+		newSentenceList.setVisibleRowCount(5);
 		ListSelectionHandler listHandler = new ListSelectionHandler();
 		sentenceList.getSelectionModel().addListSelectionListener(listHandler);
 		newSentenceList.getSelectionModel().addListSelectionListener(

@@ -797,16 +797,38 @@ public class RevisionDocument {
 		return info;
 	}
 	
+	//After realignment remove the wrong annotations
+	public void check() {
+		ArrayList<RevisionUnit> units = this.getRoot().getRevisionUnitAtLevel(0);
+		ArrayList<RevisionUnit> removes = new ArrayList<RevisionUnit>();
+		for(RevisionUnit unit: units) {
+			ArrayList<Integer> oldIndices = unit.getOldSentenceIndex();
+			ArrayList<Integer> newIndices = unit.getNewSentenceIndex();
+			if(oldIndices == null || oldIndices.size()==0 || (oldIndices.size()==1&&oldIndices.get(0)==-1)) {
+				if(unit.getRevision_op()!=RevisionOp.ADD)  removes.add(unit);
+			} else if(newIndices == null || newIndices.size()==0 ||(newIndices.size()==1&&newIndices.get(0)==-1)) {
+				if(unit.getRevision_op()!=RevisionOp.DELETE) removes.add(unit);
+			} else {
+				if(this.getOldSentences(oldIndices).trim().equals(this.getNewSentences(newIndices).trim())) {
+					removes.add(unit);
+				}
+			}
+		}
+		for(RevisionUnit rem: removes) {
+			units.remove(rem);
+		}
+	}
+	
 	public String[] regenerateDrafts() {
 		String[] drafts = new String[2];
-		String draft1 = "";
-		String draft2 = "";
+		String draft1 = "        ";
+		String draft2 = "        ";
 		int paraNum = 1;
 		for(int i = 0;i<oldDraftSentences.size();i++) {
 			int index = i+1;
 			int currParaNo = this.getParaNoOfOldSentence(index);
 			if(currParaNo > paraNum) {
-				draft1 += "\n";
+				draft1 += "\n        ";
 				draft1 += oldDraftSentences.get(i) + " ";
 				paraNum = currParaNo;
 			} else {
@@ -819,7 +841,7 @@ public class RevisionDocument {
 			int index = i+1;
 			int currParaNo = this.getParaNoOfNewSentence(index);
 			if(currParaNo > paraNum) {
-				draft2 += "\n";
+				draft2 += "\n        ";
 				draft2 += newDraftSentences.get(i) + " ";
 				paraNum = currParaNo;
 			} else {

@@ -7,23 +7,28 @@ public class ContentBox extends Box{
 	JTextArea oldSentence;
 	public ContentBox(int axis) {
 		super(axis);
-		newSentence = new JTextArea("Sentence from current version:\n");
-		oldSentence = new JTextArea("Sentence from the last version:\n");
+		
+		newSentence = new JTextArea("Sentence from NEW version:\n");
+		oldSentence = new JTextArea("Sentence from the OLD version:\n");
+		newSentence.setRows(3);
+		oldSentence.setRows(3);
+		oldSentence.setLineWrap(true);
+		newSentence.setLineWrap(true);
 		newSentence.setEditable(false);
 		oldSentence.setEditable(false);
 		
 		JScrollPane newPane = new JScrollPane(newSentence);
 		JScrollPane oldPane = new JScrollPane(oldSentence);
 	
-		add(newPane);
 		add(oldPane);
+		add(newPane);
 	}
 	
 	public void setNewSentence(String sent) {
-		this.newSentence.setText("Sentence from current version:\n"+sent);
+		this.newSentence.setText("Sentence from NEW version:\n"+sent);
 	}
 	
 	public void setOldSentence(String sent) {
-		this.oldSentence.setText("Sentence from the last version:\n"+sent);
+		this.oldSentence.setText("Sentence from the OLD version:\n"+sent);
 	}
 }

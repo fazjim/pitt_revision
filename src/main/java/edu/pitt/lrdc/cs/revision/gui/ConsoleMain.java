@@ -8,6 +8,8 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 
 public class ConsoleMain extends JFrame{
@@ -50,11 +52,28 @@ public class ConsoleMain extends JFrame{
 	}
 	
 	public static void main(String[] args) {
+		try {
+			UIManager.setLookAndFeel(UIManager
+					.getCrossPlatformLookAndFeelClassName());
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedLookAndFeelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		ConsoleMain mf = new ConsoleMain();
 		mf.setTitle("Console");
 		// mf.load("dummy");
 		mf.show();
 		mf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		
 	}
 	
 	public void showAnnotation() {

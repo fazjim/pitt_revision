@@ -22,6 +22,7 @@ public class Docx2TxtTransformer {
 	public static void transform(String srcPath, String dstPath) throws IOException, InvalidFormatException, OpenXML4JException, XmlException {
 		InputStream fis = new FileInputStream(srcPath);
 		POITextExtractor extractor;
+		//System.out.println("SRC:"+srcPath);
 		// if docx
 		if (srcPath.toLowerCase().endsWith(".docx")) {
 		    XWPFDocument doc = new XWPFDocument(fis);
@@ -56,5 +57,9 @@ public class Docx2TxtTransformer {
 			String dstFile = dstFolderPath + "/" +  file.getName().replace(".docx", ".txt");
 			transform(file.getAbsolutePath(),dstFile);
 		}
+	}
+	
+	public static void main(String[] args) throws InvalidFormatException, IOException, OpenXML4JException, XmlException {
+		transformFolder("C:\\Not Backed Up\\data\\Braverman_raw","C:\\Not Backed Up\\data\\Braverman_raw_txt");
 	}
 }

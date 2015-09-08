@@ -21,7 +21,7 @@ public class AnnotateBox extends JPanel{
 	public void loadTable() {
 		for(int i = RevisionPurpose.START;i<=RevisionPurpose.END;i++) {
 			String purposeName = RevisionPurpose.getPurposeName(i);
-			table.put(purposeName, new EditUnit(purposeName));
+			table.put(purposeName, new EditUnit(purposeName,ColorConstants.getColor(i)));
 		}
 	}
 	
@@ -30,17 +30,20 @@ public class AnnotateBox extends JPanel{
 	}
 	
 	public AnnotateBox() {
-		this.setLayout(new GridLayout(0,2));
+		this.setLayout(new GridLayout(0,1));
 		loadTable();
-		Iterator<String> it = table.keySet().iterator();
+		//Iterator<String> it = table.keySet().iterator();
 		add(statusDisplay);
 		JLabel dummyDisplay = new JLabel("-----------------------------");
 		add(dummyDisplay);
-		while(it.hasNext()) {
-			String purposeName = it.next();
+		//while(it.hasNext()) {
+		//	String purposeName = it.next();
+		//	add(table.get(purposeName));
+		//}
+		for(int i = RevisionPurpose.START;i<=RevisionPurpose.END;i++) {
+			String purposeName = RevisionPurpose.getPurposeName(i);
 			add(table.get(purposeName));
 		}
-		
 	}
 	
 	public void setEnabled(boolean enabled) {
