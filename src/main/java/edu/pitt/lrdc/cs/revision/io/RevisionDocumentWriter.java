@@ -220,7 +220,7 @@ public class RevisionDocumentWriter {
 			Hashtable<Integer, HashSet<Integer>> newRevLocations = new Hashtable<Integer, HashSet<Integer>>();
 			Hashtable<Integer, Integer> revPurposeIndex = new Hashtable<Integer, Integer>();
 			Hashtable<Integer, Integer> revOpIndex = new Hashtable<Integer, Integer>();
-			System.out.println("____");
+//			System.out.println("____");
 			for (RevisionUnit ru : rus) {
 //				System.out.println("LEVEL:" + i + ",INDEX:"
 //						+ ru.getRevision_index());
@@ -292,7 +292,7 @@ public class RevisionDocumentWriter {
 				if (revPurposeStr.endsWith(","))
 					revPurposeStr = revPurposeStr.substring(0,
 							revPurposeStr.length() - 1);
-				System.out.println(start + i * 3);
+				//System.out.println(start + i * 3);
 				sheet0.getRow(location).createCell(start + i * 3)
 						.setCellValue(revPurposeStr);
 				sheet0.getRow(location).createCell(start + i * 3 + 1)
@@ -323,7 +323,7 @@ public class RevisionDocumentWriter {
 				if (revPurposeStr.endsWith(","))
 					revPurposeStr = revPurposeStr.substring(0,
 							revPurposeStr.length() - 1);
-				System.out.println("NEWLOC:"+newLoc);
+				//System.out.println("NEWLOC:"+newLoc);
 				sheet1.getRow(newLoc).createCell(start + i * 3)
 						.setCellValue(revPurposeStr);
 				sheet1.getRow(newLoc).createCell(start + i * 3 + 1)

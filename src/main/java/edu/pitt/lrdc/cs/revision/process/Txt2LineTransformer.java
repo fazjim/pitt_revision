@@ -280,7 +280,7 @@ public class Txt2LineTransformer {
 	//change this later to let it be specified by the gui user
 	private Charset getCorrectCharsetToApply() {
 		// TODO Auto-generated method stub
-		return Charset.forName("Windows-1252"); //For this new dataset, usually should be utf-8
+		return Charset.forName("UTF-8"); //For this new dataset, usually should be utf-8
 	}
 
 	public void processFile(String path, String destination) throws IOException {

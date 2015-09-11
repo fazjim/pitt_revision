@@ -33,7 +33,7 @@ public class StringConverter {
 	}
 	
 	public static Charset getCorrectCharsetToApply() {
-		return Charset.forName("Windows-1252");
+		return Charset.forName("UTF-8");
 	}
 	
 	public static void main(String[] args) throws IOException {

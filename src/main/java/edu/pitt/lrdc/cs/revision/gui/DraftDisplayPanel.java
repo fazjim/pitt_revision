@@ -11,6 +11,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.Document;
 import javax.swing.text.Highlighter;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
@@ -133,6 +134,48 @@ public class DraftDisplayPanel extends JPanel {
 					}
 				}
 			}
+			currP = 0;
+			for (int i = 0; i < newSentences.size(); i++) {
+				int index = i + 1;
+				int paraNo = doc.getParaNoOfNewSentence(index);
+				if (paraNo > currP) {
+					if (currP == 0) {
+						addSent(newDraftPane.getStyledDocument(), "        ",
+								-2, newDraftStyle);
+					} else {
+						addSent(newDraftPane.getStyledDocument(), "\n        ",
+								-2, newDraftStyle);
+					}
+					currP = paraNo;
+				} else {
+					addSent(newDraftPane.getStyledDocument(), " ", -2,
+							newDraftStyle);
+				}
+				if (newPurposeIndices.containsKey(index)) {
+					String newSent = doc.getNewSentence(index);
+					addSent(newDraftPane.getStyledDocument(), newSent,
+							newPurposeIndices.get(index), newDraftStyle);
+				} else {
+					String newSent = doc.getNewSentence(index).trim();
+					ArrayList<Integer> oldIndices = doc.getOldFromNew(index);
+					if (oldIndices == null
+							|| oldIndices.size() == 0
+							|| (oldIndices.size() == 1 && oldIndices.get(0) == -1)) {
+						addSent(newDraftPane.getStyledDocument(), newSent, -1,
+								newDraftStyle);
+					} else {
+						String oldSent = doc.getOldSentences(
+								doc.getOldFromNew(index)).trim();
+						if (oldSent.equals(newSent)) {
+							addSent(newDraftPane.getStyledDocument(), newSent,
+									-2, newDraftStyle);
+						} else {
+							addSent(newDraftPane.getStyledDocument(), newSent,
+									-1, newDraftStyle);
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -165,6 +208,7 @@ public class DraftDisplayPanel extends JPanel {
 			}
 		}
 		oldDraftPane.setSelectedTextColor(new Color(51, 51, 255));
+
 		newDraftPane.setSelectedTextColor(new Color(51, 51, 255));
 
 		ArrayList<String> oldSentences = doc.getOldDraftSentences();
@@ -262,52 +306,63 @@ public class DraftDisplayPanel extends JPanel {
 			Hashtable<Integer, Style> oldDraftStyle) {
 
 		Style normalStyle = oldDraftPane.addStyle("NormalStyle", null);
+		StyleConstants.setBackground(normalStyle, Color.WHITE);
+		StyleConstants.setBold(normalStyle, false);
 		oldDraftStyle.put(-2, normalStyle);
 
 		Style claimStyle = oldDraftPane.addStyle("claimStyle", null);
 		StyleConstants.setBackground(claimStyle, ColorConstants.claimColor);
+		StyleConstants.setBold(claimStyle, false);
 		oldDraftStyle.put(RevisionPurpose.CLAIMS_IDEAS, claimStyle);
 
 		Style warrantStyle = oldDraftPane.addStyle("warrantStyle", null);
 		StyleConstants.setBackground(warrantStyle, ColorConstants.warrantColor);
+		StyleConstants.setBold(warrantStyle, false);
 		oldDraftStyle.put(RevisionPurpose.CD_WARRANT_REASONING_BACKING,
 				warrantStyle);
 
 		Style evidenceStyle = oldDraftPane.addStyle("evidenceStyle", null);
 		StyleConstants.setBackground(evidenceStyle,
 				ColorConstants.evidenceColor);
+		StyleConstants.setBold(evidenceStyle, false);
 		oldDraftStyle.put(RevisionPurpose.EVIDENCE, evidenceStyle);
 
 		Style rebuttalStyle = oldDraftPane.addStyle("rebuttalStyle", null);
 		StyleConstants.setBackground(rebuttalStyle,
 				ColorConstants.rebuttalColor);
+		StyleConstants.setBold(rebuttalStyle, false);
 		oldDraftStyle.put(RevisionPurpose.CD_REBUTTAL_RESERVATION,
 				rebuttalStyle);
 
 		Style generalStyle = oldDraftPane.addStyle("generalStyle", null);
 		StyleConstants.setBackground(generalStyle, ColorConstants.generalColor);
-		oldDraftStyle.put(RevisionPurpose.CD_REBUTTAL_RESERVATION,
-				rebuttalStyle);
+		StyleConstants.setBold(generalStyle, false);
+		oldDraftStyle.put(RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT,
+				generalStyle);
 
 		Style conventionStyle = oldDraftPane.addStyle("conventionStyle", null);
 		StyleConstants.setBackground(conventionStyle,
 				ColorConstants.conventionColor);
+		StyleConstants.setBold(conventionStyle, false);
 		oldDraftStyle.put(RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING,
 				conventionStyle);
 
 		Style wordStyle = oldDraftPane.addStyle("wordStyle", null);
 		StyleConstants.setBackground(wordStyle, ColorConstants.wordColor);
+		StyleConstants.setBold(wordStyle, false);
 		oldDraftStyle.put(RevisionPurpose.WORDUSAGE_CLARITY, wordStyle);
 
 		Style cascadedStyle = oldDraftPane.addStyle("cascadedStyle", null);
 		StyleConstants.setBackground(cascadedStyle,
 				ColorConstants.cascadedColor);
+		StyleConstants.setBold(cascadedStyle, false);
 		oldDraftStyle.put(RevisionPurpose.WORDUSAGE_CLARITY_CASCADED,
 				cascadedStyle);
 
 		Style unannotatedStyle = oldDraftPane.addStyle("uannotatedStyle", null);
 		StyleConstants.setBackground(unannotatedStyle,
 				ColorConstants.unannotatedColor);
+		StyleConstants.setBold(unannotatedStyle, false);
 		oldDraftStyle.put(-1, unannotatedStyle);
 	}
 
@@ -326,15 +381,41 @@ public class DraftDisplayPanel extends JPanel {
 
 		String text;
 		if (isOld) {
-			text = oldDraftPane.getText();
+			try {
+				Document doc = oldDraftPane.getDocument();
+				text = doc.getText(0, doc.getLength());
+			} catch (Exception exp) {
+				text = oldDraftPane.getText();
+			}
+			// text = oldDraftPane.getText();
 		} else {
-			text = newDraftPane.getText();
+			try {
+				Document doc = newDraftPane.getDocument();
+				text = doc.getText(0, doc.getLength());
+			} catch (Exception exp) {
+				text = newDraftPane.getText();
+			}
 		}
 
 		int p0 = text.indexOf(find);
 		int p1 = p0 + find.length();
 		try {
 			hl.addHighlight(p0, p1, DefaultHighlighter.DefaultPainter);
+			if (isOld) {
+				Style boldStyle = oldDraftPane.addStyle("BoldStyle", null);
+				StyleConstants.setBold(boldStyle, true);
+				oldDraftPane.getStyledDocument().setCharacterAttributes(p0, find.length(),
+						boldStyle, true);
+				oldDraftPane.setSelectionStart(p0);
+				oldDraftPane.setSelectionEnd(p1);
+			} else {
+				Style boldStyle = newDraftPane.addStyle("BoldStyle", null);
+				StyleConstants.setBold(boldStyle, true);
+				newDraftPane.getStyledDocument().setCharacterAttributes(p0, find.length(),
+						boldStyle, true);
+				newDraftPane.setSelectionStart(p0);
+				newDraftPane.setSelectionEnd(p1);
+			}
 			// if(isOld) oldDraftPane.requestFocusInWindow();
 			// else newDraftPane.requestFocusInWindow();
 		} catch (BadLocationException e) {

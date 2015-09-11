@@ -51,9 +51,11 @@ public class AdvBaseLevelPanel extends JPanel implements LevelPanel {
 		ddp.highLight(false, highlightNew);
 	}
 	
+	//ArrayList<Integer> currentOldSentenceIndex;
+	//ArrayList<Integer> currentNewSentenceIndex;
 	public void registerRevision() {
 		ArrayList<SelectionUnit> sus = annotateBox.getSelectedUnits();
-		if (currentRU == null || currentRU.size() == 0) {
+		if (currentRU == null || currentRU.size()==0) {
 			// do nothing
 			System.err.println("Do nothing");
 		} else {
@@ -125,6 +127,7 @@ public class AdvBaseLevelPanel extends JPanel implements LevelPanel {
 				}
 			}
 		}
+		doc.check();
 		doc.getRoot().clear();
 		ddp.reload();
 	}
@@ -268,7 +271,7 @@ public class AdvBaseLevelPanel extends JPanel implements LevelPanel {
 			} else {
 				// changing alignment
 			}
-			highlight();
+			//highlight();
 		}
 
 		public void valueChanged(ListSelectionEvent e) {
@@ -393,7 +396,9 @@ public class AdvBaseLevelPanel extends JPanel implements LevelPanel {
 					annotateBox.display("Please annotate the revision");
 				}
 			}
+			highlight();
 		}
+		
 	}
 
 	public AdvBaseLevelPanel(RevisionDocument doc) {

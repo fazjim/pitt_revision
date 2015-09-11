@@ -263,14 +263,34 @@ public class RevisionDocumentReader {
 			int newSentenceIndex = (int) row.getCell(0).getNumericCellValue();
 			if (row.getCell(2) != null) {
 				String oldSent = row.getCell(2).toString();
-				int oldSentenceIndex = -1;
-				try {
-					oldSentenceIndex = (int) Double.parseDouble(oldSent);
-				} catch (Exception exp) {
-					// do nothing
+			
+				if(oldSent.contains(",")) {
+					String[] oldSents = oldSent.split(",");
+					for(String oldIndexSent: oldSents) {
+						int oldSentenceIndex = -1;
+						try {
+							oldSentenceIndex = (int) Double.parseDouble(oldIndexSent);
+						} catch (Exception exp) {
+							// do nothing
+						}
+						if(oldSentenceIndex!=-1) {
+						doc.addNewMappingIndex(newSentenceIndex, oldSentenceIndex);
+						doc.addOldMappingIndex(oldSentenceIndex, newSentenceIndex);
+						}
+					}
+				} else {
+					int oldSentenceIndex = -1;
+					try {
+						oldSentenceIndex = (int) Double.parseDouble(oldSent);
+					} catch (Exception exp) {
+						// do nothing
+					}
+					if(oldSentenceIndex!=-1) {
+					doc.addNewMappingIndex(newSentenceIndex, oldSentenceIndex);
+					doc.addOldMappingIndex(oldSentenceIndex, newSentenceIndex);
+					}
 				}
-				doc.addNewMappingIndex(newSentenceIndex, oldSentenceIndex);
-				doc.addOldMappingIndex(oldSentenceIndex, newSentenceIndex);
+				
 			}
 			// Add paragraph information
 			int cellIndex = 5;

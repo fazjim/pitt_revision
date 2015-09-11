@@ -109,7 +109,8 @@ public class AlignmentChangePanel extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
-				cancel();
+				//cancel();
+				remove();
 			}
 
 		});
@@ -221,7 +222,7 @@ public class AlignmentChangePanel extends JPanel {
 		} catch(Exception exp) {
 			JOptionPane.showMessageDialog(this, "Alignment could not be changed.\n"+"Trace: "+exp.getMessage());
 		}
-		doc.check();
+		//doc.check();
 	}
 
 	

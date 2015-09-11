@@ -142,7 +142,8 @@ public class PhraseSentenceMerger {
 	
 	private static Charset getCorrectCharsetToApply() {
 		// TODO Auto-generated method stub
-		return Charset.forName("Windows-1252");
+		//return Charset.forName("Windows-1252");
+		return Charset.forName("UTF-8");
 	}
 
 	public static void adjustNew(RevisionDocument doc) {

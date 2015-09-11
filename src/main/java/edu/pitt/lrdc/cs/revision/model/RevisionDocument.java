@@ -159,13 +159,15 @@ public class RevisionDocument {
 		}
 
 		for (Integer newIndex : newIndices) {
-			ArrayList<Integer> alignments = mapNewtoOld.get(newIndex); //Has already changed!!!!
+			ArrayList<Integer> alignments = mapNewtoOld.get(newIndex); // Has
+																		// already
+																		// changed!!!!
 			ArrayList<Integer> newAlignments = new ArrayList<Integer>();
 			for (int i = 0; i < alignments.size(); i++) {
 				int val = alignments.get(i);
 				if (val > startIndex)
 					val = val - num; // move up by num
-				//alignments.set(i, val);
+				// alignments.set(i, val);
 				newAlignments.add(val);
 			}
 			changeNewAlignment(newIndex, newAlignments);
@@ -187,7 +189,7 @@ public class RevisionDocument {
 				int val = alignments.get(i);
 				if (val > startIndex)
 					val = val - num;
-				//alignments.set(i, val);
+				// alignments.set(i, val);
 				newAlignments.add(val);
 			}
 			changeOldAlignment(oldIndex, newAlignments);
@@ -207,7 +209,7 @@ public class RevisionDocument {
 			for (Integer i : indices) {
 				if (i != -1)
 					sent += getNewSentence(i) + " ";
-					//sent += getNewSentence(i) + "\n";
+				// sent += getNewSentence(i) + "\n";
 			}
 		}
 		return sent.trim();
@@ -220,7 +222,7 @@ public class RevisionDocument {
 			for (Integer i : indices) {
 				if (i > 0)
 					sent += getOldSentence(i) + " ";
-					//sent += getOldSentence(i) + "\n";
+				// sent += getOldSentence(i) + "\n";
 			}
 		}
 		return sent.trim();
@@ -278,11 +280,11 @@ public class RevisionDocument {
 	public ArrayList<String> getNewDraftSentences() {
 		return newDraftSentences;
 	}
-	
+
 	public ArrayList<String> getOldDraftSentences() {
 		return oldDraftSentences;
 	}
-	
+
 	/**
 	 * For GUI design
 	 * 
@@ -355,21 +357,24 @@ public class RevisionDocument {
 	 * @param oldSentIndex
 	 */
 	public void addNewMappingIndex(int newSentIndex, int oldSentIndex) {
-		if (mapNewtoOld.containsKey(newSentIndex)) {
-			ArrayList<Integer> arr = mapNewtoOld.get(newSentIndex);
-			boolean isFound = false;
-			for (Integer index : arr) {
-				if (index == oldSentIndex) {
-					isFound = true;
-					break;
+		if (newSentIndex != -1) {
+			if (mapNewtoOld.containsKey(newSentIndex)) {
+				ArrayList<Integer> arr = mapNewtoOld.get(newSentIndex);
+				boolean isFound = false;
+				for (Integer index : arr) {
+					if (index == oldSentIndex) {
+						isFound = true;
+						break;
+					}
 				}
+				if (!isFound && oldSentIndex != -1)
+					arr.add(oldSentIndex);
+			} else {
+				ArrayList<Integer> arr = new ArrayList<Integer>();
+				if (oldSentIndex != -1)
+					arr.add(oldSentIndex);
+				this.mapNewtoOld.put(newSentIndex, arr);
 			}
-			if (!isFound)
-				arr.add(oldSentIndex);
-		} else {
-			ArrayList<Integer> arr = new ArrayList<Integer>();
-			arr.add(oldSentIndex);
-			this.mapNewtoOld.put(newSentIndex, arr);
 		}
 	}
 
@@ -380,21 +385,24 @@ public class RevisionDocument {
 	 * @param newSentIndex
 	 */
 	public void addOldMappingIndex(int oldSentIndex, int newSentIndex) {
-		if (mapOldtoNew.containsKey(oldSentIndex)) {
-			ArrayList<Integer> arr = mapOldtoNew.get(oldSentIndex);
-			boolean isFound = false;
-			for (Integer index : arr) {
-				if (index == newSentIndex) {
-					isFound = true;
-					break;
+		if (oldSentIndex != -1) {
+			if (mapOldtoNew.containsKey(oldSentIndex)) {
+				ArrayList<Integer> arr = mapOldtoNew.get(oldSentIndex);
+				boolean isFound = false;
+				for (Integer index : arr) {
+					if (index == newSentIndex) {
+						isFound = true;
+						break;
+					}
 				}
+				if (!isFound)
+					arr.add(newSentIndex);
+			} else {
+				ArrayList<Integer> arr = new ArrayList<Integer>();
+				if (newSentIndex != -1)
+					arr.add(newSentIndex);
+				this.mapOldtoNew.put(oldSentIndex, arr);
 			}
-			if (!isFound)
-				arr.add(newSentIndex);
-		} else {
-			ArrayList<Integer> arr = new ArrayList<Integer>();
-			arr.add(newSentIndex);
-			this.mapOldtoNew.put(oldSentIndex, arr);
 		}
 	}
 
@@ -461,10 +469,16 @@ public class RevisionDocument {
 	 * @param index
 	 */
 	public void removeIndex(ArrayList<Integer> arr, int index) {
-		for (int i = 0; i < arr.size(); i++) {
+		/*
+		 * for (int i = 0; i < arr.size(); i++) { if (arr.get(i) == index) {
+		 * arr.remove(i); return; } }
+		 */
+		int i = 0;
+		while (i < arr.size()) {
 			if (arr.get(i) == index) {
 				arr.remove(i);
-				return;
+			} else {
+				i++;
 			}
 		}
 	}
@@ -474,31 +488,33 @@ public class RevisionDocument {
 	}
 
 	public void mergeOldSentences(int oldIndexStart, int num) {
-		if(num == 1) return;
+		if (num == 1)
+			return;
 		String mergedText = "";
-		for(int i = oldIndexStart;i<oldIndexStart+num;i++) {
-			mergedText += oldDraftSentences.get(i-1)+ " ";
+		for (int i = oldIndexStart; i < oldIndexStart + num; i++) {
+			mergedText += oldDraftSentences.get(i - 1) + " ";
 		}
 		mergedText = mergedText.trim();
-		for(int i = 0;i<num-1;i++) {
-			oldDraftSentences.remove(oldIndexStart-1);
+		for (int i = 0; i < num - 1; i++) {
+			oldDraftSentences.remove(oldIndexStart - 1);
 		}
-		oldDraftSentences.set(oldIndexStart-1, mergedText);
+		oldDraftSentences.set(oldIndexStart - 1, mergedText);
 	}
-	
+
 	public void mergeNewSentences(int newIndexStart, int num) {
-		if(num == 1) return; //do nothing;
+		if (num == 1)
+			return; // do nothing;
 		String mergedText = "";
-		for(int i = newIndexStart;i<newIndexStart + num;i++)  {
-			mergedText += newDraftSentences.get(i-1) + " ";
+		for (int i = newIndexStart; i < newIndexStart + num; i++) {
+			mergedText += newDraftSentences.get(i - 1) + " ";
 		}
 		mergedText = mergedText.trim();
-		for(int i = 0;i<num-1;i++) {
-			newDraftSentences.remove(newIndexStart-1);
+		for (int i = 0; i < num - 1; i++) {
+			newDraftSentences.remove(newIndexStart - 1);
 		}
-		newDraftSentences.set(newIndexStart-1, mergedText);
+		newDraftSentences.set(newIndexStart - 1, mergedText);
 	}
-	
+
 	/**
 	 * Change the alignment of the new sentence
 	 * 
@@ -514,13 +530,22 @@ public class RevisionDocument {
 				removeIndex(this.mapOldtoNew.get(oldIndex), newIndex);
 			}
 		}
-		for (Integer oldIndex : oldIndices) {
-			if (this.mapOldtoNew.containsKey(oldIndex)) {
-				addIndex(this.mapOldtoNew.get(oldIndex), newIndex);
-			} else {
-				ArrayList<Integer> newArr = new ArrayList<Integer>();
-				newArr.add(newIndex);
-				this.mapOldtoNew.put(oldIndex, newArr);
+
+		// Should remove the correlated revisions
+		ArrayList<RevisionUnit> toRemove = this.getRoot()
+				.getRevisionUnitNewAtLevel(0, newIndex);
+		for (RevisionUnit unit : toRemove) {
+			unit.setAbandoned();
+		}
+		if (newIndex != -1) {
+			for (Integer oldIndex : oldIndices) {
+				if (this.mapOldtoNew.containsKey(oldIndex)) {
+					addIndex(this.mapOldtoNew.get(oldIndex), newIndex);
+				} else {
+					ArrayList<Integer> newArr = new ArrayList<Integer>();
+					newArr.add(newIndex);
+					this.mapOldtoNew.put(oldIndex, newArr);
+				}
 			}
 		}
 		this.mapNewtoOld.put(newIndex, oldIndices);
@@ -541,13 +566,22 @@ public class RevisionDocument {
 				removeIndex(this.mapNewtoOld.get(newIndex), oldIndex);
 			}
 		}
+		// Should remove the correlated revisions
+		ArrayList<RevisionUnit> toRemove = this.getRoot()
+				.getRevisionUnitOldAtLevel(0, oldIndex);
+		for (RevisionUnit unit : toRemove) {
+			unit.setAbandoned();
+		}
+
 		for (Integer newIndex : newIndices) {
-			if (this.mapNewtoOld.containsKey(newIndex)) {
-				addIndex(this.mapNewtoOld.get(newIndex), oldIndex);
-			} else {
-				ArrayList<Integer> oldArr = new ArrayList<Integer>();
-				oldArr.add(oldIndex);
-				this.mapNewtoOld.put(newIndex, oldArr);
+			if (oldIndex != -1) {
+				if (this.mapNewtoOld.containsKey(newIndex)) {
+					addIndex(this.mapNewtoOld.get(newIndex), oldIndex);
+				} else {
+					ArrayList<Integer> oldArr = new ArrayList<Integer>();
+					oldArr.add(oldIndex);
+					this.mapNewtoOld.put(newIndex, oldArr);
+				}
 			}
 		}
 		this.mapOldtoNew.put(oldIndex, newIndices);
@@ -796,51 +830,73 @@ public class RevisionDocument {
 		info.setContentEdits(contentEdits);
 		return info;
 	}
-	
-	//After realignment remove the wrong annotations
+
+	public void removeNumber(ArrayList<Integer> list) {
+		int i = 0;
+		while (i < list.size()) {
+			if (list.get(i) == -1) {
+				list.remove(i);
+			} else {
+				i++;
+			}
+		}
+	}
+
+	// After realignment remove the wrong annotations
 	public void check() {
-		ArrayList<RevisionUnit> units = this.getRoot().getRevisionUnitAtLevel(0);
+		ArrayList<RevisionUnit> units = this.getRoot()
+				.getRevisionUnitAtLevel(0);
+
 		ArrayList<RevisionUnit> removes = new ArrayList<RevisionUnit>();
-		for(RevisionUnit unit: units) {
+		for (RevisionUnit unit : units) {
 			ArrayList<Integer> oldIndices = unit.getOldSentenceIndex();
 			ArrayList<Integer> newIndices = unit.getNewSentenceIndex();
-			if(oldIndices == null || oldIndices.size()==0 || (oldIndices.size()==1&&oldIndices.get(0)==-1)) {
-				if(unit.getRevision_op()!=RevisionOp.ADD)  removes.add(unit);
-			} else if(newIndices == null || newIndices.size()==0 ||(newIndices.size()==1&&newIndices.get(0)==-1)) {
-				if(unit.getRevision_op()!=RevisionOp.DELETE) removes.add(unit);
+			removeNumber(oldIndices);
+			removeNumber(newIndices);
+
+			if (oldIndices == null || oldIndices.size() == 0
+					|| (oldIndices.size() == 1 && oldIndices.get(0) == -1)) {
+				if (unit.getRevision_op() != RevisionOp.ADD)
+					removes.add(unit);
+			} else if (newIndices == null || newIndices.size() == 0
+					|| (newIndices.size() == 1 && newIndices.get(0) == -1)) {
+				if (unit.getRevision_op() != RevisionOp.DELETE)
+					removes.add(unit);
 			} else {
-				if(this.getOldSentences(oldIndices).trim().equals(this.getNewSentences(newIndices).trim())) {
+				if (this.getOldSentences(oldIndices).trim()
+						.equals(this.getNewSentences(newIndices).trim())) {
 					removes.add(unit);
 				}
 			}
 		}
-		for(RevisionUnit rem: removes) {
-			units.remove(rem);
+		for (RevisionUnit rem : removes) {
+			// units.remove(rem);
+			rem.setAbandoned();
 		}
 	}
-	
+
 	public String[] regenerateDrafts() {
 		String[] drafts = new String[2];
 		String draft1 = "        ";
 		String draft2 = "        ";
 		int paraNum = 1;
-		for(int i = 0;i<oldDraftSentences.size();i++) {
-			int index = i+1;
+		for (int i = 0; i < oldDraftSentences.size(); i++) {
+			int index = i + 1;
 			int currParaNo = this.getParaNoOfOldSentence(index);
-			if(currParaNo > paraNum) {
+			if (currParaNo > paraNum) {
 				draft1 += "\n        ";
 				draft1 += oldDraftSentences.get(i) + " ";
 				paraNum = currParaNo;
 			} else {
-				draft1 += oldDraftSentences.get(i)+ " ";
+				draft1 += oldDraftSentences.get(i) + " ";
 			}
 		}
-		
+
 		paraNum = 1;
-		for(int i = 0;i<newDraftSentences.size();i++) {
-			int index = i+1;
+		for (int i = 0; i < newDraftSentences.size(); i++) {
+			int index = i + 1;
 			int currParaNo = this.getParaNoOfNewSentence(index);
-			if(currParaNo > paraNum) {
+			if (currParaNo > paraNum) {
 				draft2 += "\n        ";
 				draft2 += newDraftSentences.get(i) + " ";
 				paraNum = currParaNo;
