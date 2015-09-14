@@ -29,8 +29,8 @@ public class MainFrame extends JFrame {
 		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 		int width = gd.getDisplayMode().getWidth();
 		int height = gd.getDisplayMode().getHeight();
-		width = (int)(width* 0.8);
-		height = (int)(height *0.8);
+		width = (int)(width* 0.95);
+		height = (int)(height *0.95);
 		setSize(width, height);
 		//setSize(1000, 800);
 		//pack();

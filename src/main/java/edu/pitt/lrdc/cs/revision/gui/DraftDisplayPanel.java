@@ -42,6 +42,8 @@ public class DraftDisplayPanel extends JPanel {
 		newDraftPane = new JTextPane();
 		newDraftPane.setSize(400, 400);
 		newDraftPane.setText(newDraft);
+		
+		
 
 		JScrollPane oldSp = new JScrollPane(oldDraftPane);
 		JScrollPane newSp = new JScrollPane(newDraftPane);
@@ -69,6 +71,7 @@ public class DraftDisplayPanel extends JPanel {
 
 	public void reload() {
 		clearTxt();
+		doc.check();
 		if (doc != null) {
 
 			ArrayList<RevisionUnit> units = doc.getRoot()
@@ -185,8 +188,8 @@ public class DraftDisplayPanel extends JPanel {
 		oldDraftPane.setSize(400, 400);
 		newDraftPane = new JTextPane();
 		newDraftPane.setSize(400, 400);
-
-		this.doc = doc;
+		
+        this.doc = doc;
 		clearTxt();
 		setStyles(oldDraftPane, oldDraftStyle);
 		setStyles(newDraftPane, newDraftStyle);
@@ -295,6 +298,18 @@ public class DraftDisplayPanel extends JPanel {
 				}
 			}
 		}
+		
+		/*Style fontSize = oldDraftPane.addStyle("fontSize", null);
+        StyleConstants.setFontSize(fontSize, 18);
+        //Setting the font Size
+        oldDraftPane.getStyledDocument().setCharacterAttributes(0, oldDraftPane.getStyledDocument().getLength(), fontSize, false);
+
+        Style fontSize2 = newDraftPane.addStyle("fontSize", null);
+        StyleConstants.setFontSize(fontSize2, 18);
+        //Setting the font Size
+        newDraftPane.getStyledDocument().setCharacterAttributes(0, newDraftPane.getStyledDocument().getLength(), fontSize2, false);
+		*/
+        
 		JScrollPane oldSp = new JScrollPane(oldDraftPane);
 		JScrollPane newSp = new JScrollPane(newDraftPane);
 		this.add(oldSp);
@@ -404,6 +419,7 @@ public class DraftDisplayPanel extends JPanel {
 			if (isOld) {
 				Style boldStyle = oldDraftPane.addStyle("BoldStyle", null);
 				StyleConstants.setBold(boldStyle, true);
+				StyleConstants.setFontSize(boldStyle, 18);
 				oldDraftPane.getStyledDocument().setCharacterAttributes(p0, find.length(),
 						boldStyle, true);
 				oldDraftPane.setSelectionStart(p0);
@@ -411,6 +427,7 @@ public class DraftDisplayPanel extends JPanel {
 			} else {
 				Style boldStyle = newDraftPane.addStyle("BoldStyle", null);
 				StyleConstants.setBold(boldStyle, true);
+				StyleConstants.setFontSize(boldStyle, 18);
 				newDraftPane.getStyledDocument().setCharacterAttributes(p0, find.length(),
 						boldStyle, true);
 				newDraftPane.setSelectionStart(p0);

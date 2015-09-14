@@ -1,19 +1,23 @@
 package edu.pitt.lrdc.cs.revision.gui;
 
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -196,6 +200,11 @@ public class AlignmentChangePanel extends JPanel {
 		}
 	}
 
+	public void close() {
+		JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+		topFrame.dispatchEvent(new WindowEvent(topFrame, WindowEvent.WINDOW_CLOSING));
+	}
+	
 	public void save() {
 		try {
 		if (!oldSentenceList.isEnabled()) {
@@ -207,6 +216,7 @@ public class AlignmentChangePanel extends JPanel {
 			}
 			doc.changeOldAlignment(oldIndex, newIndices);
 			JOptionPane.showMessageDialog(this, "Alignment changed.");
+			close();
 		} else if (!newSentenceList.isEnabled()) {
 			int newIndex = newSentenceList.getSelectedIndex() + 1;
 			int[] oldIndiceArr = oldSentenceList.getSelectedIndices();
@@ -216,6 +226,7 @@ public class AlignmentChangePanel extends JPanel {
 			}
 			doc.changeNewAlignment(newIndex, oldIndices);
 			JOptionPane.showMessageDialog(this, "Alignment changed.");
+			close();
 		} else {
 			// something is wrong
 		}
@@ -253,6 +264,7 @@ public class AlignmentChangePanel extends JPanel {
 			JOptionPane.showMessageDialog(this, "Alignment could not be changed.\n"+"Trace: "+exp.getMessage());
 		}
 		doc.check();
+		close();
 	}
 	
 	public void cancel() {
