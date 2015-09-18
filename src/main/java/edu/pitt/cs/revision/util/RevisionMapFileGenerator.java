@@ -73,8 +73,10 @@ public class RevisionMapFileGenerator {
 		String outputPath = "C:\\Not Backed Up\\data\\newSample.txt";
 		// RevisionDocument doc = RevisionDocumentReader.readDoc(path);
 		// generateHeatMapFile(doc, outputPath);
-		String root = "C:\\Not Backed Up\\data\\newSample";
-		String outputPathRoot = "C:\\Not Backed Up\\data\\newSampleMap";
+		//String root = "C:\\Not Backed Up\\data\\newSample";
+		String root = "C:\\Not Backed Up\\data\\newData\\tmp\\Jiaoyang";
+		//String outputPathRoot = "C:\\Not Backed Up\\data\\newSampleMap";
+		String outputPathRoot = "C:\\Not Backed Up\\data\\newData\\tmp\\JiaoyangMap";
 		File folder = new File(root);
 		File[] files = folder.listFiles();
 		for (File tempFile : files) {
@@ -83,8 +85,8 @@ public class RevisionMapFileGenerator {
 			String fileName = tempFile.getName();
 			String outPath = outputPathRoot + "/"
 					+ fileName.substring(0, fileName.length() - 5);
-			// generateHeatMapFile(doc, outPath);
-			ArrayList<ArrayList<HeatMapUnit>> units = getUnits4CRF(doc);
+			 generateHeatMapFile(doc, outPath);
+			/*ArrayList<ArrayList<HeatMapUnit>> units = getUnits4CRF(doc);
 			System.out.println(units.size());
 			for (ArrayList<HeatMapUnit> unitArr : units) {
 				for (HeatMapUnit unit : unitArr) {
@@ -93,7 +95,7 @@ public class RevisionMapFileGenerator {
 					System.out.println("S2:" + unit.scD2);
 				}
 				System.out.println("==============");
-			}
+			}*/
 		}
 	}
 

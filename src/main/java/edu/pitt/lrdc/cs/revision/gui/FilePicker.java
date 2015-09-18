@@ -38,6 +38,18 @@ public class FilePicker extends JPanel {
         this.fileChooser.setFileSelectionMode(mode);
     }
      
+    public void setChooseFolder() {
+    	this.fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+    }
+    
+    public void setChooseFile() {
+    	this.fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+    }
+    
+    public void setChooseBoth() {
+    	this.fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+    }
+    
     public FilePicker(String textFieldLabel, String buttonLabel) {
         this.textFieldLabel = textFieldLabel;
         this.buttonLabel = buttonLabel;

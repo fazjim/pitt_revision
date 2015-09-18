@@ -39,6 +39,8 @@ public class EvaluatePanel extends JPanel {
 				"Select the path of the gold standard documents", "Browse");
 		predictPathPicker = new FilePicker(
 				"Select the path of the predicted documents", "Browse");
+		goldPathPicker.setChooseBoth();
+		predictPathPicker.setChooseBoth();
 		classifyEvaluate = new JButton("Evaluate Classification");
 		pipelineEvaluate = new JButton("Evaluete Pipeline Classification");
 		alignEvaluate = new JButton("Evaluate Alignment");
