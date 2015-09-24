@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
+
+import com.google.gson.Gson;
 
 import edu.pitt.lrdc.cs.revision.alignment.model.HeatMapUnit;
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentReader;
@@ -32,17 +35,23 @@ public class RevisionMapFileGenerator {
 	public static String generateTxt(RevisionDocument doc) {
 		String txt = "";
 		txt = addHeader(txt);
-		ArrayList<HeatMapUnit> units = generateUnits(doc);
+		List<HeatMapUnit> units = generateUnits(doc);
 		adjustUnits(units);
 		for (HeatMapUnit unit : units) {
 			txt = addLine(unit, txt);
 		}
 		return txt;
 	}
+	
+	public static String generateJson(RevisionDocument doc) {
+		List<HeatMapUnit> units = generateUnits(doc);
+		adjustUnits(units);
+		return toJson(units);
+	}
 
 	public static ArrayList<ArrayList<HeatMapUnit>> getUnits4CRF(
 			RevisionDocument doc) {
-		ArrayList<HeatMapUnit> units = generateUnits(doc);
+		List<HeatMapUnit> units = generateUnits(doc);
 		adjustUnits(units);
 		ArrayList<ArrayList<HeatMapUnit>> segmentedUnits = new ArrayList<ArrayList<HeatMapUnit>>();
 		int currentP = -1;
@@ -99,6 +108,12 @@ public class RevisionMapFileGenerator {
 		}
 	}
 
+	public static String toJson(List<HeatMapUnit> units) {
+		Gson gson = new Gson();
+		String json = gson.toJson(units);
+		return json;
+	}
+	
 	public static String addHeader(String txt) {
 		txt += "pD1\t";
 		txt += "pD2\t";
@@ -131,7 +146,7 @@ public class RevisionMapFileGenerator {
 		return txt;
 	}
 
-	public static void adjustUnits(ArrayList<HeatMapUnit> units) {
+	public static void adjustUnits(List<HeatMapUnit> units) {
 		int aR = 1;
 		int aC = 0;
 		int currentP1 = 1;
@@ -186,7 +201,7 @@ public class RevisionMapFileGenerator {
 	 * @param doc
 	 * @return
 	 */
-	public static ArrayList<HeatMapUnit> generateUnits(RevisionDocument doc) {
+	public static List<HeatMapUnit> generateUnits(RevisionDocument doc) {
 		ArrayList<String> oldDraftSentences = doc.getOldDraftSentences();
 		ArrayList<String> newDraftSentences = doc.getNewDraftSentences();
 
@@ -330,7 +345,7 @@ public class RevisionMapFileGenerator {
 			}
 		}
 
-		ArrayList<HeatMapUnit> hmUnits = new ArrayList<HeatMapUnit>();
+		List<HeatMapUnit> hmUnits = new ArrayList<HeatMapUnit>();
 		Iterator<String> it = unitMaps.keySet().iterator();
 		while (it.hasNext()) {
 			String key = it.next();
