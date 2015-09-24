@@ -13,14 +13,14 @@ public class RestServiceUploader {
 		 String charset = "UTF-8";
 	        File uploadFile = new File(fileName);
 	        //String requestURL = "http://localhost:8080/FileUploadSpringMVC/uploadFile.do";
-	        String requestURL = url+"?username="+username;
+	        String requestURL = url;
 	        try {
 	            MultipartUtility multipart = new MultipartUtility(requestURL, charset);
 	             
 	            multipart.addHeaderField("User-Agent", "Pitt-AnnotatorTool");
 	            multipart.addHeaderField("Test-Header", "Header-Value");
 	             
-	            //multipart.addFormField("description", "Cool Pictures");
+	            multipart.addFormField("username", username);
 	            //multipart.addFormField("keywords", "Java,upload,Spring");
 	             
 	            multipart.addFilePart("file", uploadFile);
