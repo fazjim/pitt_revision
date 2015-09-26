@@ -1,6 +1,7 @@
 package edu.pitt.lrdc.cs.revision.gui;
 
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
@@ -28,6 +29,9 @@ public class MainFrame extends JFrame {
 	private DraftDisplayPanel displayPanel;
 	private JSplitPane splitPane;
 	private String currentPath=null;
+	private String serverAddress = "http://localhost:8080";
+	private String username = null;
+	
 	
 	public MainFrame() {
 		setTitle("Revision Annotation Tool");
@@ -48,6 +52,12 @@ public class MainFrame extends JFrame {
 		item2.setToolTipText("Export the annotation to a specified location");
 		JMenuItem saveItem = new JMenuItem("Save");
 		saveItem.setToolTipText("Save the annotation to the current file");
+		JMenuItem itemLoadService = new JMenuItem("Load From Web");
+		itemLoadService.setToolTipText("Load the spreadsheet file from server for annotation");
+		JMenuItem itemUploadService = new JMenuItem("Load From Web");
+		itemUploadService.setToolTipText("Upload the spreadsheet file to the server");
+
+		
 		JMenuItem item3 = new JMenuItem("Import the source file(Old Draft)");
 		item3.setToolTipText("Not implemented yet, load the original source file to generate the spreadsheet file");
 		JMenuItem item4 = new JMenuItem(
@@ -59,6 +69,8 @@ public class MainFrame extends JFrame {
 
 		JMenu menuDemo = new JMenu("Run");
 
+		
+		
 		saveItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -78,6 +90,41 @@ public class MainFrame extends JFrame {
 				}
 			}
 			
+		});
+		
+		itemLoadService.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					JTextField addressField = new JTextField("http://localhost:8080");
+				      JTextField usernameField = new JTextField("test");
+					JPanel myPanel = new JPanel();
+					myPanel.setSize(600, 400);
+					myPanel.setLayout(new BoxLayout(myPanel, BoxLayout.Y_AXIS));
+				      myPanel.add(new JLabel("ServerAddress:"));
+				      myPanel.add(addressField);
+
+				      myPanel.add(new JLabel("Username:"));
+				      myPanel.add(usernameField);
+				      UIManager.put("OptionPane.minimumSize",new Dimension(500,200));
+				      int result = JOptionPane.showConfirmDialog(null, myPanel, 
+				               "Please Enter Server Address and user name", JOptionPane.OK_CANCEL_OPTION);
+				      if (result == JOptionPane.OK_OPTION) {
+				         serverAddress = addressField.getText();
+				         username = usernameField.getText();
+						 loadFromService(serverAddress, username);
+				      }
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+					JOptionPane.showMessageDialog(MainFrame.this, e1.getMessage());
+				}
+			}
+		});
+		
+		itemUploadService.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(MainFrame.this, uploadToService(serverAddress, username));
+			}
 		});
 		
 		item.addActionListener(new ActionListener() {
@@ -136,12 +183,16 @@ public class MainFrame extends JFrame {
 		menu.add(item);
 		menu.add(item2);
 		menu.add(saveItem);
-		item3.setEnabled(false);
+		menu.add(new JSeparator());
+		menu.add(itemLoadService);
+		menu.add(itemUploadService);
+
+		/*item3.setEnabled(false);
 		menu.add(item3);
 		item4.setEnabled(false);
 		menu.add(item4);
 		item5.setEnabled(false);
-		menu.add(item5);
+		menu.add(item5);*/
 
 		JMenuItem menuCode = new JMenuItem("Coding Manual");
 		menuCode.setEnabled(false);
