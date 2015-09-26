@@ -52,9 +52,9 @@ public class MainFrame extends JFrame {
 		item2.setToolTipText("Export the annotation to a specified location");
 		JMenuItem saveItem = new JMenuItem("Save");
 		saveItem.setToolTipText("Save the annotation to the current file");
-		JMenuItem itemLoadService = new JMenuItem("Load From Web");
+		JMenuItem itemLoadService = new JMenuItem("Load From Server");
 		itemLoadService.setToolTipText("Load the spreadsheet file from server for annotation");
-		JMenuItem itemUploadService = new JMenuItem("Load From Web");
+		JMenuItem itemUploadService = new JMenuItem("Upload To Server");
 		itemUploadService.setToolTipText("Upload the spreadsheet file to the server");
 
 		
@@ -208,7 +208,7 @@ public class MainFrame extends JFrame {
 	}
 
 	public void loadFromService(String serverAddress, String username) throws Exception {
-		String url = serverAddress +"/AnnotatorService/"+username;
+		String url = serverAddress +"/RestfulRevision/AnnotatorService/"+username;
 		Client client = Client.create();
 		WebResource webResource = client
 		   .resource(url);
@@ -229,7 +229,8 @@ public class MainFrame extends JFrame {
 	}
 	
 	public String uploadToService(String serverAddress, String username) {
-		String url = serverAddress + "/AnnotatorService/"+username;
+		save();
+		String url = serverAddress + "/RestfulRevision/AnnotatorService/"+username;
 		return RestServiceUploader.uploadFile(url, username, currentPath);
 	}
 	
