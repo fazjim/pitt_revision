@@ -62,8 +62,9 @@ public class WekaAssist {
 		for (String cat : category) {
 			attVals.addElement(cat);
 		}
+		
 		atts.addElement(new Attribute("category", attVals));
-
+		
 		// The other customized features
 		for (String name : featureTable.features) {
 			int index = featureTable.getIndex(name);
@@ -132,7 +133,7 @@ public class WekaAssist {
 		}
 		vals[vals.length - 1] = insts.attribute(vals.length - 1)
 				.addStringValue(ID);
-		Instance instance = new Instance(1.0, vals);
+		Instance instance = new DenseInstance(1.0, vals);
 		insts.add(instance);
 	}
 
@@ -163,7 +164,7 @@ public class WekaAssist {
 				vals[i] = (Double) features[i];
 			}
 		}
-		Instance instance = new Instance(1.0, vals);
+		Instance instance = new DenseInstance(1.0, vals);
 		insts.add(instance);
 	}
 

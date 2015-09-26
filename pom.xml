@@ -15,11 +15,7 @@
 	</properties>
 
 	<dependencies>
-	<dependency>
-	<groupId>org.apache.httpcomponents</groupId>
-	<artifactId>httpclient</artifactId>
-	<version>4.0-alpha4</version>
-</dependency>
+
 	
 		<dependency>
 			<groupId>junit</groupId>
@@ -28,10 +24,10 @@
 			<scope>test</scope>
 		</dependency>
 		 <dependency>
-	<groupId>com.google.code.gson</groupId>
-	<artifactId>gson</artifactId>
-	<version>1.7.1</version>
-  </dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>1.7.1</version>
+  		</dependency>
 		<dependency>
 			<groupId>edu.stanford.nlp</groupId>
 			<artifactId>stanford-corenlp</artifactId>
@@ -50,9 +46,14 @@
 		</dependency>
 		<dependency>
 			<groupId>nz.ac.waikato.cms.weka</groupId>
-			<artifactId>weka-stable</artifactId>
-			<version>3.6.12</version>
+			<artifactId>weka-dev</artifactId>
+			<version>3.7.10</version>
 		</dependency>
+		<dependency>
+		<groupId>com.sun.jersey</groupId>
+		<artifactId>jersey-client</artifactId>
+		<version>1.19</version>
+	</dependency>
 		<dependency>
 			<groupId>edu.arizona.sista</groupId>
 			<artifactId>processors_2.11</artifactId>
@@ -94,11 +95,11 @@
 			<artifactId>poi-ooxml</artifactId>
 			<version>3.9</version>
 		</dependency>
-		<dependency>
+	<!-- 	<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-scratchpad</artifactId>
 			<version>3.9</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.apache.tika</groupId>
 			<artifactId>tika-core</artifactId>

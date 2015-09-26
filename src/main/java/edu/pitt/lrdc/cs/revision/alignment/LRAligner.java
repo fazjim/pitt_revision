@@ -83,7 +83,7 @@ public class LRAligner {
 		double[] atts = new double[2];
 		atts[0] = calc(a, b, option);
 		atts[1] = 0;
-		Instance instance = new Instance(1.0, atts);
+		Instance instance = new DenseInstance(1.0, atts);
 		return logClassifier.distributionForInstance(instance)[0];
 	}
 
@@ -225,7 +225,7 @@ public class LRAligner {
 						atts[0] = calc(src.getSentences().get(j), dest
 								.getSentences().get(k), option);
 						atts[1] = 0;
-						Instance instance = new Instance(1.0, atts);
+						Instance instance = new DenseInstance(1.0, atts);
 						val[j][k] = (logClassifier
 								.distributionForInstance(instance))[0];
 					}
@@ -437,7 +437,7 @@ public class LRAligner {
 				double[] vals = new double[ins.numAttributes()];
 				vals[0] = val;
 				vals[1] = attVals.indexOf("positive");
-				Instance instance = new Instance(1.0, vals);
+				Instance instance = new DenseInstance(1.0, vals);
 				ins.add(instance);
 			}
 
@@ -457,7 +457,7 @@ public class LRAligner {
 					double[] vals = new double[ins.numAttributes()];
 					vals[0] = sim;
 					vals[1] = attVals.indexOf("negative");
-					Instance instance = new Instance(1.0, vals);
+					Instance instance = new DenseInstance(1.0, vals);
 					ins.add(instance);
 				} else {
 					index = rand.nextInt(size);
@@ -535,7 +535,7 @@ public class LRAligner {
 					vals[k] = val;
 				}
 				vals[options.length] = attVals.indexOf("positive");
-				Instance instance = new Instance(1.0, vals);
+				Instance instance = new DenseInstance(1.0, vals);
 				ins.add(instance);
 			}
 
@@ -557,7 +557,7 @@ public class LRAligner {
 						vals[k] = sim;
 					}
 					vals[options.length] = attVals.indexOf("negative");
-					Instance instance = new Instance(1.0, vals);
+					Instance instance = new DenseInstance(1.0, vals);
 					ins.add(instance);
 				} else {
 					index = rand.nextInt(size);
@@ -583,7 +583,7 @@ public class LRAligner {
 								.getSentences().get(k), options[m]);
 					}
 					atts[options.length] = 0;
-					Instance instance = new Instance(1.0, atts);
+					Instance instance = new DenseInstance(1.0, atts);
 					val[j][k] = (logClassifier
 							.distributionForInstance(instance))[0];
 				}

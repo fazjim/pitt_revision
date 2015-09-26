@@ -6,10 +6,16 @@ import java.awt.GraphicsEnvironment;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import javax.swing.*;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+
+import edu.pitt.lrdc.cs.revision.io.RestServiceUploader;
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentReader;
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentWriter;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
@@ -150,6 +156,32 @@ public class MainFrame extends JFrame {
 		this.setJMenuBar(menuBar);
 	}
 
+	public void loadFromService(String serverAddress, String username) throws Exception {
+		String url = serverAddress +"/AnnotatorService/"+username;
+		Client client = Client.create();
+		WebResource webResource = client
+		   .resource(url);
+		ClientResponse response = webResource.accept("application/vnd.ms-excel").get(ClientResponse.class);
+		if (response.getStatus() != 200) {
+		   throw new RuntimeException("Failed : HTTP error code : "
+			+ response.getStatus());
+		}
+		File s= response.getEntity(File.class);
+	    File ff = new File(username+".xlsx");
+	    s.renameTo(ff);
+	    FileWriter fr = new FileWriter(s);
+	    fr.flush();
+	    fr.close();
+	    //load(ff.getAbsolutePath());
+	    MainFrame.this.load(ff.getAbsolutePath());
+		currentPath = ff.getAbsolutePath();
+	}
+	
+	public String uploadToService(String serverAddress, String username) {
+		String url = serverAddress + "/AnnotatorService/"+username;
+		return RestServiceUploader.uploadFile(url, username, currentPath);
+	}
+	
 	public void load(String path) throws Exception {
 		// RevisionDocument rd = RevisionDocumentReader
 		// .readDoc("E:\\independent study\\Revision\\Braverman\\agreement\\Annotation__bravesfavstudent Christian.xlsx");
