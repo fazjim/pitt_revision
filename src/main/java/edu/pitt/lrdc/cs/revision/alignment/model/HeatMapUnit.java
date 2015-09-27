@@ -80,20 +80,20 @@ public class HeatMapUnit implements Comparable {
 		this.aVR = aVR;
 	}
 
-	public String getRevType() {
-		return revType;
+	public String getRType() {
+		return rType;
 	}
 
-	public void setRevType(String revType) {
-		this.revType = revType;
+	public void setRType(String revType) {
+		this.rType = revType;
 	}
 
-	public String getRevPurpose() {
-		return revPurpose;
+	public String getRPurpose() {
+		return rPurpose;
 	}
 
-	public void setRevPurpose(String revPurpose) {
-		this.revPurpose = revPurpose;
+	public void setRPurpose(String revPurpose) {
+		this.rPurpose = revPurpose;
 	}
 
 	/**
@@ -108,8 +108,8 @@ public class HeatMapUnit implements Comparable {
 	public int aR; // adjusted Row index
 	public int aC; // adjusted Column index
 	public int aVR; //adjusted Row index in vertical view
-	public String revType;
-	public String revPurpose;
+	public String rType;
+	public String rPurpose;
 
 	@Override
 	public int compareTo(Object o) {

@@ -376,11 +376,11 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 	public void extractOpFeatures(HeatMapUnit hmu, ArrayList<ArrayList<HeatMapUnit>> essay) {
 		int featureIndex = features.getIndex("REVISION_OP");
 		double val = 0;
-		if (hmu.revType.equals("Add")) {
+		if (hmu.rType.equals("Add")) {
 			val = 1;
-		} else if (hmu.revType.equals("Delete")) {
+		} else if (hmu.rType.equals("Delete")) {
 			val = 0;
-		} else if(hmu.revType.equals("Modify")) {
+		} else if(hmu.rType.equals("Modify")) {
 			val = -1;
 		}
 		else {

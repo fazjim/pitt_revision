@@ -138,8 +138,8 @@ public class RevisionMapFileGenerator {
 		txt += unit.aR + "\t";
 		txt += unit.aC + "\t";
 		txt += unit.aVR + "\t";
-		txt += unit.revType + "\t";
-		txt += unit.revPurpose + "\t";
+		txt += unit.rType + "\t";
+		txt += unit.rPurpose + "\t";
 		txt += unit.scD1 + "\t";
 		txt += unit.scD2;
 		txt += "\n";
@@ -269,8 +269,8 @@ public class RevisionMapFileGenerator {
 						hmu.scD2 = doc.getNewSentence(newIndex);
 						hmu.pD1 = pD1;
 						hmu.pD2 = doc.getParaNoOfNewSentence(newIndex);
-						hmu.revType = revisionOp;
-						hmu.revPurpose = revisionPurpose;
+						hmu.rType = revisionOp;
+						hmu.rPurpose = revisionPurpose;
 						String key = oldIndex + ":" + newIndex;
 						unitMaps.put(key, hmu);
 					}
@@ -291,8 +291,8 @@ public class RevisionMapFileGenerator {
 						hmu.scD2 = scD2;
 						hmu.pD1 = doc.getParaNoOfOldSentence(oldIndex);
 						hmu.pD2 = pD2;
-						hmu.revType = revisionOp;
-						hmu.revPurpose = revisionPurpose;
+						hmu.rType = revisionOp;
+						hmu.rPurpose = revisionPurpose;
 						String key = oldIndex + ":" + newIndex;
 						unitMaps.put(key, hmu);
 					}
@@ -310,8 +310,8 @@ public class RevisionMapFileGenerator {
 								hmu.scD2 = doc.getNewSentence(newIndex);
 								hmu.pD1 = doc.getParaNoOfOldSentence(oldIndex);
 								hmu.pD2 = doc.getParaNoOfNewSentence(newIndex);
-								hmu.revType = revisionOp;
-								hmu.revPurpose = revisionPurpose;
+								hmu.rType = revisionOp;
+								hmu.rPurpose = revisionPurpose;
 								String key = oldIndex + ":" + newIndex;
 								unitMaps.put(key, hmu);
 							}
@@ -336,8 +336,8 @@ public class RevisionMapFileGenerator {
 							hmu.scD1 = hmu.scD2 = doc.getOldSentence(oldIndex);
 							hmu.pD1 = doc.getParaNoOfOldSentence(oldIndex);
 							hmu.pD2 = doc.getParaNoOfNewSentence(newIndex);
-							hmu.revType = "Nochange";
-							hmu.revPurpose = "";
+							hmu.rType = "Nochange";
+							hmu.rPurpose = "";
 							unitMaps.put(key, hmu);
 						}
 					}

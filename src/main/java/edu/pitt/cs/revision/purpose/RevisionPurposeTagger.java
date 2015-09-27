@@ -68,12 +68,12 @@ public class RevisionPurposeTagger {
 			for (ArrayList<HeatMapUnit> paragraph : units) {
 				for (HeatMapUnit hmu : paragraph) {
 					Object[] features = featureArr.get(index);
-					if (hmu.revType.equals("Nochange")) {
+					if (hmu.rType.equals("Nochange")) {
 						wa.addInstance(features, fe.features, usingNgram,
 								trainData, "NOCHANGE", "dummy");
 					} else {
 						wa.addInstance(features, fe.features, usingNgram,
-								trainData, hmu.revPurpose, "dummy");
+								trainData, hmu.rPurpose, "dummy");
 					}
 					index++;
 				}
@@ -89,12 +89,12 @@ public class RevisionPurposeTagger {
 			for (ArrayList<HeatMapUnit> paragraph : units) {
 				for (HeatMapUnit hmu : paragraph) {
 					Object[] features = featureArr.get(index);
-					if (hmu.revType.equals("Nochange")) {
+					if (hmu.rType.equals("Nochange")) {
 						wa.addInstance(features, fe.features, usingNgram,
 								testData, "NOCHANGE", "dummy");
 					} else {
 						wa.addInstance(features, fe.features, usingNgram,
-								testData, hmu.revPurpose, "dummy");
+								testData, hmu.rPurpose, "dummy");
 					}
 					index++;
 				}
