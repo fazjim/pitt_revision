@@ -1,11 +1,14 @@
 package edu.pitt.lrdc.cs.revision.gui;
 
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 
+import javax.swing.BorderFactory;
 import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -16,12 +19,16 @@ import edu.pitt.lrdc.cs.revision.model.RevisionUnit;
 
 public class AnnotateBox extends JPanel{
 	private JLabel statusDisplay = new JLabel("--------------------------------");
-	private Hashtable<String,EditUnit> table = new Hashtable<String,EditUnit>();
+	private Hashtable<String,EditUnitV2> table = new Hashtable<String,EditUnitV2>();
+	
+	private JPanel surfaceEUGroup;
+	private JPanel contentEUGroup;
+	private JPanel bonusGroup;
 	
 	public void loadTable() {
 		for(int i = RevisionPurpose.START;i<=RevisionPurpose.END;i++) {
 			String purposeName = RevisionPurpose.getPurposeName(i);
-			table.put(purposeName, new EditUnit(purposeName,ColorConstants.getColor(i)));
+			table.put(purposeName, new EditUnitV2(purposeName,ColorConstants.getColor(i)));
 		}
 	}
 	
@@ -40,10 +47,40 @@ public class AnnotateBox extends JPanel{
 		//	String purposeName = it.next();
 		//	add(table.get(purposeName));
 		//}
-		for(int i = RevisionPurpose.START;i<=RevisionPurpose.END;i++) {
+		
+		surfaceEUGroup = new JPanel();
+		surfaceEUGroup.setBorder(BorderFactory.createTitledBorder("Surface Revisions"));
+		bonusGroup = new JPanel();
+		bonusGroup.setBorder(BorderFactory.createTitledBorder("Surface Bonus"));
+		contentEUGroup = new JPanel();
+		contentEUGroup.setBorder(BorderFactory.createTitledBorder("Content Revisions"));
+		
+		/*for(int i = RevisionPurpose.START;i<=RevisionPurpose.END;i++) {
 			String purposeName = RevisionPurpose.getPurposeName(i);
 			add(table.get(purposeName));
+		}*/
+		Box boxSurface = new Box(BoxLayout.X_AXIS);
+		for(int i = RevisionPurpose.END;i>RevisionPurpose.WORDUSAGE_CLARITY_CASCADED;i--) {
+			String purposeName = RevisionPurpose.getPurposeName(i);
+			boxSurface.add(table.get(purposeName));
+			boxSurface.add(Box.createRigidArea(new Dimension(5,0)));
 		}
+		surfaceEUGroup.add(boxSurface);
+		Box bonusSurface = new Box(BoxLayout.X_AXIS);
+		bonusSurface.add(table.get(RevisionPurpose.getPurposeName(RevisionPurpose.WORDUSAGE_CLARITY_CASCADED)));
+		bonusGroup.add(bonusSurface);
+		
+		Box boxContent = new Box(BoxLayout.X_AXIS);
+		for(int i = RevisionPurpose.START;i<RevisionPurpose.WORDUSAGE_CLARITY_CASCADED;i++) {
+			String purposeName = RevisionPurpose.getPurposeName(i);
+			boxContent.add(table.get(purposeName));
+			boxContent.add(Box.createRigidArea(new Dimension(5,0)));
+		}
+		contentEUGroup.add(boxContent);
+		
+		add(surfaceEUGroup);
+		add(bonusGroup);
+		add(contentEUGroup);
 	}
 	
 	public void setEnabled(boolean enabled) {
@@ -76,9 +113,9 @@ public class AnnotateBox extends JPanel{
 		while(it.hasNext()) {
 			String key = it.next();
 			int revision_purpose = RevisionPurpose.getPurposeIndex(key);
-			EditUnit eu = table.get(key);
-			if(eu.getSelectedOp() != -1) {
-				SelectionUnit su = new SelectionUnit(eu.getSelectedOp(),revision_purpose);
+			EditUnitV2 eu = table.get(key);
+			if(eu.isSelected()) {
+				SelectionUnit su = new SelectionUnit(-1,revision_purpose);
 				sus.add(su);
 			}
 		}

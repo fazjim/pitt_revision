@@ -13,7 +13,8 @@ public class ColorConstants {
 	public static Color conventionColor = new Color(255, 153, 51);
 	public static Color wordColor = new Color(255, 255, 153);
 	public static Color cascadedColor = new Color(255, 255, 204);
-	public static Color unannotatedColor = new Color(242,242,242);
+	public static Color organizationColor = new Color(153, 153, 255);
+	public static Color unannotatedColor = Color.GRAY;//new Color(242,242,242);
 	
 	public static Color getColor(int revPurpose) {
 		if(revPurpose == RevisionPurpose.CLAIMS_IDEAS) {
@@ -32,6 +33,8 @@ public class ColorConstants {
 			return wordColor;
 		} else if(revPurpose == RevisionPurpose.WORDUSAGE_CLARITY_CASCADED) {
 			return cascadedColor;
+		} else if(revPurpose == RevisionPurpose.ORGANIZATION) {
+			return organizationColor;
 		}
 		return null;
 	}

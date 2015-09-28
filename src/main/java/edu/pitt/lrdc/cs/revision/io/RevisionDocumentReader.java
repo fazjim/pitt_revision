@@ -40,7 +40,7 @@ public class RevisionDocumentReader {
 		int nextLayer = index + 3;
 		int nextLevel = currentLevel + 1;
 		while (nextLevel < levels) {
-			if (row.getCell(nextLayer + 2) != null)
+			if (row.getCell(nextLayer + 2) == null)
 				return nextLevel;
 			nextLayer += 3;
 			nextLevel += 1;
@@ -50,7 +50,7 @@ public class RevisionDocumentReader {
 
 	// Comment: changed the code, now first creates redundant unit row by row,
 	// next merge unit column by column
-
+/*
 	public static void addRowOfRevisions(XSSFRow row, int startIndex,
 			int levels, ArrayList<RevisionUnit> allRevisions,
 			RevisionUnit root, boolean isOld) {
@@ -155,8 +155,108 @@ public class RevisionDocumentReader {
 			}
 
 		}
-	}
+	}*/
 
+	/**
+	 * There are bugs in the old addRowofRevisions when dealing levels, temporary solution here for only 1 level
+	 * 
+	 * !!!!This is not a solution for hierarchical parsing, only for 1 level parsing
+	 * 
+	 * @param row
+	 * @param startIndex
+	 * @param levels
+	 * @param allRevisions
+	 * @param root
+	 * @param isOld
+	 */
+	public static void addRowOfRevisionsV2(XSSFRow row, int startIndex,
+			int levels, ArrayList<RevisionUnit> allRevisions,
+			RevisionUnit root, boolean isOld) {
+		int currentLevel = 0;
+		
+			XSSFCell purposeCell = row.getCell(startIndex + currentLevel * 3);
+			XSSFCell operationCell = row.getCell(startIndex + currentLevel * 3
+					+ 1);
+			XSSFCell indexCell = row.getCell(startIndex + currentLevel * 3 + 2);
+
+			if (indexCell != null && !indexCell.toString().trim().equals("")) {
+				String indexValStr = indexCell.toString();
+				// System.out.println(indexValStr);
+				// System.out.println(indexValStr.length());
+				String[] indexes = indexValStr.split(",");
+				for (int k = 0; k < indexes.length; k++) {
+					RevisionUnit ru = new RevisionUnit(root);
+					ru.setRevision_index((int) Double.parseDouble(indexes[k])); // set
+																				// the
+																				// revision
+																				// index
+					if (purposeCell != null
+							&& !purposeCell.toString().trim().equals("")) { // set
+																			// the
+																			// purpose
+						String purposeVal = purposeCell.getStringCellValue();
+						String[] purposes = purposeVal.split(",");
+						ru.setRevision_purpose(RevisionPurpose
+								.getPurposeIndex(purposes[k]));
+					}
+					if (operationCell != null
+							&& !operationCell.toString().trim().equals("")) { // set
+																				// the
+																				// op
+						String operationVal = operationCell
+								.getStringCellValue();
+						String[] operations = operationVal.split(",");
+						ru.setRevision_op(RevisionOp.getOpIndex(operations[k]));
+					}
+					
+					if (currentLevel == 0) { // First level have the sentence
+												// indexes
+						// Set up the sentence indexes
+						if (ru.getRevision_op() == RevisionOp.DELETE && isOld) {
+							// Get in sheet 0
+							int oldSentenceIndex = (int) row.getCell(0)
+									.getNumericCellValue();
+							ArrayList<Integer> olds = new ArrayList<Integer>();
+							olds.add(oldSentenceIndex);
+							ru.setOldSentenceIndex(olds);
+							// ru.setNewSentenceIndex(-1);
+						} else if (!isOld) {
+							int newSentenceIndex = (int) row.getCell(0)
+									.getNumericCellValue();
+							ArrayList<Integer> newSentenceIndexes = new ArrayList<Integer>();
+							newSentenceIndexes.add(newSentenceIndex);
+							String oldSent = row.getCell(2).toString();
+							ArrayList<Integer> oldSentenceIndex = new ArrayList<Integer>();
+							String[] olds = oldSent.split(",");
+							for (int i = 0; i < olds.length; i++) {
+								try {
+									oldSentenceIndex.add((int) Double
+											.parseDouble(olds[i]));
+								} catch (Exception exp) {
+									// do nothing
+								}
+							}
+							ru.setOldSentenceIndex(oldSentenceIndex);
+							ru.setNewSentenceIndex(newSentenceIndexes);
+						} else {
+							// Old but not delete, has already been logged
+						}
+					}
+
+					// build the revision unit
+					ru.setRevision_level(currentLevel);
+					int nextLevel = findNextLevel(row, startIndex
+							+ currentLevel * 3, currentLevel, levels);
+					ru.setParent_index(-1);
+					ru.setParent_level(3);//Temporary for current settings
+
+					//ru.setParent_level(nextLevel);
+					allRevisions.add(ru);
+					
+				}
+			} 
+	}
+	
 	// Recursively build up the structure, not efficient, fix it later
 	public static RevisionUnit buildHierarchicalUnit(
 			ArrayList<RevisionUnit> allUnits, RevisionUnit root,
@@ -315,7 +415,7 @@ public class RevisionDocumentReader {
 		if (r0Index != -1) {
 			for (int i = 1; i < sheet0.getPhysicalNumberOfRows(); i++) {
 				XSSFRow row = sheet0.getRow(i);
-				addRowOfRevisions(row, r0Index, levels, allUnits, rootUnit,
+				addRowOfRevisionsV2(row, r0Index, levels, allUnits, rootUnit,
 						true);
 			}
 		}
@@ -323,7 +423,7 @@ public class RevisionDocumentReader {
 		if (r1Index != -1) {
 			for (int i = 1; i < sheet1.getPhysicalNumberOfRows(); i++) {
 				XSSFRow row = sheet1.getRow(i);
-				addRowOfRevisions(row, r1Index, levels, allUnits, rootUnit,
+				addRowOfRevisionsV2(row, r1Index, levels, allUnits, rootUnit,
 						false);
 			}
 		}

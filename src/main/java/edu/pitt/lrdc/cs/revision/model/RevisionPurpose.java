@@ -8,13 +8,13 @@ public class RevisionPurpose {
 	public static final int CD_GENERAL_CONTENT_DEVELOPMENT = 5;
 	public static final int EVIDENCE = 4;
 	public static final int ORGANIZATION = 9;
-	public static final int CONVENTIONS_GRAMMAR_SPELLING = 6;
+	public static final int CONVENTIONS_GRAMMAR_SPELLING = 8;
 	public static final int WORDUSAGE_CLARITY = 7;
-	public static final int WORDUSAGE_CLARITY_CASCADED = 8;
+	public static final int WORDUSAGE_CLARITY_CASCADED = 6;
 	public static final int HEAVY_EDIT = 11;
-	public static final int STYLE = 9;
+	public static final int STYLE = 12;
 	public static final int WHOLEPAPER = 10;
-	public static final int END = 8;
+	public static final int END = 9;
 
 	public static String getPurposeName(int index) {
 		if (index == RevisionPurpose.CLAIMS_IDEAS) {

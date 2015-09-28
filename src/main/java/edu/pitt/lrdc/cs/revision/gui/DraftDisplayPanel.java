@@ -38,9 +38,9 @@ public class DraftDisplayPanel extends JPanel {
 		newDraftText = newDraft;
 		oldDraftPane = new JTextPane();
 		oldDraftPane.setText(oldDraft);
-		oldDraftPane.setSize(400, 400);
+		//oldDraftPane.setSize(400, 400);
 		newDraftPane = new JTextPane();
-		newDraftPane.setSize(400, 400);
+		//newDraftPane.setSize(400, 400);
 		newDraftPane.setText(newDraft);
 		
 		
@@ -185,9 +185,9 @@ public class DraftDisplayPanel extends JPanel {
 	// Styled Version
 	public DraftDisplayPanel(RevisionDocument doc) {
 		oldDraftPane = new JTextPane();
-		oldDraftPane.setSize(400, 400);
+		//oldDraftPane.setSize(400, 400);
 		newDraftPane = new JTextPane();
-		newDraftPane.setSize(400, 400);
+		//newDraftPane.setSize(400, 400);
 		
         this.doc = doc;
 		clearTxt();
@@ -419,7 +419,7 @@ public class DraftDisplayPanel extends JPanel {
 			if (isOld) {
 				Style boldStyle = oldDraftPane.addStyle("BoldStyle", null);
 				StyleConstants.setBold(boldStyle, true);
-				StyleConstants.setFontSize(boldStyle, 18);
+				StyleConstants.setFontSize(boldStyle, 12);
 				oldDraftPane.getStyledDocument().setCharacterAttributes(p0, find.length(),
 						boldStyle, true);
 				oldDraftPane.setSelectionStart(p0);
@@ -427,7 +427,7 @@ public class DraftDisplayPanel extends JPanel {
 			} else {
 				Style boldStyle = newDraftPane.addStyle("BoldStyle", null);
 				StyleConstants.setBold(boldStyle, true);
-				StyleConstants.setFontSize(boldStyle, 18);
+				StyleConstants.setFontSize(boldStyle, 12);
 				newDraftPane.getStyledDocument().setCharacterAttributes(p0, find.length(),
 						boldStyle, true);
 				newDraftPane.setSelectionStart(p0);
