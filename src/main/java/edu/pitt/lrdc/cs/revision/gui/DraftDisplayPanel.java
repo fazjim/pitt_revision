@@ -49,7 +49,7 @@ public class DraftDisplayPanel extends JPanel {
 		JScrollPane newSp = new JScrollPane(newDraftPane);
 		this.add(oldSp);
 		this.add(newSp);
-		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 	}
 
 	public void clearTxt() {
@@ -314,7 +314,7 @@ public class DraftDisplayPanel extends JPanel {
 		JScrollPane newSp = new JScrollPane(newDraftPane);
 		this.add(oldSp);
 		this.add(newSp);
-		this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 	}
 
 	public void setStyles(JTextPane oldDraftPane,

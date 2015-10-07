@@ -111,8 +111,135 @@ public class HeatMapUnit implements Comparable {
 	public String rType;
 	public String rPurpose;
 
+	public static int compare(HeatMapUnit unit1, HeatMapUnit unit2) {
+		if(unit1.pD1 == -1) {
+			if(unit2.pD2!=-1) {
+				if(unit1.pD2 != unit2.pD2) {
+					return unit1.pD2 - unit2.pD2;
+				} else {
+					return unit1.sD2 - unit2.sD2;
+				}
+			} else {
+				return 0; //Can't determine the location
+			}
+		}
+		if(unit1.pD2 == -1) {
+			if(unit2.pD1!=-1) {
+				if(unit1.pD1 != unit2.pD1) {
+					return unit1.pD1 - unit2.pD1;
+				} else {
+					return unit1.sD1 - unit2.sD1;
+				}
+			} else {
+				return 0;  //Can't determine the location
+			}
+		}
+		
+		if(unit2.pD1 == -1) {
+			if(unit1.pD2!=-1) {
+				if(unit1.pD2 != unit2.pD2) {
+					return unit1.pD2 - unit2.pD2;
+				} else {
+					return unit1.sD2 - unit2.sD2;
+				}
+			} else {
+				return 0;
+			}
+		}
+		
+		if(unit2.pD2 == -1) {
+			if(unit1.pD1 != -1) {
+				if(unit1.pD1 != unit2.pD1) {
+					return unit1.pD1 - unit2.pD1;
+				} else {
+					return unit1.sD1 - unit2.sD1;
+				}
+			} else {
+				return 0;
+			}
+		}
+		
+		if(unit1.pD1 != unit2.pD1) {
+			return unit1.pD1 - unit2.pD1;
+		} else {
+			if(unit1.pD2 != unit2.pD2) {
+				return unit1.pD2 - unit2.pD2;
+			} else {
+				if(unit1.sD1 != unit2.sD1) {
+					return unit1.sD1 - unit2.sD1;
+				} else {
+					return unit1.sD2 - unit2.sD2;
+				}
+			}
+		}
+	}
+	
 	@Override
 	public int compareTo(Object o) {
+		HeatMapUnit compared = (HeatMapUnit) o;
+		if(this.pD1 == -1) {
+			if(compared.pD2!=-1) {
+				if(this.pD2 != compared.pD2) {
+					return this.pD2 - compared.pD2;
+				} else {
+					return this.sD2 - compared.sD2;
+				}
+			} else {
+				return 0; //Can't determine the location
+			}
+		}
+		if(this.pD2 == -1) {
+			if(compared.pD1!=-1) {
+				if(this.pD1 != compared.pD1) {
+					return this.pD1 - compared.pD1;
+				} else {
+					return this.sD1 - compared.sD1;
+				}
+			} else {
+				return 0;  //Can't determine the location
+			}
+		}
+		
+		if(compared.pD1 == -1) {
+			if(this.pD2!=-1) {
+				if(this.pD2 != compared.pD2) {
+					return this.pD2 - compared.pD2;
+				} else {
+					return this.sD2 - compared.sD2;
+				}
+			} else {
+				return 0;
+			}
+		}
+		
+		if(compared.pD2 == -1) {
+			if(this.pD1 != -1) {
+				if(this.pD1 != compared.pD1) {
+					return this.pD1 - compared.pD1;
+				} else {
+					return this.sD1 - compared.sD1;
+				}
+			} else {
+				return 0;
+			}
+		}
+		
+		if(this.pD1 != compared.pD1) {
+			return this.pD1 - compared.pD1;
+		} else {
+			if(this.pD2 != compared.pD2) {
+				return this.pD2 - compared.pD2;
+			} else {
+				if(this.sD1 != compared.sD1) {
+					return this.sD1 - compared.sD1;
+				} else {
+					return this.sD2 - compared.sD2;
+				}
+			}
+		}
+	}
+
+	public int compareTo2(Object o) {
 		// TODO Auto-generated method stub
 		HeatMapUnit compared = (HeatMapUnit) o;
 		if (this.pD1 == -1 || compared.pD1 == -1) { //Put this in front so that the deleted are always ahead of the adds

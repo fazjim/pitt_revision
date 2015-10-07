@@ -10,6 +10,11 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
+import org.jgrapht.DirectedGraph;
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.traverse.TopologicalOrderIterator;
+
 import com.google.gson.Gson;
 
 import edu.pitt.lrdc.cs.revision.alignment.model.HeatMapUnit;
@@ -21,7 +26,7 @@ import edu.pitt.lrdc.cs.revision.model.RevisionUnit;
 
 public class RevisionMapFileGenerator {
 	// If true, then do not distinguish between surfaces
-	public static boolean ignoreSurface = true;
+	public static boolean ignoreSurface = false;
 
 	/**
 	 * If true, then do not distinguish between surfaces
@@ -42,7 +47,7 @@ public class RevisionMapFileGenerator {
 		}
 		return txt;
 	}
-	
+
 	public static String generateJson(RevisionDocument doc) {
 		List<HeatMapUnit> units = generateUnits(doc);
 		adjustUnits(units);
@@ -82,9 +87,9 @@ public class RevisionMapFileGenerator {
 		String outputPath = "C:\\Not Backed Up\\data\\newSample.txt";
 		// RevisionDocument doc = RevisionDocumentReader.readDoc(path);
 		// generateHeatMapFile(doc, outputPath);
-		//String root = "C:\\Not Backed Up\\data\\newSample";
+		// String root = "C:\\Not Backed Up\\data\\newSample";
 		String root = "C:\\Not Backed Up\\data\\newData\\tmp\\Jiaoyang";
-		//String outputPathRoot = "C:\\Not Backed Up\\data\\newSampleMap";
+		// String outputPathRoot = "C:\\Not Backed Up\\data\\newSampleMap";
 		String outputPathRoot = "C:\\Not Backed Up\\data\\newData\\tmp\\JiaoyangMap";
 		File folder = new File(root);
 		File[] files = folder.listFiles();
@@ -94,17 +99,15 @@ public class RevisionMapFileGenerator {
 			String fileName = tempFile.getName();
 			String outPath = outputPathRoot + "/"
 					+ fileName.substring(0, fileName.length() - 5);
-			 generateHeatMapFile(doc, outPath);
-			/*ArrayList<ArrayList<HeatMapUnit>> units = getUnits4CRF(doc);
-			System.out.println(units.size());
-			for (ArrayList<HeatMapUnit> unitArr : units) {
-				for (HeatMapUnit unit : unitArr) {
-					System.out.println("REV:" + unit.revPurpose);
-					System.out.println("S1:" + unit.scD1);
-					System.out.println("S2:" + unit.scD2);
-				}
-				System.out.println("==============");
-			}*/
+			generateHeatMapFile(doc, outPath);
+			/*
+			 * ArrayList<ArrayList<HeatMapUnit>> units = getUnits4CRF(doc);
+			 * System.out.println(units.size()); for (ArrayList<HeatMapUnit>
+			 * unitArr : units) { for (HeatMapUnit unit : unitArr) {
+			 * System.out.println("REV:" + unit.revPurpose);
+			 * System.out.println("S1:" + unit.scD1); System.out.println("S2:" +
+			 * unit.scD2); } System.out.println("=============="); }
+			 */
 		}
 	}
 
@@ -113,7 +116,7 @@ public class RevisionMapFileGenerator {
 		String json = gson.toJson(units);
 		return json;
 	}
-	
+
 	public static String addHeader(String txt) {
 		txt += "pD1\t";
 		txt += "pD2\t";
@@ -170,8 +173,15 @@ public class RevisionMapFileGenerator {
 					aVR++;
 				}
 			} else if (pD2 == -1) {
-				aC++;
-				aVR++;
+				if (pD1 > currentP1) {
+					currentP1 = pD1;
+					aR++;
+					aVR+=3;
+					aC = sD1;
+				} else {
+					aC++;
+					aVR++;
+				}
 			} else {
 				if (pD1 > currentP1) {
 					currentP1 = pD1;
@@ -354,5 +364,236 @@ public class RevisionMapFileGenerator {
 
 		Collections.sort(hmUnits);
 		return hmUnits;
+	}
+
+	/**
+	 * This version includes the unannotated changes
+	 * 
+	 * For cases: Half aligned or not aligned at all
+	 * 
+	 * @param doc
+	 * @return
+	 */
+	public static List<HeatMapUnit> generateUnits4Tagging(RevisionDocument doc) {
+		ArrayList<String> oldDraftSentences = doc.getOldDraftSentences();
+		ArrayList<String> newDraftSentences = doc.getNewDraftSentences();
+
+		Hashtable<Integer, Integer> oldParagraphSentences = new Hashtable<Integer, Integer>();
+		Hashtable<Integer, Integer> newParagraphSentences = new Hashtable<Integer, Integer>();
+
+		Hashtable<Integer, Integer> oldParaIndices = new Hashtable<Integer, Integer>();
+		Hashtable<Integer, Integer> newParaIndices = new Hashtable<Integer, Integer>();
+
+		Hashtable<String, HeatMapUnit> unitMaps = new Hashtable<String, HeatMapUnit>();
+
+		for (int i = 0; i < oldDraftSentences.size(); i++) {
+			int index = i + 1;
+			int sD1 = 1;
+			int oldParaIndex = doc.getParaNoOfOldSentence(index);
+			if (!oldParagraphSentences.containsKey(oldParaIndex))
+				oldParagraphSentences.put(oldParaIndex, sD1);
+			else {
+				sD1 = oldParagraphSentences.get(oldParaIndex) + 1;
+				oldParagraphSentences.put(oldParaIndex, sD1);
+			}
+			oldParaIndices.put(index, sD1);
+		}
+
+		for (int i = 0; i < newDraftSentences.size(); i++) {
+			int index = i + 1;
+			int sD2 = 1;
+			int newParaIndex = doc.getParaNoOfNewSentence(index);
+			if (!newParagraphSentences.containsKey(newParaIndex))
+				newParagraphSentences.put(newParaIndex, sD2);
+			else {
+				sD2 = newParagraphSentences.get(newParaIndex) + 1;
+				newParagraphSentences.put(newParaIndex, sD2);
+			}
+			newParaIndices.put(index, sD2);
+		}
+
+		ArrayList<RevisionUnit> rus = doc.getRoot().getRevisionUnitAtLevel(0);
+		for (RevisionUnit ru : rus) {
+			ArrayList<Integer> oldIndices = ru.getOldSentenceIndex();
+			ArrayList<Integer> newIndices = ru.getNewSentenceIndex();
+			String revisionOp = RevisionOp.getOpName(ru.getRevision_op());
+			String revisionPurpose = RevisionPurpose.getPurposeName(ru
+					.getRevision_purpose());
+
+			if (ignoreSurface == true
+					&& (ru.getRevision_purpose() == RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING
+							|| ru.getRevision_purpose() == RevisionPurpose.WORDUSAGE_CLARITY || ru
+							.getRevision_purpose() == RevisionPurpose.WORDUSAGE_CLARITY_CASCADED)) {
+				revisionPurpose = "Surface";
+			}
+			if (oldIndices == null || oldIndices.size() == 0
+					|| (oldIndices.size() == 1 && oldIndices.get(0) == -1)) {
+				// Should be add
+				int oldIndex = -1;
+				int pD1 = -1;
+				int sD1 = -1;
+				String scD1 = "";
+				for (Integer newIndex : newIndices) {
+					if (newIndex != -1) {
+						HeatMapUnit hmu = new HeatMapUnit();
+						hmu.sD1 = sD1;
+						hmu.sD2 = newParaIndices.get(newIndex);
+						hmu.scD1 = scD1;
+						hmu.scD2 = doc.getNewSentence(newIndex);
+						hmu.pD1 = pD1;
+						hmu.pD2 = doc.getParaNoOfNewSentence(newIndex);
+						hmu.rType = revisionOp;
+						hmu.rPurpose = revisionPurpose;
+						String key = oldIndex + ":" + newIndex;
+						unitMaps.put(key, hmu);
+					}
+				}
+			} else if (newIndices == null || newIndices.size() == 0
+					|| (newIndices.size() == 1 && newIndices.get(0) == -1)) {
+				// Should be delete
+				int newIndex = -1;
+				int pD2 = -1;
+				int sD2 = -1;
+				String scD2 = "";
+				for (Integer oldIndex : oldIndices) {
+					if (oldIndex != -1) {
+						HeatMapUnit hmu = new HeatMapUnit();
+						hmu.sD1 = oldParaIndices.get(oldIndex);
+						hmu.sD2 = sD2;
+						hmu.scD1 = doc.getOldSentence(oldIndex);
+						hmu.scD2 = scD2;
+						hmu.pD1 = doc.getParaNoOfOldSentence(oldIndex);
+						hmu.pD2 = pD2;
+						hmu.rType = revisionOp;
+						hmu.rPurpose = revisionPurpose;
+						String key = oldIndex + ":" + newIndex;
+						unitMaps.put(key, hmu);
+					}
+				}
+			} else {
+
+				for (Integer oldIndex : oldIndices) {
+					if (oldIndex != -1) {
+						for (Integer newIndex : newIndices) {
+							if (newIndex != -1) {
+								HeatMapUnit hmu = new HeatMapUnit();
+								hmu.sD1 = oldParaIndices.get(oldIndex);
+								hmu.sD2 = newParaIndices.get(newIndex);
+								hmu.scD1 = doc.getOldSentence(oldIndex);
+								hmu.scD2 = doc.getNewSentence(newIndex);
+								hmu.pD1 = doc.getParaNoOfOldSentence(oldIndex);
+								hmu.pD2 = doc.getParaNoOfNewSentence(newIndex);
+								hmu.rType = revisionOp;
+								hmu.rPurpose = revisionPurpose;
+								String key = oldIndex + ":" + newIndex;
+								unitMaps.put(key, hmu);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Now handling the rest of the alignments, if aligned, should be
+		// perfect alignments
+		for (int i = 0; i < oldDraftSentences.size(); i++) {
+			int oldIndex = i + 1;
+			ArrayList<Integer> newIndices = doc.getNewFromOld(oldIndex);
+			if (newIndices != null && newIndices.size() != 0) {
+				for (Integer newIndex : newIndices) {
+					if (newIndex != -1) {
+						String key = oldIndex + ":" + newIndex;
+						if (!unitMaps.containsKey(key)) {
+							HeatMapUnit hmu = new HeatMapUnit();
+							hmu.sD1 = oldParaIndices.get(oldIndex);
+							hmu.sD2 = newParaIndices.get(newIndex);
+							hmu.scD1 = doc.getOldSentence(oldIndex);
+							hmu.scD2 = doc.getNewSentence(newIndex);
+							if (hmu.scD1.equals(hmu.scD2)) {
+								hmu.rType = "Nochange";
+							} else {
+								hmu.rType = "Modify";
+							}
+							hmu.pD1 = doc.getParaNoOfOldSentence(oldIndex);
+							hmu.pD2 = doc.getParaNoOfNewSentence(newIndex);
+							hmu.rPurpose = "";
+							unitMaps.put(key, hmu);
+						}
+					}
+				}
+			} else {
+				String key = oldIndex + ":-1";
+				if (!unitMaps.containsKey(key)) {
+					HeatMapUnit hmu = new HeatMapUnit();
+					hmu.sD1 = oldParaIndices.get(oldIndex);
+					hmu.sD2 = -1;
+					hmu.scD1 = doc.getOldSentence(oldIndex);
+					hmu.scD2 = "";
+					hmu.rType = "Delete";
+					hmu.pD1 = doc.getParaNoOfOldSentence(oldIndex);
+					hmu.pD2 = -1;
+					hmu.rPurpose = "";
+					unitMaps.put(key, hmu);
+				}
+			}
+		}
+
+		for (int i = 0; i < newDraftSentences.size(); i++) {
+			int newIndex = i + 1;
+			ArrayList<Integer> oldIndices = doc.getOldFromNew(newIndex);
+			if (oldIndices == null || oldIndices.size() == 0) {
+				String key = "-1:" + newIndex;
+				if (!unitMaps.containsKey(key)) {
+					HeatMapUnit hmu = new HeatMapUnit();
+					hmu.sD1 = -1;
+					hmu.sD2 = newParaIndices.get(newIndex);
+					hmu.scD1 = "";
+					hmu.scD2 = doc.getNewSentence(newIndex);
+					hmu.rType = "Add";
+					hmu.pD1 = -1;
+					hmu.pD2 = doc.getParaNoOfNewSentence(newIndex);
+					hmu.rPurpose = "";
+					unitMaps.put(key, hmu);
+				}
+			}
+		}
+
+		List<HeatMapUnit> hmUnits = new ArrayList<HeatMapUnit>();
+		Iterator<String> it = unitMaps.keySet().iterator();
+		while (it.hasNext()) {
+			String key = it.next();
+			hmUnits.add(unitMaps.get(key));
+		}
+
+		//Collections.sort(hmUnits);
+		hmUnits = topoSort(hmUnits);
+		return hmUnits;
+	}
+	
+	public static ArrayList<HeatMapUnit> topoSort(List<HeatMapUnit> hmUnits) {
+		DirectedGraph<HeatMapUnit, DefaultEdge> g =
+	            new DefaultDirectedGraph<HeatMapUnit, DefaultEdge>(DefaultEdge.class);
+		for(int i = 0;i<hmUnits.size();i++) {
+			g.addVertex(hmUnits.get(i));
+		}
+		for(int i = 0;i<hmUnits.size();i++) {
+			for(int j = i+1;j<hmUnits.size();j++) {
+				HeatMapUnit unit1 = hmUnits.get(i);
+				HeatMapUnit unit2 = hmUnits.get(j);
+				int score = HeatMapUnit.compare(unit1, unit2);
+				if(score > 0) {
+					g.addEdge(unit2, unit1);
+				} else if(score <0) {
+					g.addEdge(unit1, unit2);
+				}
+			}
+		}
+		ArrayList<HeatMapUnit> newList = new ArrayList<HeatMapUnit>();
+		TopologicalOrderIterator<HeatMapUnit, DefaultEdge> iter = new TopologicalOrderIterator(g);
+		while(iter.hasNext()) {
+			HeatMapUnit node = iter.next();
+			newList.add(node);
+		}
+		return newList;
 	}
 }

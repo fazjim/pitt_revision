@@ -33,6 +33,11 @@ public class AlignmentChangePanel extends JPanel {
 	private JButton cancelButton;
 	private JButton removeButton;
 	private RevisionDocument doc;
+	private ColoredListWrapper clw;
+	
+	public void setListWrapper(ColoredListWrapper clw) {
+		this.clw = clw;
+	}
 
 	Hashtable<String, Integer> sentenceIndex = new Hashtable<String, Integer>();
 
@@ -203,6 +208,7 @@ public class AlignmentChangePanel extends JPanel {
 	public void close() {
 		JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
 		topFrame.dispatchEvent(new WindowEvent(topFrame, WindowEvent.WINDOW_CLOSING));
+		clw.repaint();
 	}
 	
 	public void save() {
@@ -233,6 +239,8 @@ public class AlignmentChangePanel extends JPanel {
 		} catch(Exception exp) {
 			JOptionPane.showMessageDialog(this, "Alignment could not be changed.\n"+"Trace: "+exp.getMessage());
 		}
+		//
+		
 		//doc.check();
 	}
 

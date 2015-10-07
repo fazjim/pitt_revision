@@ -534,6 +534,11 @@ public class RevisionDocument {
 		// Should remove the correlated revisions
 		ArrayList<RevisionUnit> toRemove = this.getRoot()
 				.getRevisionUnitNewAtLevel(0, newIndex);
+		//Added: the aligned revisions should also be removed
+		for(Integer oldIndex: oldIndices){
+			toRemove.addAll(this.getRoot().getRevisionUnitOldAtLevel(0, oldIndex));
+		}
+		
 		for (RevisionUnit unit : toRemove) {
 			unit.setAbandoned();
 		}
@@ -569,6 +574,13 @@ public class RevisionDocument {
 		// Should remove the correlated revisions
 		ArrayList<RevisionUnit> toRemove = this.getRoot()
 				.getRevisionUnitOldAtLevel(0, oldIndex);
+		
+		/**New added, remove the errors*/
+		for(Integer newIndex: newIndices) {
+			toRemove.addAll(this.getRoot().getRevisionUnitNewAtLevel(0, newIndex));
+		}
+		
+		
 		for (RevisionUnit unit : toRemove) {
 			unit.setAbandoned();
 		}
