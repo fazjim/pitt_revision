@@ -110,6 +110,8 @@ public class HeatMapUnit implements Comparable {
 	public int aVR; //adjusted Row index in vertical view
 	public String rType;
 	public String rPurpose;
+	public int oldIndex;
+	public int newIndex;
 
 	public static int compare(HeatMapUnit unit1, HeatMapUnit unit2) {
 		if(unit1.pD1 == -1) {

@@ -56,7 +56,7 @@ public class RevisionMapFileGenerator {
 
 	public static ArrayList<ArrayList<HeatMapUnit>> getUnits4CRF(
 			RevisionDocument doc) {
-		List<HeatMapUnit> units = generateUnits(doc);
+		List<HeatMapUnit> units = generateUnits4Tagging(doc);
 		adjustUnits(units);
 		ArrayList<ArrayList<HeatMapUnit>> segmentedUnits = new ArrayList<ArrayList<HeatMapUnit>>();
 		int currentP = -1;
@@ -149,6 +149,39 @@ public class RevisionMapFileGenerator {
 		return txt;
 	}
 
+	public static void shiftUp(List<HeatMapUnit> units, int index) {
+		for(int i = index;i<units.size();i++) {
+			units.get(i).aVR = units.get(i).aVR-2;
+		}
+	}
+	
+	public static void adjustUnitsPass2(List<HeatMapUnit> units) {
+		for(int i = 0;i<units.size();i++) {
+			HeatMapUnit unit = units.get(i);
+			if(unit.pD2 == -1) {
+				int j = i+1;
+				if(j<units.size() && units.get(j).aVR-unit.aVR>1) {
+				while(j<units.size()&&units.get(j).pD1 == -1) {
+					j++;
+				}
+				if(units.get(j).pD1 == unit.pD1) {
+					shiftUp(units,i+1);
+				}
+				}
+			} else if(unit.pD1 == -1) {
+				int j = i + 1;
+				if(j<units.size()&&units.get(j).aVR-unit.aVR >1) {
+					while(j<units.size()&&units.get(j).pD2 ==-1) {
+						j++;
+					}
+					if(units.get(j).pD2 == unit.pD2) {
+						shiftUp(units,i+1);
+					}
+				}
+			}
+		}
+	}
+	
 	public static void adjustUnits(List<HeatMapUnit> units) {
 		int aR = 1;
 		int aC = 0;
@@ -201,7 +234,7 @@ public class RevisionMapFileGenerator {
 		}
 
 		// Adding another step of vertical view processing
-
+		adjustUnitsPass2(units);
 	}
 
 	/**
@@ -261,7 +294,7 @@ public class RevisionMapFileGenerator {
 					&& (ru.getRevision_purpose() == RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING
 							|| ru.getRevision_purpose() == RevisionPurpose.WORDUSAGE_CLARITY || ru
 							.getRevision_purpose() == RevisionPurpose.WORDUSAGE_CLARITY_CASCADED)) {
-				revisionPurpose = "Surface";
+				revisionPurpose = RevisionPurpose.getPurposeName(RevisionPurpose.SURFACE);
 			}
 			if (oldIndices == null || oldIndices.size() == 0
 					|| (oldIndices.size() == 1 && oldIndices.get(0) == -1)) {
@@ -273,6 +306,8 @@ public class RevisionMapFileGenerator {
 				for (Integer newIndex : newIndices) {
 					if (newIndex != -1) {
 						HeatMapUnit hmu = new HeatMapUnit();
+						hmu.oldIndex = oldIndex;
+						hmu.newIndex = newIndex;
 						hmu.sD1 = sD1;
 						hmu.sD2 = newParaIndices.get(newIndex);
 						hmu.scD1 = scD1;
@@ -295,6 +330,8 @@ public class RevisionMapFileGenerator {
 				for (Integer oldIndex : oldIndices) {
 					if (oldIndex != -1) {
 						HeatMapUnit hmu = new HeatMapUnit();
+						hmu.oldIndex = oldIndex;
+						hmu.newIndex = newIndex;
 						hmu.sD1 = oldParaIndices.get(oldIndex);
 						hmu.sD2 = sD2;
 						hmu.scD1 = doc.getOldSentence(oldIndex);
@@ -314,6 +351,8 @@ public class RevisionMapFileGenerator {
 						for (Integer newIndex : newIndices) {
 							if (newIndex != -1) {
 								HeatMapUnit hmu = new HeatMapUnit();
+								hmu.oldIndex = oldIndex;
+								hmu.newIndex = newIndex;
 								hmu.sD1 = oldParaIndices.get(oldIndex);
 								hmu.sD2 = newParaIndices.get(newIndex);
 								hmu.scD1 = doc.getOldSentence(oldIndex);
@@ -341,12 +380,14 @@ public class RevisionMapFileGenerator {
 						String key = oldIndex + ":" + newIndex;
 						if (!unitMaps.containsKey(key)) {
 							HeatMapUnit hmu = new HeatMapUnit();
+							hmu.oldIndex = oldIndex;
+							hmu.newIndex = newIndex;
 							hmu.sD1 = oldParaIndices.get(oldIndex);
 							hmu.sD2 = newParaIndices.get(newIndex);
 							hmu.scD1 = hmu.scD2 = doc.getOldSentence(oldIndex);
 							hmu.pD1 = doc.getParaNoOfOldSentence(oldIndex);
 							hmu.pD2 = doc.getParaNoOfNewSentence(newIndex);
-							hmu.rType = "Nochange";
+							hmu.rType = RevisionPurpose.getPurposeName(RevisionPurpose.NOCHANGE);
 							hmu.rPurpose = "";
 							unitMaps.put(key, hmu);
 						}
@@ -362,7 +403,8 @@ public class RevisionMapFileGenerator {
 			hmUnits.add(unitMaps.get(key));
 		}
 
-		Collections.sort(hmUnits);
+		//Collections.sort(hmUnits);
+		hmUnits = topoSort(hmUnits);
 		return hmUnits;
 	}
 
@@ -424,7 +466,7 @@ public class RevisionMapFileGenerator {
 					&& (ru.getRevision_purpose() == RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING
 							|| ru.getRevision_purpose() == RevisionPurpose.WORDUSAGE_CLARITY || ru
 							.getRevision_purpose() == RevisionPurpose.WORDUSAGE_CLARITY_CASCADED)) {
-				revisionPurpose = "Surface";
+				revisionPurpose = RevisionPurpose.getPurposeName(RevisionPurpose.SURFACE);
 			}
 			if (oldIndices == null || oldIndices.size() == 0
 					|| (oldIndices.size() == 1 && oldIndices.get(0) == -1)) {
@@ -436,6 +478,8 @@ public class RevisionMapFileGenerator {
 				for (Integer newIndex : newIndices) {
 					if (newIndex != -1) {
 						HeatMapUnit hmu = new HeatMapUnit();
+						hmu.oldIndex = -1;
+						hmu.newIndex = newIndex;
 						hmu.sD1 = sD1;
 						hmu.sD2 = newParaIndices.get(newIndex);
 						hmu.scD1 = scD1;
@@ -458,6 +502,8 @@ public class RevisionMapFileGenerator {
 				for (Integer oldIndex : oldIndices) {
 					if (oldIndex != -1) {
 						HeatMapUnit hmu = new HeatMapUnit();
+						hmu.oldIndex = oldIndex;
+						hmu.newIndex = -1;
 						hmu.sD1 = oldParaIndices.get(oldIndex);
 						hmu.sD2 = sD2;
 						hmu.scD1 = doc.getOldSentence(oldIndex);
@@ -477,6 +523,8 @@ public class RevisionMapFileGenerator {
 						for (Integer newIndex : newIndices) {
 							if (newIndex != -1) {
 								HeatMapUnit hmu = new HeatMapUnit();
+								hmu.oldIndex = oldIndex;
+								hmu.newIndex = newIndex;
 								hmu.sD1 = oldParaIndices.get(oldIndex);
 								hmu.sD2 = newParaIndices.get(newIndex);
 								hmu.scD1 = doc.getOldSentence(oldIndex);
@@ -505,6 +553,8 @@ public class RevisionMapFileGenerator {
 						String key = oldIndex + ":" + newIndex;
 						if (!unitMaps.containsKey(key)) {
 							HeatMapUnit hmu = new HeatMapUnit();
+							hmu.oldIndex = oldIndex;
+							hmu.newIndex = newIndex;
 							hmu.sD1 = oldParaIndices.get(oldIndex);
 							hmu.sD2 = newParaIndices.get(newIndex);
 							hmu.scD1 = doc.getOldSentence(oldIndex);
@@ -525,6 +575,8 @@ public class RevisionMapFileGenerator {
 				String key = oldIndex + ":-1";
 				if (!unitMaps.containsKey(key)) {
 					HeatMapUnit hmu = new HeatMapUnit();
+					hmu.oldIndex = oldIndex;
+					hmu.newIndex = -1;
 					hmu.sD1 = oldParaIndices.get(oldIndex);
 					hmu.sD2 = -1;
 					hmu.scD1 = doc.getOldSentence(oldIndex);
@@ -545,6 +597,8 @@ public class RevisionMapFileGenerator {
 				String key = "-1:" + newIndex;
 				if (!unitMaps.containsKey(key)) {
 					HeatMapUnit hmu = new HeatMapUnit();
+					hmu.oldIndex = -1;
+					hmu.newIndex = newIndex;
 					hmu.sD1 = -1;
 					hmu.sD2 = newParaIndices.get(newIndex);
 					hmu.scD1 = "";
@@ -566,7 +620,11 @@ public class RevisionMapFileGenerator {
 		}
 
 		//Collections.sort(hmUnits);
+		try {
 		hmUnits = topoSort(hmUnits);
+		}catch(Exception exp) {
+		System.out.println(doc.getDocumentName());
+		}
 		return hmUnits;
 	}
 	

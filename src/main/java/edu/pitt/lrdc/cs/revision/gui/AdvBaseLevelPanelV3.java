@@ -31,6 +31,8 @@ import edu.pitt.lrdc.cs.revision.model.RevisionUnit;
 public class AdvBaseLevelPanelV3 extends JPanel implements LevelPanel {
 	JList sentenceList; // old
 	JList newSentenceList; // new
+	JSplitPane splitPane;
+	
 	
 	RevisionDocument doc; // Data model
 	JButton changeAlignmentButton; // Change alignment
@@ -172,6 +174,16 @@ public class AdvBaseLevelPanelV3 extends JPanel implements LevelPanel {
 		return true;
 	}
 
+	private void restoreDefaults() {
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+            	splitPane.setDividerLocation(splitPane.getSize().height /2);
+                //mainSplittedPane.setDividerLocation(mainSplittedPane.getSize().width /2);
+            }
+        });
+    }
 	
 
 	public AdvBaseLevelPanelV3(RevisionDocument doc) {
@@ -184,19 +196,23 @@ public class AdvBaseLevelPanelV3 extends JPanel implements LevelPanel {
 		sentenceList = wrapper.getOldSentenceList();
 		newSentenceList = wrapper.getNewSentenceList();
 		wrapper.paint();
-		JScrollPane pane = new JScrollPane(sentenceList);
-		JScrollPane newPane = new JScrollPane(newSentenceList);
+		//JScrollPane pane = new JScrollPane(sentenceList);
+		//JScrollPane newPane = new JScrollPane(newSentenceList);
 		//pane.setSize(this.getWidth() / 3, this.getHeight() / 2);
 		//newPane.setSize(this.getWidth() / 3, this.getHeight() / 2);
 		annotateBox = new AnnotateBox();
 		
-		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, pane, newPane);
+		//JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, pane, newPane);
+		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sentenceList, newSentenceList);
 		splitPane.setDividerLocation(0.5);
 		splitPane.setResizeWeight(.5d);
+		
+		JScrollPane splitScroll = new JScrollPane(splitPane);
 		sentenceBox = new Box(BoxLayout.X_AXIS);
 		//sentenceBox.add(pane);
 		//sentenceBox.add(newPane);
-		sentenceBox.add(splitPane);
+		//sentenceBox.add(splitPane);
+		sentenceBox.add(splitScroll);
 		annotateContentDetail = new ContentBox(BoxLayout.Y_AXIS);
 		//levelPanel = new LevelDemoPanel(doc, 0);
 		//levelPanel.boundPanel(this);
@@ -231,6 +247,7 @@ public class AdvBaseLevelPanelV3 extends JPanel implements LevelPanel {
 		
 		add(sentenceBox);
 		add(changeAlignmentButton);
+		add(annotateContentDetail);
 		// c.fill = GridBagConstraints.HORIZONTAL;
 		// c.gridx = 0;
 		// c.gridy = 4;
@@ -241,13 +258,14 @@ public class AdvBaseLevelPanelV3 extends JPanel implements LevelPanel {
 		// c.gridx = 0;
 		// c.gridy = 8;
 		// c.gridheight = 2;
-		add(annotateContentDetail);
+		
 
 		// c.gridheight = 1;
 		// c.fill = GridBagConstraints.HORIZONTAL;
 		// c.gridx = 0;
 		// c.gridy = 10;
 		//add(levelPanel);
+        restoreDefaults();
 	}
 
 	public void showAlign() {

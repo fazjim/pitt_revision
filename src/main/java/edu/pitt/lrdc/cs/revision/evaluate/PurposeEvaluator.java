@@ -294,6 +294,38 @@ public class PurposeEvaluator {
 					+ printCorr(getCorr(getCorrMatrix(docs, true, type))));
 		}
 	}
+	
+	public static void evaluatePurposeCorrelation2(
+			ArrayList<RevisionDocument> docs) {
+		int type = -1;
+		System.out.println("Correlation of all revisions");
+		System.out.println("Essay-level:"
+				+ printCorr(getCorr(getCorrMatrix(docs, false, type))));
+		System.out.println("Paragraph-level:"
+				+ printCorr(getCorr(getCorrMatrix(docs, true, type))));
+		type = -2;
+		System.out.println("Correlation of TEXT revisions");
+		System.out.println("Essay-level:"
+				+ printCorr(getCorr(getCorrMatrix(docs, false, type))));
+		System.out.println("Paragraph-level:"
+				+ printCorr(getCorr(getCorrMatrix(docs, true, type))));
+		for (int i = RevisionPurpose.CLAIMS_IDEAS; i <= RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT; i++) {
+			type = i;
+			System.out.println("Correlation of revisions:"
+					+ RevisionPurpose.getPurposeName(type));
+			System.out.println("Essay-level:"
+					+ printCorr(getCorr(getCorrMatrix(docs, false, type))));
+			System.out.println("Paragraph-level:"
+					+ printCorr(getCorr(getCorrMatrix(docs, true, type))));
+		}
+		type = RevisionPurpose.WORDUSAGE_CLARITY;
+		System.out.println("Correlation of revisions:"
+				+ RevisionPurpose.getPurposeName(type));
+		System.out.println("Essay-level:"
+				+ printCorr(getCorr(getCorrMatrix(docs, false, type))));
+		System.out.println("Paragraph-level:"
+				+ printCorr(getCorr(getCorrMatrix(docs, true, type))));
+	}
 
 	/**
 	 * Of all the revisions, how many of the revisions has been identified

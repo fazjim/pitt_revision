@@ -854,6 +854,29 @@ public class RevisionDocument {
 		}
 	}
 
+	public String getIndiceStr(ArrayList<Integer> indices) {
+		Collections.sort(indices);
+		String indiceStr = "";
+		for(Integer index: indices) {
+			if(index!=-1) {
+				indiceStr += index + "-";
+			}
+		}
+		return indiceStr;
+	}
+	public void removeRedundant() {
+		HashSet<String> existingRevs = new HashSet<String>();
+		ArrayList<RevisionUnit> revisions = this.getRoot().getRevisionUnitAtLevel(0);
+		for(RevisionUnit unit:revisions) {
+			String label = "PURPOSE:"+ unit.getRevision_purpose() + "OLD:"+getIndiceStr(unit.getOldSentenceIndex()) + "NEW:"+getIndiceStr(unit.getNewSentenceIndex());
+			if(existingRevs.contains(label)) {
+				unit.setAbandoned();
+			} else {
+				existingRevs.add(label);
+			}
+		}
+	}
+	
 	// After realignment remove the wrong annotations
 	public void check() {
 		ArrayList<RevisionUnit> units = this.getRoot()

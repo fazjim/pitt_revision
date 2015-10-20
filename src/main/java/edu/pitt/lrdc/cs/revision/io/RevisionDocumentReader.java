@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Stack;
 
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFRow;
@@ -451,6 +452,7 @@ public class RevisionDocumentReader {
 			TemporaryAnnotationFixer.addParagraphInfo(fixFolderPath, filePath,
 					doc);
 		doc.setPromptContent(tmpPromptInfo);
+		doc.removeRedundant();
 		return doc;
 	}
 
@@ -529,10 +531,25 @@ public class RevisionDocumentReader {
 			throws Exception {
 		ArrayList<RevisionDocument> revDocs = new ArrayList<RevisionDocument>();
 		File folder = new File(folderPath);
+		/**
 		File[] files = folder.listFiles();
 		for (int i = 0; i < files.length; i++) {
 			if(files[i].getName().endsWith(".xlsx"))
 			revDocs.add(readDoc(files[i].getAbsolutePath()));
+		}**/
+		Stack<File> stack = new Stack<File>();
+		stack.push(folder);
+		while(!stack.isEmpty()) {
+			File f = stack.pop();
+			File[] files = f.listFiles();
+			for(File sub: files) {
+				if(sub.isDirectory()) stack.push(sub);
+				else {
+					if(sub.getName().endsWith(".xlsx")) {
+						revDocs.add(readDoc(sub.getAbsolutePath()));
+					}
+				}
+			}
 		}
 		return revDocs;
 	}

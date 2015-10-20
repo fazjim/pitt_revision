@@ -1,9 +1,20 @@
 package edu.pitt.cs.revision.purpose;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+
+//import scala.collection.Iterator;
+import java.util.Iterator;
+
+import com.github.jcrfsuite.CrfTagger;
+import com.github.jcrfsuite.CrfTrainer;
+import com.github.jcrfsuite.util.Pair;
 
 import cc.mallet.fst.CRF;
 import cc.mallet.fst.CRFOptimizableByLabelLikelihood;
@@ -20,9 +31,13 @@ import weka.core.Instances;
 import edu.pitt.cs.revision.machinelearning.WekaAssist;
 import edu.pitt.cs.revision.util.RevisionMapFileGenerator;
 import edu.pitt.lrdc.cs.revision.alignment.model.HeatMapUnit;
+import edu.pitt.lrdc.cs.revision.evaluate.EvaluateTool;
+import edu.pitt.lrdc.cs.revision.evaluate.PurposeEvaluator;
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentReader;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
+import edu.pitt.lrdc.cs.revision.model.RevisionOp;
 import edu.pitt.lrdc.cs.revision.model.RevisionPurpose;
+import edu.pitt.lrdc.cs.revision.model.RevisionUnit;
 
 /**
  * This works as a sequential tagger version for purpose labeling
@@ -37,24 +52,155 @@ public class RevisionPurposeTagger {
 												// is a segment
 	private boolean ignoreSurface = true;
 
+	private WekaAssist wa;
+	private CRFFeatureExtractor fe;
+	private CrfTagger tagger;
+
+	private static RevisionPurposeTagger instance;
+
+	private ArrayList<RevisionDocument> trainDocs;
+	private ArrayList<String> categories;
+
+	private RevisionPurposeTagger() {
+		wa = new WekaAssist();
+		fe = new CRFFeatureExtractor();
+	}
+
+	public void setIgnoreSurface(boolean ignoreSurface) {
+		this.ignoreSurface = ignoreSurface;
+	}
+
+	public void setTagLevelParagraph(boolean tagLevelParagraph) {
+		this.tagLevelParagraph = tagLevelParagraph;
+	}
+
+	public static RevisionPurposeTagger getInstance() {
+		if (instance == null) {
+			instance = new RevisionPurposeTagger();
+		}
+		return instance;
+	}
+
+	public Instances[] prepareForLabelling(ArrayList<RevisionDocument> docs,
+			boolean usingNgram, int remove) throws Exception {
+		if (trainDocs != null) {
+			return prepareForLabelling(trainDocs, docs, usingNgram, remove);
+		} else {
+			throw new Exception("Training data not set yet");
+		}
+	}
+
+	public void trainAndTag(String trainPath, String modelPath,
+			String testPath, String testOutputPath) throws IOException {
+		CrfTrainer.train(trainPath, modelPath);
+		tagger = new CrfTagger(modelPath);
+		List<List<Pair<String, Double>>> tagProbLists = tagger.tag(testPath);
+
+		// Compute accuracy
+		int total = 0;
+		int correct = 0;
+		System.out.println("Gold\tPredict\tProbability");
+
+		BufferedReader br = new BufferedReader(new FileReader(testPath));
+		BufferedWriter writer = new BufferedWriter(new FileWriter(
+				testOutputPath));
+		String line;
+		for (List<Pair<String, Double>> tagProbs : tagProbLists) {
+			for (Pair<String, Double> tagProb : tagProbs) {
+				String prediction = tagProb.first;
+				Double prob = tagProb.second;
+				line = br.readLine();
+				while (line.trim().length() == 0) {
+					writer.write("\n");
+					line = br.readLine();
+				}
+				writer.write(prediction + "\t" + line + "\n");
+			}
+		}
+		br.close();
+		writer.close();
+	}
+
+	public void tag(String testPath, String testOutputPath) throws IOException {
+		if (tagger != null) {
+			List<List<Pair<String, Double>>> tagProbLists = tagger
+					.tag(testPath);
+			BufferedReader br = new BufferedReader(new FileReader(testPath));
+			BufferedWriter writer = new BufferedWriter(new FileWriter(
+					testOutputPath));
+			String line;
+			for (List<Pair<String, Double>> tagProbs : tagProbLists) {
+				for (Pair<String, Double> tagProb : tagProbs) {
+					String prediction = tagProb.first;
+					Double prob = tagProb.second;
+					line = br.readLine();
+					while (line.trim().length() == 0) {
+						writer.write("\n");
+						line = br.readLine();
+					}
+					writer.write(prediction + "\t" + line + "\n");
+				}
+			}
+			writer.close();
+			br.close();
+		}
+	}
+
+	public void tag(String testPath) throws IOException {
+		if (tagger != null) {
+			List<List<Pair<String, Double>>> tagProbLists = tagger
+					.tag(testPath);
+			BufferedReader br = new BufferedReader(new FileReader(testPath));
+			List<String> lines = new ArrayList<String>();
+			String line;
+			for (List<Pair<String, Double>> tagProbs : tagProbLists) {
+				for (Pair<String, Double> tagProb : tagProbs) {
+					String prediction = tagProb.first;
+					Double prob = tagProb.second;
+
+					line = br.readLine();
+					while (line.trim().length() == 0) {
+						lines.add("\n");
+						line = br.readLine();
+					}
+					line = line.substring(line.indexOf("\t") + 1);
+					line = prediction + "\t" + line;
+					lines.add(line);
+				}
+			}
+
+			BufferedWriter writer = new BufferedWriter(new FileWriter(testPath));
+			for (String newLine : lines) {
+				writer.write(newLine + "\n");
+			}
+			writer.close();
+			br.close();
+		}
+	}
+
 	public Instances[] prepareForLabelling(
 			ArrayList<RevisionDocument> trainDocs,
 			ArrayList<RevisionDocument> testDocs, boolean usingNgram, int remove)
 			throws Exception {
-		WekaAssist wa = new WekaAssist();
-		CRFFeatureExtractor fe = new CRFFeatureExtractor();
-
-		ArrayList<String> categories = new ArrayList<String>();
-		for (int i = RevisionPurpose.START; i <= RevisionPurpose.END; i++) {
-			if(ignoreSurface&&(i==RevisionPurpose.WORDUSAGE_CLARITY||i==RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING||i==RevisionPurpose.WORDUSAGE_CLARITY_CASCADED)){
-				//do nothing
-			} else {
-				categories.add(RevisionPurpose.getPurposeName(i));
-			}
+		/*
+		 * ArrayList<String> categories = new ArrayList<String>(); for (int i =
+		 * RevisionPurpose.START; i <= RevisionPurpose.END; i++) { if
+		 * (ignoreSurface && (i == RevisionPurpose.WORDUSAGE_CLARITY || i ==
+		 * RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING || i ==
+		 * RevisionPurpose.WORDUSAGE_CLARITY_CASCADED)) { // do nothing } else {
+		 * categories.add(RevisionPurpose.getPurposeName(i)); } } if
+		 * (ignoreSurface) categories.add("Surface");
+		 * categories.add("NOCHANGE");
+		 */
+		if (categories == null) {
+			if (ignoreSurface)
+				categories = CategoryFactory
+						.buildCategories(CategoryFactory.CONTENTSURFACE_MODE);
+			else
+				categories = CategoryFactory
+						.buildCategories(CategoryFactory.CONTENTSURFACE_MODE);
+			fe.buildFeatures(usingNgram, categories);
 		}
-		if(ignoreSurface) categories.add("Surface");
-		categories.add("NOCHANGE");
-		fe.buildFeatures(usingNgram, categories);
 
 		Instances trainData = wa.buildInstances(fe.features, usingNgram);
 		Instances testData = wa.buildInstances(fe.features, usingNgram);
@@ -62,20 +208,56 @@ public class RevisionPurposeTagger {
 		for (RevisionDocument doc : trainDocs) {
 			ArrayList<ArrayList<HeatMapUnit>> units = RevisionMapFileGenerator
 					.getUnits4CRF(doc);
-			ArrayList<Object[]> featureArr = fe.extractFeatures(units,
+			ArrayList<Object[]> featureArr = null; 
+			try {
+				featureArr = fe.extractFeatures(units,
 					usingNgram);
+			}catch(Exception exp) {
+				System.out.println(doc.getDocumentName());
+			}
 			int index = 0;
 			for (ArrayList<HeatMapUnit> paragraph : units) {
 				for (HeatMapUnit hmu : paragraph) {
 					Object[] features = featureArr.get(index);
-					if (hmu.rType.equals("Nochange")) {
-						wa.addInstance(features, fe.features, usingNgram,
-								trainData, "NOCHANGE", "dummy");
+					if (hmu.rType.equals(RevisionPurpose
+							.getPurposeName(RevisionPurpose.NOCHANGE))) {
+						wa.addInstance(
+								features,
+								fe.features,
+								usingNgram,
+								trainData,
+								RevisionPurpose
+										.getPurposeName(RevisionPurpose.NOCHANGE),
+								"dummy");
 					} else {
-						wa.addInstance(features, fe.features, usingNgram,
-								trainData, hmu.rPurpose, "dummy");
+						// For training data, trim the unlabeled ones
+						if (hmu.rPurpose.trim().length() > 0) {
+							String purpose = hmu.rPurpose;
+							if (purpose
+									.equals(RevisionPurpose
+											.getPurposeName(RevisionPurpose.WORDUSAGE_CLARITY))
+									|| purpose
+											.equals(RevisionPurpose
+													.getPurposeName(RevisionPurpose.ORGANIZATION))
+									|| purpose
+											.equals(RevisionPurpose
+													.getPurposeName(RevisionPurpose.WORDUSAGE_CLARITY_CASCADED))
+									|| purpose
+											.equals(RevisionPurpose
+													.getPurposeName(RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING))) {
+								purpose = RevisionPurpose
+										.getPurposeName(RevisionPurpose.SURFACE);
+							}
+							wa.addInstance(features, fe.features, usingNgram,
+									trainData, purpose, "dummy");
+						}
+
 					}
 					index++;
+					if (trainData.size() > 0
+							&& trainData.instance(trainData.size() - 1)
+									.classValue() == -1)
+						System.out.println("PURPOSE:" + hmu.rPurpose);
 				}
 			}
 		}
@@ -89,25 +271,226 @@ public class RevisionPurposeTagger {
 			for (ArrayList<HeatMapUnit> paragraph : units) {
 				for (HeatMapUnit hmu : paragraph) {
 					Object[] features = featureArr.get(index);
-					if (hmu.rType.equals("Nochange")) {
-						wa.addInstance(features, fe.features, usingNgram,
-								testData, "NOCHANGE", "dummy");
+					if (hmu.rType.equals(RevisionPurpose
+							.getPurposeName(RevisionPurpose.NOCHANGE))) {
+						wa.addInstance(
+								features,
+								fe.features,
+								usingNgram,
+								testData,
+								RevisionPurpose
+										.getPurposeName(RevisionPurpose.NOCHANGE),
+								"dummy");
 					} else {
-						wa.addInstance(features, fe.features, usingNgram,
-								testData, hmu.rPurpose, "dummy");
+						if (hmu.rPurpose.trim().length() == 0) {
+							wa.addInstance(
+									features,
+									fe.features,
+									usingNgram,
+									testData,
+									RevisionPurpose
+											.getPurposeName(RevisionPurpose.NOCHANGE),
+									"dummy");
+						} else {
+							wa.addInstance(features, fe.features, usingNgram,
+									testData, hmu.rPurpose, "dummy");
+						}
 					}
 					index++;
 				}
 			}
 		}
 		Instances[] trainTestInstances = new Instances[2];
-		if(usingNgram) {
+		if (usingNgram) {
 			trainTestInstances = wa.addNgram(trainData, testData);
 		} else {
 			trainTestInstances[0] = trainData;
 			trainTestInstances[1] = testData;
 		}
 		return trainTestInstances;
+	}
+
+	/**
+	 * Read the CRF results and set to predict units
+	 * 
+	 * @param docs
+	 * @param fileName
+	 * @throws IOException
+	 */
+	public void readResultToDocs(ArrayList<RevisionDocument> docs,
+			String fileName) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(fileName));
+		List<String> lines = new ArrayList<String>();
+		String line = "";
+		line = reader.readLine();
+		while (line != null) {
+			if (line.trim().length() > 0)
+				lines.add(line);
+			line = reader.readLine();
+		}
+		reader.close();
+
+		int index = 0;
+		for (RevisionDocument doc : docs) {
+			ArrayList<ArrayList<HeatMapUnit>> units = RevisionMapFileGenerator
+					.getUnits4CRF(doc);
+			for (ArrayList<HeatMapUnit> paragraph : units) {
+				for (HeatMapUnit unit : paragraph) {
+					String resultLine = lines.get(index);
+					String tag = resultLine.split("\t")[0];
+					double tagDouble = Double.parseDouble(tag);
+					int tagInt = (int) tagDouble;
+					unit.setRPurpose(categories.get(tagInt));
+					index++;
+				}
+			}
+			setPredictResults(units, doc);
+		}
+	}
+
+	public void setPredictResults(ArrayList<ArrayList<HeatMapUnit>> units,
+			RevisionDocument doc) {
+		Hashtable<Integer, ArrayList<Integer>> oldLists = new Hashtable<Integer, ArrayList<Integer>>();
+		Hashtable<Integer, ArrayList<Integer>> newLists = new Hashtable<Integer, ArrayList<Integer>>();
+
+		Hashtable<Integer, String> oldRevs = new Hashtable<Integer, String>();
+		Hashtable<Integer, String> newRevs = new Hashtable<Integer, String>();
+
+		for (ArrayList<HeatMapUnit> paragraph : units) {
+			for (HeatMapUnit unit : paragraph) {
+				int oldIndex = unit.oldIndex;
+				int newIndex = unit.newIndex;
+				if (oldIndex != -1) {
+					ArrayList<Integer> newIndices;
+					if (!oldLists.containsKey(oldIndex)) {
+						newIndices = new ArrayList<Integer>();
+						oldLists.put(oldIndex, newIndices);
+					} else {
+						newIndices = oldLists.get(oldIndex);
+					}
+					if (newIndex != -1)
+						newIndices.add(newIndex);
+					oldRevs.put(oldIndex, unit.rPurpose);
+				}
+				if (newIndex != -1) {
+					ArrayList<Integer> oldIndices;
+					if (!newLists.containsKey(newIndex)) {
+						oldIndices = new ArrayList<Integer>();
+						newLists.put(newIndex, oldIndices);
+					} else {
+						oldIndices = newLists.get(newIndex);
+					}
+					if (oldIndex != -1)
+						oldIndices.add(oldIndex);
+					newRevs.put(newIndex, unit.rPurpose);
+				}
+			}
+		}
+		int revIndex = 1;
+		Iterator<Integer> oldIt = oldLists.keySet().iterator();
+		while (oldIt.hasNext()) {
+			int oldIndex = oldIt.next();
+			ArrayList<Integer> newIndices = oldLists.get(oldIndex);
+			ArrayList<Integer> oldIndices = new ArrayList<Integer>();
+			oldIndices.add(oldIndex);
+			if (newIndices.size() == 0 || newIndices.size() > 1) {
+				for (Integer newIndex : newIndices) {
+					newLists.remove(newIndex);
+				}
+
+				String rPurpose = oldRevs.get(oldIndex);
+				if (!rPurpose.equals(RevisionPurpose
+						.getPurposeName(RevisionPurpose.NOCHANGE))) {
+					if (rPurpose.equals("Surface"))
+						rPurpose = RevisionPurpose
+								.getPurposeName(RevisionPurpose.WORDUSAGE_CLARITY);
+					RevisionUnit ru = new RevisionUnit(doc.getPredictedRoot());
+					ru.setNewSentenceIndex(newIndices);
+					ru.setOldSentenceIndex(oldIndices);
+					if (newIndices == null || newIndices.size() == 0) {
+						ru.setRevision_op(RevisionOp.DELETE);
+					} else if (oldIndices == null || oldIndices.size() == 0) {
+						ru.setRevision_op(RevisionOp.ADD);
+					} else {
+						ru.setRevision_op(RevisionOp.MODIFY);
+					}
+
+					ru.setRevision_purpose(RevisionPurpose
+							.getPurposeIndex(rPurpose));
+					ru.setRevision_level(0);
+					ru.setRevision_index(revIndex);
+					doc.getPredictedRoot().addUnit(ru);
+					revIndex++;
+				}
+			}
+		}
+
+		Iterator<Integer> newIt = newLists.keySet().iterator();
+		while (newIt.hasNext()) {
+			int newIndex = newIt.next();
+			ArrayList<Integer> oldIndices = newLists.get(newIndex);
+			ArrayList<Integer> newIndices = new ArrayList<Integer>();
+			newIndices.add(newIndex);
+			String rPurpose = newRevs.get(newIndex);
+			if (!rPurpose.equals(RevisionPurpose
+					.getPurposeName(RevisionPurpose.NOCHANGE))) {
+				if (rPurpose.equals("Surface"))
+					rPurpose = RevisionPurpose
+							.getPurposeName(RevisionPurpose.WORDUSAGE_CLARITY);
+				RevisionUnit ru = new RevisionUnit(doc.getPredictedRoot());
+				ru.setNewSentenceIndex(newIndices);
+				ru.setOldSentenceIndex(oldIndices);
+				if (newIndices == null || newIndices.size() == 0) {
+					ru.setRevision_op(RevisionOp.DELETE);
+				} else if (oldIndices == null || oldIndices.size() == 0) {
+					ru.setRevision_op(RevisionOp.ADD);
+				} else {
+					ru.setRevision_op(RevisionOp.MODIFY);
+				}
+
+				ru.setRevision_purpose(RevisionPurpose
+						.getPurposeIndex(rPurpose));
+				ru.setRevision_level(0);
+				ru.setRevision_index(revIndex);
+				doc.getPredictedRoot().addUnit(ru);
+				revIndex++;
+			}
+		}
+
+	}
+
+	public void transformToTxtForCRFTrain(Instances inst,
+			ArrayList<RevisionDocument> docs, String fileName)
+			throws IOException {
+		int index = 0;
+		int classIndex = inst.classIndex();
+		BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
+		for (RevisionDocument doc : docs) {
+			ArrayList<ArrayList<HeatMapUnit>> units = RevisionMapFileGenerator
+					.getUnits4CRF(doc);
+
+			for (ArrayList<HeatMapUnit> paragraph : units) {
+				for (HeatMapUnit unit : paragraph) {
+					if (unit.rPurpose.trim().length() > 0
+							|| unit.rType.equals("Nochange")) {
+						Instance instance = inst.instance(index);
+						writer.write(instance.classValue() + "\t");
+						for (int i = 0; i < instance.numAttributes(); i++) {
+							if (i != classIndex) {
+								writer.write(instance.attribute(i).name() + "="
+										+ instance.value(i) + "\t");
+							}
+						}
+						writer.write("\n");
+						index++;
+					}
+				}
+				if (tagLevelParagraph)
+					writer.write("\n");
+			}
+			writer.write("\n");
+		}
+		writer.close();
 	}
 
 	public void transformToTxtForCRF(Instances inst,
@@ -200,23 +583,41 @@ public class RevisionPurposeTagger {
 
 	public static void main(String[] args) throws Exception {
 		RevisionPurposeTagger tagger = new RevisionPurposeTagger();
-		String folderPath = "C:\\Not Backed Up\\data\\trainData";
+		//String folderPath = "C:\\Not Backed Up\\data\\trainData";
+		String folderPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang";
 		ArrayList<RevisionDocument> docs = RevisionDocumentReader
 				.readDocs(folderPath);
-		ArrayList<RevisionDocument> trainDocs = new ArrayList<RevisionDocument>();
-		ArrayList<RevisionDocument> testDocs = new ArrayList<RevisionDocument>();
-		for (int i = 0; i < docs.size() - 2; i++) {
-			trainDocs.add(docs.get(i));
+		int folder = 10;
+		ArrayList<ArrayList<ArrayList<RevisionDocument>>> crossCuts = EvaluateTool
+				.getCrossCut(docs, folder);
+		for (int i = 0; i < folder; i++) {
+			ArrayList<RevisionDocument> trainDocs = crossCuts.get(i).get(0);
+			ArrayList<RevisionDocument> testDocs = crossCuts.get(i).get(1);
+
+			/*
+			 * boolean usingNgram = false; Instances[] data =
+			 * tagger.prepareForLabelling(trainDocs, testDocs, usingNgram, -1);
+			 * tagger.transformToTxtForCRF(data[0], trainDocs,
+			 * "C:\\Not Backed Up\\trainCrf.txt");
+			 * tagger.transformToTxtForCRF(data[1], testDocs,
+			 * "C:\\Not Backed Up\\testCrf.txt");
+			 */
+			boolean usingNgram = false;
+			Instances[] instances = RevisionPurposeTagger.getInstance()
+					.prepareForLabelling(trainDocs, testDocs, usingNgram, -1);
+			String trainPath = "C:\\Not Backed Up\\trainCrf.txt";
+			String testPath = "C:\\Not Backed Up\\testCrf.txt";
+			String modelPath = "C:\\Not Backed Up\\crf.model";
+			String testPath2 = "C:\\Not Backed Up\\testPredictCrf.txt";
+			RevisionPurposeTagger.getInstance().transformToTxtForCRFTrain(
+					instances[0], trainDocs, trainPath);
+			RevisionPurposeTagger.getInstance().transformToTxtForCRF(
+					instances[1], testDocs, testPath);
+			RevisionPurposeTagger.getInstance().trainAndTag(trainPath,
+					modelPath, testPath, testPath2);
+			RevisionPurposeTagger.getInstance().readResultToDocs(testDocs,
+					testPath2);
 		}
-		for (int i = docs.size() - 2; i < docs.size(); i++) {
-			testDocs.add(docs.get(i));
-		}
-		boolean usingNgram = false;
-		Instances[] data = tagger.prepareForLabelling(trainDocs, testDocs,
-				usingNgram, -1);
-		tagger.transformToTxtForCRF(data[0], trainDocs,
-				"C:\\Not Backed Up\\trainCrf.txt");
-		tagger.transformToTxtForCRF(data[1], testDocs,
-				"C:\\Not Backed Up\\testCrf.txt");
+		PurposeEvaluator.evaluatePurposeCorrelation2(docs);
 	}
 }

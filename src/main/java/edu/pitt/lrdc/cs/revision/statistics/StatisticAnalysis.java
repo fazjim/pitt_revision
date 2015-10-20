@@ -1,6 +1,8 @@
 package edu.pitt.lrdc.cs.revision.statistics;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Iterator;
 
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentReader;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
@@ -19,10 +21,11 @@ public class StatisticAnalysis {
 		 * ArrayList<RevisionDocument> testDocs = reader
 		 * .readDocs("D:\\annotationTool\\annotated\\class4");
 		 */
+		String folderPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang";
 		ArrayList<RevisionDocument> trainDocs = reader
-				.readDocs("C:\\Not Backed Up\\data\\trainData");
+				.readDocs(folderPath);
 		// trainDocs.addAll(testDocs);
-		printAllInfo(trainDocs);
+		printAllInfoUnique(trainDocs);
 		// printAllInfo(testDocs);
 		// for(int i =
 		// RevisionPurpose.START;i<=RevisionPurpose.WORDUSAGE_CLARITY;i++) {
@@ -37,6 +40,83 @@ public class StatisticAnalysis {
 		// analyzeSpecificCategoryCorrelationRatio(trainDocs);
 	}
 
+	public static String genIndiceStr(ArrayList<Integer> indices) {
+		String indexStr = "";
+		for(Integer index: indices) {
+			indexStr += index + "-";
+		}
+		return indexStr;
+	}
+	
+	public static void printAllInfoUnique(ArrayList<RevisionDocument> docs) {
+		System.out.print("Username\t");
+		for (int i = RevisionPurpose.START; i <= RevisionPurpose.END; i++) {
+			System.out.print(RevisionPurpose.getPurposeName(i) + "\t");
+		}
+		for (int i = RevisionOp.START; i <= RevisionOp.MODIFY; i++) {
+			System.out.print(RevisionOp.getOpName(i) + "\t");
+		}
+		System.out.println();
+
+		
+		for (RevisionDocument doc : docs) {
+			System.out.print(doc.getDocumentName() + "\t");
+			double[] distribution = new double[9];
+			double[] distribution2 = new double[3];
+			int total = 0;
+			ArrayList<RevisionUnit> rus = doc.getRoot().getRevisionUnitAtLevel(
+					0);
+			Hashtable<String,Integer> revPurposesMap = new Hashtable<String, Integer>();
+			//Hashtable<String,Integer> surfaceRevMap = new Hashtable<String, Integer>();
+			for (RevisionUnit ru : rus) {
+                if(ru.getRevision_purpose()>RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT) {
+				distribution[ru.getRevision_purpose() - 1] += 1;
+				distribution2[ru.getRevision_op() - 1] += 1;
+				total += 1;
+                } else {
+                	ArrayList<Integer> oldIndices = ru.getOldSentenceIndex();
+                	ArrayList<Integer> newIndices = ru.getNewSentenceIndex();
+                	 
+                	String id = ru.getRevision_op()+":"+genIndiceStr(oldIndices)+":"+genIndiceStr(newIndices);
+                	int currentPurpose = ru.getRevision_purpose();
+                	if(revPurposesMap.containsKey(id)) {
+                		int purpose = revPurposesMap.get(id);
+                		//Put more important categories in
+                		if(currentPurpose<purpose) revPurposesMap.put(id,currentPurpose);
+                	} else {
+                		revPurposesMap.put(id, currentPurpose);
+                	}
+                }
+			}
+			
+			Iterator<String> it = revPurposesMap.keySet().iterator();
+			while(it.hasNext()) {
+				String name = it.next();
+				int purpose = revPurposesMap.get(name);
+				String[] splits = name.split(":");
+				int op = Integer.parseInt(splits[0]);
+				distribution[purpose-1] += 1;
+				distribution2[op-1] += 1;
+				total += 1;
+			}
+			for (int i = RevisionPurpose.START; i <= RevisionPurpose.END; i++) {
+				System.out.print(distribution[i - 1] + "\t");
+
+			}
+			for (int i = RevisionOp.START; i <= RevisionOp.MODIFY; i++) {
+				System.out.print(distribution2[i - 1] + "\t");
+
+			}
+			System.out.println();
+			/*
+			 * for(int i = RevisionPurpose.START;i<=RevisionPurpose.END;i++) {
+			 * System
+			 * .out.println(RevisionPurpose.getPurposeName(i)+":"+distribution
+			 * [i-1]); }
+			 */
+		}
+	}
+	
 	public static void printAllInfo(ArrayList<RevisionDocument> docs) {
 		System.out.print("Username\t");
 		for (int i = RevisionPurpose.START; i <= RevisionPurpose.END; i++) {

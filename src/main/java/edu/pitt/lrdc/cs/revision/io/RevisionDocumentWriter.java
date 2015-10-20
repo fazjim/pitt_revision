@@ -18,6 +18,7 @@ import edu.pitt.lrdc.cs.revision.model.RevisionUnit;
 public class RevisionDocumentWriter {
 	public static void writeToDoc(RevisionDocument rd, String path)
 			throws Exception {
+		rd.removeRedundant();
 		FileOutputStream fileOut = new FileOutputStream(path);
 		int level = rd.getRoot().getRevision_level();
 		ArrayList<String> cols = new ArrayList<String>();

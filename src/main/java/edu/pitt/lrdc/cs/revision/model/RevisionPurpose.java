@@ -15,6 +15,11 @@ public class RevisionPurpose {
 	public static final int STYLE = 12;
 	public static final int WHOLEPAPER = 10;
 	public static final int END = 9;
+	
+	public static final int NOCHANGE = 0;
+	public static final int SURFACE = 100;
+	public static final int CONTENT = 101;
+	
 
 	public static String getPurposeName(int index) {
 		if (index == RevisionPurpose.CLAIMS_IDEAS) {
@@ -41,6 +46,12 @@ public class RevisionPurpose {
 			return "Whole paper";
 		} else if (index == RevisionPurpose.HEAVY_EDIT) {
 			return "Heavy edit";
+		} else if(index == RevisionPurpose.NOCHANGE) {
+			return "Nochange";
+		} else if(index == RevisionPurpose.SURFACE) {
+			return "Surface";
+		} else if(index == RevisionPurpose.CONTENT) {
+			return "Content";
 		}
 		return "Dummy";
 	}
