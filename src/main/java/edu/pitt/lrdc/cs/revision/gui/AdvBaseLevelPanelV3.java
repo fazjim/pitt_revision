@@ -173,17 +173,17 @@ public class AdvBaseLevelPanelV3 extends JPanel implements LevelPanel {
 		}
 		return true;
 	}
-
+/*
 	private void restoreDefaults() {
         SwingUtilities.invokeLater(new Runnable() {
 
             @Override
             public void run() {
-            	splitPane.setDividerLocation(splitPane.getSize().height /2);
+            	splitPane.setDividerLocation(splitPane.getSize().width /2);
                 //mainSplittedPane.setDividerLocation(mainSplittedPane.getSize().width /2);
             }
         });
-    }
+    }*/
 	
 
 	public AdvBaseLevelPanelV3(RevisionDocument doc) {
@@ -196,23 +196,32 @@ public class AdvBaseLevelPanelV3 extends JPanel implements LevelPanel {
 		sentenceList = wrapper.getOldSentenceList();
 		newSentenceList = wrapper.getNewSentenceList();
 		wrapper.paint();
-		//JScrollPane pane = new JScrollPane(sentenceList);
-		//JScrollPane newPane = new JScrollPane(newSentenceList);
-		//pane.setSize(this.getWidth() / 3, this.getHeight() / 2);
-		//newPane.setSize(this.getWidth() / 3, this.getHeight() / 2);
+		JScrollPane pane = new JScrollPane(sentenceList,JScrollPane.VERTICAL_SCROLLBAR_NEVER,
+	            JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+		JScrollPane newPane = new JScrollPane(newSentenceList);
+		 JScrollBar sBar2 = pane.getVerticalScrollBar();
+		    sBar2.setModel(newPane.getVerticalScrollBar().getModel());
+		
 		annotateBox = new AnnotateBox();
+		//sentenceList.setSize(this.getWidth()/2, this.getHeight()/2);
+		/*JPanel sentenceBoxPanel = new JPanel();
+		sentenceBoxPanel.add(sentenceList);
+
+		JPanel newSentenceBoxPanel = new JPanel();
+		newSentenceBoxPanel.add(newSentenceList);*/
+		//JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sentenceBoxPanel, newSentenceBoxPanel);
+		//splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, pane, newPane);
+
+		//splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sentenceBoxPanel, newSentenceBoxPanel);
+		//splitPane.setDividerLocation(0.5);
+		//splitPane.setResizeWeight(.5d);
 		
-		//JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, pane, newPane);
-		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sentenceList, newSentenceList);
-		splitPane.setDividerLocation(0.5);
-		splitPane.setResizeWeight(.5d);
-		
-		JScrollPane splitScroll = new JScrollPane(splitPane);
+		//JScrollPane splitScroll = new JScrollPane(splitPane);
 		sentenceBox = new Box(BoxLayout.X_AXIS);
-		//sentenceBox.add(pane);
-		//sentenceBox.add(newPane);
+		sentenceBox.add(pane);
+		sentenceBox.add(newPane);
 		//sentenceBox.add(splitPane);
-		sentenceBox.add(splitScroll);
+		//sentenceBox.add(splitScroll);
 		annotateContentDetail = new ContentBox(BoxLayout.Y_AXIS);
 		//levelPanel = new LevelDemoPanel(doc, 0);
 		//levelPanel.boundPanel(this);
@@ -265,21 +274,22 @@ public class AdvBaseLevelPanelV3 extends JPanel implements LevelPanel {
 		// c.gridx = 0;
 		// c.gridy = 10;
 		//add(levelPanel);
-        restoreDefaults();
+        //restoreDefaults();
 	}
 
 	public void showAlign() {
 		JFrame frame = new JFrame("Change alignment");
-		frame.setSize(800, 600);
+		frame.setSize(1200, 800);
 		/*int[] oldIndices = sentenceList.getSelectedIndices();
 		int[] newIndices = newSentenceList.getSelectedIndices();
 		ArrayList<Integer> oldIndiceArr = new ArrayList<Integer>();
 		ArrayList<Integer> newIndiceArr = new ArrayList<Integer>();
 		for(Integer oldIndex: oldIndices) oldIndiceArr.add(oldIndex+1);
 		for(Integer newIndex: newIndices) newIndiceArr.add(newIndex+1);*/
-		ArrayList<Integer> oldIndiceArr = wrapper.getOldSelectedIndexes();
-		ArrayList<Integer> newIndiceArr = wrapper.getNewSelectedIndexes();
-		AlignmentChangePanel acp = new AlignmentChangePanel(doc, oldIndiceArr, newIndiceArr);
+//		ArrayList<Integer> oldIndiceArr = wrapper.getOldSelectedIndexes();
+//		ArrayList<Integer> newIndiceArr = wrapper.getNewSelectedIndexes();
+		//AlignmentChangePanel acp = new AlignmentChangePanel(doc, oldIndiceArr, newIndiceArr);
+		AlignmentChangePanelV2 acp = new AlignmentChangePanelV2(doc);
 		acp.setListWrapper(wrapper);
 		frame.setContentPane(acp);
 		frame.show();
