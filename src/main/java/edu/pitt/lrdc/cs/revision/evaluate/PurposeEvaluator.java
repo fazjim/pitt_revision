@@ -1,5 +1,8 @@
 package edu.pitt.lrdc.cs.revision.evaluate;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -294,7 +297,7 @@ public class PurposeEvaluator {
 					+ printCorr(getCorr(getCorrMatrix(docs, true, type))));
 		}
 	}
-	
+
 	public static void evaluatePurposeCorrelation2(
 			ArrayList<RevisionDocument> docs) {
 		int type = -1;
@@ -378,6 +381,7 @@ public class PurposeEvaluator {
 		return eval;
 	}
 
+	
 	/**
 	 * Get the total performance evaluation
 	 * 
@@ -486,6 +490,7 @@ public class PurposeEvaluator {
 		return eval;
 	}
 
+	
 	/**
 	 * Transform the list of revision unit to a list of string for the easy of
 	 * comparision
@@ -538,6 +543,104 @@ public class PurposeEvaluator {
 			}
 		} else {
 			return RevisionPurpose.getPurposeName(revPurpose);
+		}
+	}
+
+	public static ConfusionMatrix buildConfusionMatrixOneSurface() {
+		ConfusionMatrix cm = new ConfusionMatrix();
+		cm.addAttribute(RevisionPurpose
+				.getPurposeName(RevisionPurpose.CLAIMS_IDEAS));
+		cm.addAttribute(RevisionPurpose
+				.getPurposeName(RevisionPurpose.CD_WARRANT_REASONING_BACKING));
+		cm.addAttribute(RevisionPurpose
+				.getPurposeName(RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT));
+		cm.addAttribute(RevisionPurpose
+				.getPurposeName(RevisionPurpose.EVIDENCE));
+		cm.addAttribute(RevisionPurpose.getPurposeName(RevisionPurpose.SURFACE));
+		cm.initMatrix();
+		return cm;
+	}
+
+	public static void enterTableOneSurface(
+			Hashtable<String, String> revisionMap, ArrayList<RevisionUnit> rus) {
+		for (RevisionUnit ru : rus) {
+			String ID = ru.getUniqueID();
+			String rPurpose = RevisionPurpose.getPurposeName(ru
+					.getRevision_purpose());
+			if (ru.getRevision_purpose() != RevisionPurpose.CD_REBUTTAL_RESERVATION) {
+				int purpose = ru.getRevision_purpose();
+				if (purpose == RevisionPurpose.ORGANIZATION
+						|| purpose == RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING
+						|| purpose == RevisionPurpose.WORDUSAGE_CLARITY
+						|| purpose == RevisionPurpose.WORDUSAGE_CLARITY_CASCADED) {
+					rPurpose = RevisionPurpose
+							.getPurposeName(RevisionPurpose.SURFACE);
+				}
+				if (!revisionMap.containsKey(ID)) {
+					revisionMap.put(ID, rPurpose);
+				} else {
+					String old = revisionMap.get(ID);
+					if (RevisionPurpose.getPurposeIndex(old) > RevisionPurpose
+							.getPurposeIndex(rPurpose)) {
+						revisionMap.put(ID, rPurpose);
+					}
+				}
+			}
+		}
+	}
+
+	public static ConfusionMatrix getConfusionMatrixOneSurface(ArrayList<RevisionDocument> docs) {
+		ConfusionMatrix cm = buildConfusionMatrixOneSurface();
+		for(RevisionDocument doc: docs) {
+			System.out.println(doc.getDocumentName());
+			getConfusionMatrixOneSurface(doc,cm);
+		}
+		return cm;
+	}
+	
+	public static ConfusionMatrix getConfusionMatrixOneSurface(
+			RevisionDocument doc) {
+		ConfusionMatrix cm = buildConfusionMatrixOneSurface();
+		getConfusionMatrixOneSurface(doc,cm);
+		return cm;
+	}
+	
+	private static BufferedWriter logger;
+	public static void writeErrorLog(String txt) throws IOException {
+		if(logger == null) {
+			
+				logger = new BufferedWriter(new FileWriter("C:\\Not Backed Up\\tagserror.txt"));
+			
+		}
+			logger.write(txt+"\n");
+			logger.flush();
+		
+	}
+	
+	public static void getConfusionMatrixOneSurface(
+			RevisionDocument doc, ConfusionMatrix cm) {
+		ArrayList<RevisionUnit> realRevisions = doc.getRoot()
+				.getRevisionUnitAtLevel(0);
+		ArrayList<RevisionUnit> predictedRevisions = doc.getPredictedRoot()
+				.getRevisionUnitAtLevel(0);
+		Hashtable<String, String> realRevisionMap = new Hashtable<String, String>();
+		Hashtable<String, String> predictedRevisionMap = new Hashtable<String, String>();
+		enterTableOneSurface(realRevisionMap, realRevisions);
+		enterTableOneSurface(predictedRevisionMap, predictedRevisions);
+		Iterator<String> it = realRevisionMap.keySet().iterator();
+		while (it.hasNext()) {
+			String key = it.next();
+			if(predictedRevisionMap.containsKey(key)) {
+				cm.count(predictedRevisionMap.get(key), realRevisionMap.get(key));
+			}
+			else {
+				//System.out.println(key);
+				try {
+				writeErrorLog(doc.getDocumentName() +": "+key);
+				}catch(Exception exp) {
+					exp.printStackTrace();
+				}
+			}
 		}
 	}
 }

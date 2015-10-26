@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import scala.collection.mutable.HashSet;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
 import weka.core.Instances;
@@ -411,14 +412,15 @@ public class RevisionPurposeClassifier {
 		categories
 				.add(RevisionPurpose
 						.getPurposeName(RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT));
-		categories.add(RevisionPurpose
-				.getPurposeName(RevisionPurpose.CD_REBUTTAL_RESERVATION));
+		//categories.add(RevisionPurpose
+		//		.getPurposeName(RevisionPurpose.CD_REBUTTAL_RESERVATION));
 		categories.add(RevisionPurpose
 				.getPurposeName(RevisionPurpose.CD_WARRANT_REASONING_BACKING));
 		categories.add(RevisionPurpose
 				.getPurposeName(RevisionPurpose.CLAIMS_IDEAS));
 		categories
 				.add(RevisionPurpose.getPurposeName(RevisionPurpose.EVIDENCE));
+		categories.add(RevisionPurpose.getPurposeName(RevisionPurpose.SURFACE));
 		
 		fe.buildFeatures(usingNgram, categories);// do not use ngram
 
@@ -432,27 +434,43 @@ public class RevisionPurposeClassifier {
 																		// the
 																		// structure
 
+		HashSet<String> ids = new HashSet<String>();
 		// Collect all the revision units
 		// ArrayList<RevisionUnit> rus = new ArrayList<RevisionUnit>();
 		for (RevisionDocument doc : docs) {
 			ArrayList<RevisionUnit> basicUnits = doc.getRoot()
 					.getRevisionUnitAtLevel(0);
 			for (RevisionUnit ru : basicUnits) {
-				if (ru.getRevision_op() == RevisionOp.ADD
-						|| ru.getRevision_op() == RevisionOp.DELETE) {
+				//if (ru.getRevision_op() == RevisionOp.ADD
+				//		|| ru.getRevision_op() == RevisionOp.DELETE) {
+				String id = doc.getDocumentName()+"_"+ru.getUniqueID();
+				if(!ids.contains(id)) {
+					ids.add(id);
 					Object[] features = fe.extractFeatures(doc, ru, usingNgram);
+					int p = ru.getRevision_purpose();
+					if(p!=RevisionPurpose.CD_REBUTTAL_RESERVATION) {
+					String purposeName = RevisionPurpose.getPurposeName(p);
+					if(p==RevisionPurpose.WORDUSAGE_CLARITY_CASCADED||p==RevisionPurpose.WORDUSAGE_CLARITY||p==RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING||p ==RevisionPurpose.ORGANIZATION)
+						purposeName = RevisionPurpose.getPurposeName(RevisionPurpose.SURFACE);
+					/*boolean found = false;
+					for(int i = 0;i<categories.size();i++) {
+						if(categories.get(i).equals(purposeName)) found = true;
+					}
+					if(found == false) throw new Exception("Error is "+purposeName);*/
+					
 					wa.addInstance(features, fe.features, usingNgram, data,
-							RevisionPurpose.getPurposeName(ru
-									.getRevision_purpose()), "dummy");
+							purposeName, "dummy");
+					}
 				}
+				//}
 			}
 		}
-		wa.saveInstances(data, "C:\\Not Backed Up\\test1.txt");
+		//wa.saveInstances(data, "C:\\Not Backed Up\\test1.txt");
 		if (usingNgram)
 			data = wa.addNgram(data);
 
-		wa.saveInstances(data, "C:\\Not Backed Up\\test.txt");
-		WekaAssist.crossvalidataion(data, 5);
+		//wa.saveInstances(data, "C:\\Not Backed Up\\test.txt");
+		WekaAssist.crossvalidataion(data, 10);
 	}
 
 	public void addPurposeCategories(ArrayList<String> categories) {
@@ -1082,7 +1100,7 @@ public class RevisionPurposeClassifier {
 		ArrayList<RevisionDocument> testDocs = reader
 				.readDocs("C:\\Not Backed Up\\data\\annotated\\revisedClass4");
 		
-		ArrayList<RevisionDocument> allDocs = reader.readDocs("C:\\Not Backed Up\\data\\selectedNew");
+		//ArrayList<RevisionDocument> allDocs = reader.readDocs("C:\\Not Backed Up\\data\\selectedNew");
 		// ArrayList<RevisionDocument> testDocs = reader
 		// .readDocs("D:\\annotationTool\\annotated\\class4");
 		/*
@@ -1090,11 +1108,13 @@ public class RevisionPurposeClassifier {
 		 * .readDocs("D:\\annotationTool\\annotated\\class2");
 		 */
 		// testDocs.addAll(testDocs2);
+		ArrayList<RevisionDocument> allDocs = reader.readDocs("C:\\Not Backed Up\\data\\trainData");
 		RevisionPurposeClassifier rpc = new RevisionPurposeClassifier();
 		WekaAssist wa = new WekaAssist();
 		//rpc.classifyADRevisionPurpose(trainDocs, testDocs, false);
-		rpc.classifyADRevisionPurpose(allDocs, testDocs, false);
-		
+		//rpc.classifyADRevisionPurpose(allDocs, testDocs, false);
+		rpc.classifyADRevisionPurpose(allDocs,
+				true); 
 		/*
 		 * int[] revPurposes = { RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT,
 		 * RevisionPurpose.CD_WARRANT_REASONING_BACKING,

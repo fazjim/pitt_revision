@@ -247,11 +247,12 @@ public class AlignmentListWrapper {
 			if (unit.aVR - lastAVR > 1)
 				addBlankLine();
 			lastAVR = unit.aVR;
-			int[] indices = addLine(unit, realOldIndex, realNewIndex);
+			/*int[] indices = addLine(unit, realOldIndex, realNewIndex);
 			if (indices[0] != -1)
 				realOldIndex = indices[0];
 			if (indices[1] != -1)
-				realNewIndex = indices[1];
+				realNewIndex = indices[1];*/
+			addLine(unit, unit.oldIndex,unit.newIndex);
 		}
 
 		oldSentenceList.setListData(oldData.toArray(new MyListItem[oldData

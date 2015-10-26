@@ -1,6 +1,7 @@
 package edu.pitt.lrdc.cs.revision.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Stack;
 
@@ -334,6 +335,7 @@ public class RevisionUnit {
 	 * Get the sentence-level revision units, filtering the multiple purpose cases
 	 * @return
 	 */
+	/*
 	public ArrayList<RevisionUnit> getSentenceRevisionUnitsForML() {
 		ArrayList<RevisionUnit> rus = this.getRevisionUnitAtLevel(0);
 		ArrayList<RevisionUnit> filteredRus = new ArrayList<RevisionUnit>();
@@ -343,7 +345,7 @@ public class RevisionUnit {
 			}
 		}
 		return rus;
-	}
+	}*/
 	
 	/**
 	 * Get the revision units at a specified level with the sentence index in
@@ -607,6 +609,7 @@ public class RevisionUnit {
 	}
 	
 	/**
+	 * @deprecated
 	 * Get the index label for the comparison of revisions
 	 * @return
 	 */
@@ -620,5 +623,20 @@ public class RevisionUnit {
 			label += newIndex + "_";
 		}
 		return label;
+	}
+	
+	public String getUniqueID() {
+		String ID = "";
+		Collections.sort(oldSentenceIndex);
+		Collections.sort(newSentenceIndex);
+		ID+= "OLD-";
+		for(Integer oldIndex: oldSentenceIndex) {
+			if(oldIndex!=-1) ID += oldIndex+ "_";
+		}
+		ID += "NEW-";
+		for(Integer newIndex: newSentenceIndex) {
+			if(newIndex!=-1) ID += newIndex + "_";
+		}
+		return ID;
 	}
 }

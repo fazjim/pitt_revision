@@ -31,6 +31,7 @@ import weka.core.Instances;
 import edu.pitt.cs.revision.machinelearning.WekaAssist;
 import edu.pitt.cs.revision.util.RevisionMapFileGenerator;
 import edu.pitt.lrdc.cs.revision.alignment.model.HeatMapUnit;
+import edu.pitt.lrdc.cs.revision.evaluate.ConfusionMatrix;
 import edu.pitt.lrdc.cs.revision.evaluate.EvaluateTool;
 import edu.pitt.lrdc.cs.revision.evaluate.PurposeEvaluator;
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentReader;
@@ -55,6 +56,8 @@ public class RevisionPurposeTagger {
 	private WekaAssist wa;
 	private CRFFeatureExtractor fe;
 	private CrfTagger tagger;
+	
+	//private static BufferedWriter errorLogger;
 
 	private static RevisionPurposeTagger instance;
 
@@ -94,12 +97,12 @@ public class RevisionPurposeTagger {
 			String testPath, String testOutputPath) throws IOException {
 		CrfTrainer.train(trainPath, modelPath);
 		tagger = new CrfTagger(modelPath);
+		
 		List<List<Pair<String, Double>>> tagProbLists = tagger.tag(testPath);
 
 		// Compute accuracy
 		int total = 0;
 		int correct = 0;
-		System.out.println("Gold\tPredict\tProbability");
 
 		BufferedReader br = new BufferedReader(new FileReader(testPath));
 		BufferedWriter writer = new BufferedWriter(new FileWriter(
@@ -303,10 +306,17 @@ public class RevisionPurposeTagger {
 		Instances[] trainTestInstances = new Instances[2];
 		if (usingNgram) {
 			trainTestInstances = wa.addNgram(trainData, testData);
+			Instances trainDataRem = WekaAssist.removeID(trainTestInstances[0]);
+			Instances testDataRem = WekaAssist.removeID(trainTestInstances[1]);
+			
+			//trainTestInstances[0] = trainDataRem;
+			//trainTestInstances[1] = testDataRem;
+			trainTestInstances = WekaAssist.selectFeatures(trainDataRem, testDataRem);
 		} else {
 			trainTestInstances[0] = trainData;
 			trainTestInstances[1] = testData;
 		}
+		
 		return trainTestInstances;
 	}
 
@@ -583,13 +593,15 @@ public class RevisionPurposeTagger {
 
 	public static void main(String[] args) throws Exception {
 		RevisionPurposeTagger tagger = new RevisionPurposeTagger();
-		//String folderPath = "C:\\Not Backed Up\\data\\trainData";
-		String folderPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang";
+		String folderPath = "C:\\Not Backed Up\\data\\trainData";
+		//String folderPath = "C:\\Not Backed Up\\temp\\testground";
+		//String folderPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang";
 		ArrayList<RevisionDocument> docs = RevisionDocumentReader
 				.readDocs(folderPath);
 		int folder = 10;
 		ArrayList<ArrayList<ArrayList<RevisionDocument>>> crossCuts = EvaluateTool
 				.getCrossCut(docs, folder);
+		ArrayList<ConfusionMatrix> cms = new ArrayList<ConfusionMatrix>();
 		for (int i = 0; i < folder; i++) {
 			ArrayList<RevisionDocument> trainDocs = crossCuts.get(i).get(0);
 			ArrayList<RevisionDocument> testDocs = crossCuts.get(i).get(1);
@@ -602,7 +614,7 @@ public class RevisionPurposeTagger {
 			 * tagger.transformToTxtForCRF(data[1], testDocs,
 			 * "C:\\Not Backed Up\\testCrf.txt");
 			 */
-			boolean usingNgram = false;
+			boolean usingNgram = true;
 			Instances[] instances = RevisionPurposeTagger.getInstance()
 					.prepareForLabelling(trainDocs, testDocs, usingNgram, -1);
 			String trainPath = "C:\\Not Backed Up\\trainCrf.txt";
@@ -617,7 +629,10 @@ public class RevisionPurposeTagger {
 					modelPath, testPath, testPath2);
 			RevisionPurposeTagger.getInstance().readResultToDocs(testDocs,
 					testPath2);
+			cms.add(PurposeEvaluator.getConfusionMatrixOneSurface(testDocs));
 		}
-		PurposeEvaluator.evaluatePurposeCorrelation2(docs);
+		//PurposeEvaluator.evaluatePurposeCorrelation2(docs);
+		EvaluateTool.printEvaluation(cms);
+		
 	}
 }

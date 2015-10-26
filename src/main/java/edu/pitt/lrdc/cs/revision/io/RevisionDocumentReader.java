@@ -213,13 +213,24 @@ public class RevisionDocumentReader {
 					if (currentLevel == 0) { // First level have the sentence
 												// indexes
 						// Set up the sentence indexes
-						if (ru.getRevision_op() == RevisionOp.DELETE && isOld) {
+						if (isOld) {
 							// Get in sheet 0
 							int oldSentenceIndex = (int) row.getCell(0)
 									.getNumericCellValue();
 							ArrayList<Integer> olds = new ArrayList<Integer>();
 							olds.add(oldSentenceIndex);
 							ru.setOldSentenceIndex(olds);
+							String newSent = row.getCell(2).toString();
+							ArrayList<Integer> newSentenceIndex = new ArrayList<Integer>();
+							String[] news = newSent.split(",");
+							for(int i = 0;i<news.length;i++) {
+								try {
+									newSentenceIndex.add((int)Double.parseDouble(news[i]));
+								} catch(Exception exp) {
+									
+								}
+							}
+							ru.setNewSentenceIndex(newSentenceIndex);
 							// ru.setNewSentenceIndex(-1);
 						} else if (!isOld) {
 							int newSentenceIndex = (int) row.getCell(0)

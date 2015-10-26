@@ -33,8 +33,10 @@ import weka.core.Instances;
 import edu.pitt.cs.revision.batch.BatchFeatureWriter;
 import edu.pitt.cs.revision.purpose.RevisionPurposeClassifier;
 import edu.pitt.cs.revision.purpose.RevisionPurposePredicter;
+import edu.pitt.cs.revision.purpose.RevisionPurposeTagger;
 import edu.pitt.lrdc.cs.revision.alignment.Aligner;
 import edu.pitt.lrdc.cs.revision.alignment.PhraseSentenceMerger;
+import edu.pitt.lrdc.cs.revision.evaluate.EvaluateTool;
 import edu.pitt.lrdc.cs.revision.io.PredictedRevisionStat;
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentReader;
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentWriter;
@@ -72,6 +74,8 @@ public class AnalysisInterface extends JPanel {
 
 	private JButton analyzeButton;
 	private JButton analyzeAllButton;
+	private JButton crossTagButton;
+	private JButton tagButton;
 	private JCheckBox useLightWeight;
 
 	private JTextArea messageBox;
@@ -173,7 +177,9 @@ public class AnalysisInterface extends JPanel {
 		// classifyButton.setEnabled(false);
 		analyzeButton = new JButton("Analyze (Binary Surface vs. Text-based)");
 		analyzeAllButton = new JButton("Analyze (All categories)");
-
+		crossTagButton = new JButton("10-fold Cross CRF Tag");
+		tagButton = new JButton("Analyze with CRF tagging");
+		
 		analyzeButton.addActionListener(new ActionListener() {
 
 			@Override
@@ -189,6 +195,15 @@ public class AnalysisInterface extends JPanel {
 				t.start();
 			}
 
+		});
+		
+		crossTagButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				LongJobCrossTagThread t = new LongJobCrossTagThread();
+				t.start();
+			}
 		});
 
 		analyzeAllButton.addActionListener(new ActionListener() {
@@ -630,6 +645,67 @@ public class AnalysisInterface extends JPanel {
 		}
 	}
 
+	public void crfCrossTag()  {
+		//String folderPath = "C:\\Not Backed Up\\data\\trainData";
+		//String folderPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang";
+		try {
+		String train = trainPathPicker.getSelectedFilePath();
+		ArrayList<RevisionDocument> docs = RevisionDocumentReader
+				.readDocs(train);
+		addMessage("Predicting revision...");
+		int folder = 10;
+		ArrayList<ArrayList<ArrayList<RevisionDocument>>> crossCuts = EvaluateTool
+				.getCrossCut(docs, folder);
+		for (int i = 0; i < folder; i++) {
+			ArrayList<RevisionDocument> trainDocs = crossCuts.get(i).get(0);
+			ArrayList<RevisionDocument> testDocs = crossCuts.get(i).get(1);
+
+			/*
+			 * boolean usingNgram = false; Instances[] data =
+			 * tagger.prepareForLabelling(trainDocs, testDocs, usingNgram, -1);
+			 * tagger.transformToTxtForCRF(data[0], trainDocs,
+			 * "C:\\Not Backed Up\\trainCrf.txt");
+			 * tagger.transformToTxtForCRF(data[1], testDocs,
+			 * "C:\\Not Backed Up\\testCrf.txt");
+			 */
+			boolean usingNgram = false;
+			Instances[] instances = RevisionPurposeTagger.getInstance()
+					.prepareForLabelling(trainDocs, testDocs, usingNgram, -1);
+			String trainPath = "C:\\Not Backed Up\\trainCrf.txt";
+			String testPath = "C:\\Not Backed Up\\testCrf.txt";
+			String modelPath = "C:\\Not Backed Up\\crf.model";
+			String testPath2 = "C:\\Not Backed Up\\testPredictCrf.txt";
+			RevisionPurposeTagger.getInstance().transformToTxtForCRFTrain(
+					instances[0], trainDocs, trainPath);
+			RevisionPurposeTagger.getInstance().transformToTxtForCRF(
+					instances[1], testDocs, testPath);
+			RevisionPurposeTagger.getInstance().trainAndTag(trainPath,
+					modelPath, testPath, testPath2);
+			RevisionPurposeTagger.getInstance().readResultToDocs(testDocs,
+					testPath2);
+		}
+		String outputPath = outputPathPicker.getSelectedFilePath();
+		for (RevisionDocument doc : docs) {
+			doc.materializeRevisionPurpose();
+		}
+		
+		addMessage("Write document ot files");
+		for (RevisionDocument doc : docs) {
+			File f = new File(doc.getDocumentName());
+			String path = outputPath + "/" + f.getName();
+			RevisionDocumentWriter.writeToDoc(doc, path);
+		}
+		addMessage("Files written");
+		}catch(Exception exp) {
+			addMessage(exp.getMessage());
+		}
+	}
+	
+	public void crfTrainAndTestTag() {
+		
+	}
+	
+	
 	public void analyzeAll() {
 		String analyzePath = prepare();
 		if (analyzePath == null) {
@@ -761,6 +837,12 @@ public class AnalysisInterface extends JPanel {
 	class LongJobAllThread extends Thread {
 		public void run() {
 			analyzeAll();
+		}
+	}
+	
+	class LongJobCrossTagThread extends Thread {
+		public void run() {
+			crfCrossTag();
 		}
 	}
 

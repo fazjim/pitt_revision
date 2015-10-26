@@ -292,11 +292,14 @@ public class ColoredListWrapper {
 			if (unit.aVR - lastAVR > 1)
 				addBlankLine();
 			lastAVR = unit.aVR;
+			
+			addLine(unit, unit.oldIndex, unit.newIndex);
+			/*
 			int[] indices = addLine(unit, realOldIndex, realNewIndex);
 			if (indices[0] != -1)
 				realOldIndex = indices[0];
 			if (indices[1] != -1)
-				realNewIndex = indices[1];
+				realNewIndex = indices[1];*/
 		}
 
 		oldSentenceList.setListData(oldData.toArray(new MyListItem[oldData
@@ -325,7 +328,7 @@ public class ColoredListWrapper {
 	}
 
 	public void selectOldSelectedIndices(ArrayList<Integer> oldIndices) {
-		// this.oldSentenceList.clearSelection();
+		this.oldSentenceList.clearSelection();
 		ArrayList<Integer> selectOldIndices = new ArrayList<Integer>();
 		for (Integer oldIndex : oldIndices) {
 			ArrayList<Integer> oldLookIndices = oldRealLookMapping
@@ -344,7 +347,7 @@ public class ColoredListWrapper {
 	}
 
 	public void selectNewSelectedIndices(ArrayList<Integer> newIndices) {
-		// this.newSentenceList.clearSelection();
+		this.newSentenceList.clearSelection();
 		ArrayList<Integer> selectNewIndices = new ArrayList<Integer>();
 		for (Integer newIndex : newIndices) {
 			ArrayList<Integer> newLookIndices = newRealLookMapping
@@ -386,7 +389,7 @@ public class ColoredListWrapper {
 		paint();
 	}
 
-	boolean changeAlignment = false;
+	// boolean changeAlignment = false;
 	// signal for select control
 	boolean isOldSelected = false; // initially the signal is off, and once
 									// clicked, the signal is turned on, when
@@ -437,70 +440,66 @@ public class ColoredListWrapper {
 		private void changeTheSelection(ListSelectionEvent e) {
 
 			ListSelectionModel lsm = (ListSelectionModel) e.getSource();
-			if (!changeAlignment) {
-				if (lsm.equals(oldSentenceList.getSelectionModel())) {
-					// System.out.println("Entered");
-					// System.out.println("old");
-					// int selectIndex = sentenceList.getSelectedIndex();
-					if (!isOldSelected) {
-						isOldSelected = true;
-					} else {
-						if (!isNewSelected) {
-							ArrayList<Integer> selectIndices = getOldSelectedIndexes();
-							ArrayList<Integer> newIndexes = new ArrayList<Integer>();
-							for (Integer selectIndex : selectIndices) {
-								if (doc.getNewFromOld(selectIndex) != null)
-									newIndexes.addAll(doc
-											.getNewFromOld(selectIndex));
-							}
 
-							removeNegativeOne(newIndexes);
-							if (newIndexes == null || newIndexes.size() == 0) {
-								newSentenceList.clearSelection();
-							} else {
-								ArrayList<Integer> currentSelection = getNewSelectedIndexes();
-								if (!compareList(newIndexes, currentSelection)) {
-									Collections.sort(newIndexes);
-									selectNewSelectedIndices(newIndexes);
-								}
-							}
-						}
-						isNewSelected = false;
-					}
-
-				} else if (lsm.equals(newSentenceList.getSelectionModel())) {
-					// System.out.println("new");
-					// int selectIndex = newSentenceList.getSelectedIndex();
+			if (lsm.equals(oldSentenceList.getSelectionModel())) {
+				// System.out.println("Entered");
+				// System.out.println("old");
+				// int selectIndex = sentenceList.getSelectedIndex();
+				if (!isOldSelected) {
+					isOldSelected = true;
 					if (!isNewSelected) {
-						isNewSelected = true;
-					} else {
-						if (!isOldSelected) {
-							ArrayList<Integer> selectIndices = getNewSelectedIndexes();
-							ArrayList<Integer> oldIndexes = new ArrayList<Integer>();
-							for (Integer selectIndex : selectIndices) {
-								if (doc.getOldFromNew(selectIndex) != null) {
-									oldIndexes.addAll(doc
-											.getOldFromNew(selectIndex));
-								}
-							}
-							removeNegativeOne(oldIndexes);
-							if (oldIndexes == null || oldIndexes.size() == 0) {
-								oldSentenceList.clearSelection();
-							} else {
-								ArrayList<Integer> currentSelection = getOldSelectedIndexes();
-								if (!compareList(oldIndexes, currentSelection)) {
-									Collections.sort(oldIndexes);
-									selectOldSelectedIndices(oldIndexes);
-								}
+						ArrayList<Integer> selectIndices = getOldSelectedIndexes();
+						ArrayList<Integer> newIndexes = new ArrayList<Integer>();
+						for (Integer selectIndex : selectIndices) {
+							if (doc.getNewFromOld(selectIndex) != null)
+								newIndexes.addAll(doc
+										.getNewFromOld(selectIndex));
+						}
+
+						removeNegativeOne(newIndexes);
+						if (newIndexes == null || newIndexes.size() == 0) {
+							newSentenceList.clearSelection();
+						} else {
+							ArrayList<Integer> currentSelection = getNewSelectedIndexes();
+							if (!compareList(newIndexes, currentSelection)) {
+								Collections.sort(newIndexes);
+								selectNewSelectedIndices(newIndexes);
 							}
 						}
-						isOldSelected = false;
 					}
+					isNewSelected = false;
+					isOldSelected = false;
 				}
-			} else {
-				// changing alignment
+			}else if (lsm.equals(newSentenceList.getSelectionModel())) {
+				// System.out.println("new");
+				// int selectIndex = newSentenceList.getSelectedIndex();
+				if (!isNewSelected) {
+					isNewSelected = true;
+				
+					if (!isOldSelected) {
+						ArrayList<Integer> selectIndices = getNewSelectedIndexes();
+						ArrayList<Integer> oldIndexes = new ArrayList<Integer>();
+						for (Integer selectIndex : selectIndices) {
+							if (doc.getOldFromNew(selectIndex) != null) {
+								oldIndexes.addAll(doc
+										.getOldFromNew(selectIndex));
+							}
+						}
+						removeNegativeOne(oldIndexes);
+						if (oldIndexes == null || oldIndexes.size() == 0) {
+							oldSentenceList.clearSelection();
+						} else {
+							ArrayList<Integer> currentSelection = getOldSelectedIndexes();
+							if (!compareList(oldIndexes, currentSelection)) {
+								Collections.sort(oldIndexes);
+								selectOldSelectedIndices(oldIndexes);
+							}
+						}
+					}
+					isOldSelected = false;
+					isNewSelected = false;
+				}
 			}
-			// highlight();
 		}
 
 		public void valueChanged(ListSelectionEvent e) {

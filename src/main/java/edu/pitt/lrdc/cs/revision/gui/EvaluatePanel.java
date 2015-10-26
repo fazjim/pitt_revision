@@ -468,6 +468,11 @@ public class EvaluatePanel extends JPanel {
 		}
 	}
 
+	
+	public void showClassification() {
+		
+	}
+	
 	public void evaluateAlignClassify() {
 
 	}

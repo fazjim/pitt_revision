@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 import weka.attributeSelection.ASEvaluation;
 import weka.attributeSelection.ASSearch;
+import weka.attributeSelection.BestFirst;
 import weka.attributeSelection.CfsSubsetEval;
 import weka.attributeSelection.GainRatioAttributeEval;
 import weka.attributeSelection.GreedyStepwise;
@@ -38,6 +39,7 @@ import weka.filters.Filter;
 import weka.filters.supervised.attribute.AttributeSelection;
 import weka.filters.unsupervised.attribute.PrincipalComponents;
 import weka.filters.unsupervised.attribute.Remove;
+import weka.filters.unsupervised.attribute.Standardize;
 
 /**
  * Assist the use of weka
@@ -62,9 +64,9 @@ public class WekaAssist {
 		for (String cat : category) {
 			attVals.addElement(cat);
 		}
-		
+
 		atts.addElement(new Attribute("category", attVals));
-		
+
 		// The other customized features
 		for (String name : featureTable.features) {
 			int index = featureTable.getIndex(name);
@@ -118,7 +120,7 @@ public class WekaAssist {
 						(String) features[i]);
 			} else if (featureTable.getType(i).equals(Boolean.TYPE)) {
 				String name = featureTable.getFeatureName(i);
-				//System.out.println(features[i]);
+				// System.out.println(features[i]);
 				vals[i + 1] = 1.0 * insts.attribute(name).indexOfValue(
 						(String) features[i]);
 			} else if (featureTable.getType(i).equals(ArrayList.class)) {
@@ -172,7 +174,7 @@ public class WekaAssist {
 	public Instances addNgram(Instances ins) throws Exception {
 		StringVectorWrapper ngramWrapper = new StringVectorWrapper();
 		InstancesPair p = ngramWrapper.applyStringVectorFilter(ins, "Text",
-				null);
+				"TEXTDIFF", null);
 		ins = p.a;
 		return ins;
 	}
@@ -491,6 +493,43 @@ public class WekaAssist {
 		System.out.println("TN COUNT: " + trueNegative);
 	}
 
+	public static Instances[] selectFeatures(Instances train, Instances test)
+			throws Exception {
+		AttributeSelection filter = new AttributeSelection(); // package
+																// weka.filters.supervised.attribute!
+		//CfsSubsetEval eval = new CfsSubsetEval();
+		GainRatioAttributeEval eval = new GainRatioAttributeEval();
+		//GreedyStepwise search = new GreedyStepwise();
+		//search.setSearchBackwards(true);
+		//BestFirst search = new BestFirst();
+		Ranker search = new Ranker();
+		
+		search.setNumToSelect(50);
+		filter.setEvaluator(eval);
+		filter.setSearch(search);
+		filter.setInputFormat(train); // initializing the filter once with
+										// training set
+		System.out.println("Selecting features...");
+		Instances newTrain = Filter.useFilter(train, filter);
+		System.out.println("Training loaded");
+		Instances newTest = Filter.useFilter(test, filter);
+		Instances[] newData = new Instances[2];
+		newData[0] = newTrain;
+		newData[1] = newTest;
+		System.out.println("Dataset features filtered from "+train.numAttributes()+"features to "+ newTrain.numAttributes());
+		return newData;
+	}
+	
+	public static Instances removeID(Instances inst) throws Exception {
+		Remove rm = new Remove();
+		int index = inst.attribute("ID").index();
+		int[] indices = new int[1];
+		indices[0] = index;
+		rm.setAttributeIndicesArray(indices);
+		rm.setInputFormat(inst);
+		return Filter.useFilter(inst, rm);
+	}
+
 	public static void trainTest(Instances trainset, Instances testset,
 			String test) throws Exception {
 		Classifier[] classifiers = {
@@ -541,22 +580,7 @@ public class WekaAssist {
 		trainTest(trainset, testset, test);
 	}
 
-	public static Instances selectFeature(Instances data) throws Exception {
-		AttributeSelection filter = new AttributeSelection(); // package
-																// weka.filters.supervised.attribute!
-		CfsSubsetEval eval = new CfsSubsetEval();
-		GreedyStepwise search = new GreedyStepwise();
-
-		search.setSearchBackwards(true);
-		filter.setEvaluator(eval);
-		filter.setSearch(search);
-		filter.setInputFormat(data);
-
-		// generate new data
-		Instances newData = Filter.useFilter(data, filter);
-
-		return newData;
-	}
+	
 
 	public static Instances performPCA(Instances dataset, int k)
 			throws Exception {
