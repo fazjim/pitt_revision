@@ -83,14 +83,20 @@ public class RevisionMapFileGenerator {
 	}
 
 	public static void main(String[] args) throws Exception {
-		String path = "C:\\Not Backed Up\\data\\newSample\\Annotation_A4effort - 18178.txt.xlsx";
+		/*String path = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang\\Annotation_englishguy1 - 18192.txt.xlsx";
 		String outputPath = "C:\\Not Backed Up\\data\\newSample.txt";
+		
+		String testPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang\\Annotation_englishguy1.xlsx";
+		ArrayList<ArrayList<HeatMapUnit>> units = RevisionMapFileGenerator.getUnits4CRF(RevisionDocumentReader.readDoc(testPath));
+		*/
 		// RevisionDocument doc = RevisionDocumentReader.readDoc(path);
 		// generateHeatMapFile(doc, outputPath);
 		// String root = "C:\\Not Backed Up\\data\\newSample";
-		String root = "C:\\Not Backed Up\\data\\newData\\tmp\\Jiaoyang";
+		//String root = "C:\\Not Backed Up\\data\\newData\\tmp\\Jiaoyang";
+		String root = "C:\\Not Backed Up\\exampleStudy\\map";
 		// String outputPathRoot = "C:\\Not Backed Up\\data\\newSampleMap";
-		String outputPathRoot = "C:\\Not Backed Up\\data\\newData\\tmp\\JiaoyangMap";
+		//String outputPathRoot = "C:\\Not Backed Up\\data\\newData\\tmp\\JiaoyangMap";
+		String outputPathRoot = "C:\\Not Backed Up\\exampleStudy\\mapoutput";
 		File folder = new File(root);
 		File[] files = folder.listFiles();
 		for (File tempFile : files) {
@@ -647,7 +653,7 @@ public class RevisionMapFileGenerator {
 			}
 		}
 		ArrayList<HeatMapUnit> newList = new ArrayList<HeatMapUnit>();
-		TopologicalOrderIterator<HeatMapUnit, DefaultEdge> iter = new TopologicalOrderIterator(g);
+		TopologicalOrderIterator<HeatMapUnit, DefaultEdge> iter = new TopologicalOrderIterator<HeatMapUnit,DefaultEdge>(g);
 		while(iter.hasNext()) {
 			HeatMapUnit node = iter.next();
 			newList.add(node);

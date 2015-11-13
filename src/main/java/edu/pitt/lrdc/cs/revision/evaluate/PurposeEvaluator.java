@@ -628,6 +628,14 @@ public class PurposeEvaluator {
 		enterTableOneSurface(realRevisionMap, realRevisions);
 		enterTableOneSurface(predictedRevisionMap, predictedRevisions);
 		Iterator<String> it = realRevisionMap.keySet().iterator();
+		if(1==1||realRevisionMap.size()!=predictedRevisionMap.size()) {
+			try {
+				writeErrorLog("\t"+realRevisionMap.size());
+				//writeErrorLog(doc.getDocumentName() +": "+"REAL:"+realRevisionMap.size()+",PREDICTED:"+predictedRevisionMap.size());
+				}catch(Exception exp) {
+					exp.printStackTrace();
+				}
+		}
 		while (it.hasNext()) {
 			String key = it.next();
 			if(predictedRevisionMap.containsKey(key)) {

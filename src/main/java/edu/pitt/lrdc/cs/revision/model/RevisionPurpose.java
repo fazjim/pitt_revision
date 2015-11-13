@@ -11,10 +11,12 @@ public class RevisionPurpose {
 	public static final int CONVENTIONS_GRAMMAR_SPELLING = 8;
 	public static final int WORDUSAGE_CLARITY = 7;
 	public static final int WORDUSAGE_CLARITY_CASCADED = 6;
-	public static final int HEAVY_EDIT = 11;
-	public static final int STYLE = 12;
-	public static final int WHOLEPAPER = 10;
+	public static final int HEAVY_EDIT = 12;
+	public static final int STYLE = 13;
+	public static final int WHOLEPAPER = 11;
+	public static final int PRECISION = 10;
 	public static final int END = 9;
+	public static final int CONTENT_ACCURACY = 14;
 	
 	public static final int NOCHANGE = 0;
 	public static final int SURFACE = 100;
@@ -52,6 +54,8 @@ public class RevisionPurpose {
 			return "Surface";
 		} else if(index == RevisionPurpose.CONTENT) {
 			return "Content";
+		} else if(index == RevisionPurpose.PRECISION) {
+			return "Precision";
 		}
 		return "Dummy";
 	}

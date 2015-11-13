@@ -18,7 +18,7 @@ public class EvaluateTool {
 	 */
 	public static ArrayList<ArrayList<ArrayList<RevisionDocument>>> getCrossCut(ArrayList<RevisionDocument> docs, int folder) {
 		int size = docs.size();
-		int topK = (int)Math.round((size*1.0/folder));
+		int topK = (int)Math.floor((size*1.0/folder)) + 1;
 		ArrayList<ArrayList<ArrayList<RevisionDocument>>> crossCuts = new ArrayList<ArrayList<ArrayList<RevisionDocument>>>();
 		Collections.shuffle(docs); //shuffle and get top K as testSet
 		for(int i = 0;i<folder;i++) {
@@ -105,7 +105,7 @@ public class EvaluateTool {
 		double fAll = 0;
 		int cnt = 0;
 		for(ConfusionMatrix matrix: matrice) {
-			double f = matrix.getRecall(name);
+			double f = matrix.getFMeasure(name);
 			if(f!=-1) {
 				fAll += f;
 				cnt ++;

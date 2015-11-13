@@ -35,6 +35,7 @@ import edu.pitt.lrdc.cs.revision.evaluate.ConfusionMatrix;
 import edu.pitt.lrdc.cs.revision.evaluate.EvaluateTool;
 import edu.pitt.lrdc.cs.revision.evaluate.PurposeEvaluator;
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentReader;
+import edu.pitt.lrdc.cs.revision.io.RevisionDocumentWriter;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
 import edu.pitt.lrdc.cs.revision.model.RevisionOp;
 import edu.pitt.lrdc.cs.revision.model.RevisionPurpose;
@@ -48,7 +49,7 @@ import edu.pitt.lrdc.cs.revision.model.RevisionUnit;
  */
 public class RevisionPurposeTagger {
 	private ArrayList<ArrayList<ArrayList<HeatMapUnit>>> essays;
-	private boolean tagLevelParagraph = true;// Each paragraph is a
+	private boolean tagLevelParagraph = false;// Each paragraph is a
 												// segment,Otherwise each essay
 												// is a segment
 	private boolean ignoreSurface = true;
@@ -593,14 +594,46 @@ public class RevisionPurposeTagger {
 
 	public static void main(String[] args) throws Exception {
 		RevisionPurposeTagger tagger = new RevisionPurposeTagger();
-		String folderPath = "C:\\Not Backed Up\\data\\trainData";
-		//String folderPath = "C:\\Not Backed Up\\temp\\testground";
-		//String folderPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang";
+		//String trainPathAll = "C:\\Not Backed Up\\data\\trainDataCRFVersion";
+		//String folderPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang2";
+		
+		String trainPathAll = "C:\\Not Backed Up\\data\\trainDataCRFVersion";
+		String  folderPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang";
+		//String trainPathAll = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang2";
+
 		ArrayList<RevisionDocument> docs = RevisionDocumentReader
 				.readDocs(folderPath);
+		ArrayList<RevisionDocument> trainDocsAll = RevisionDocumentReader.readDocs(trainPathAll);
 		int folder = 10;
+		
 		ArrayList<ArrayList<ArrayList<RevisionDocument>>> crossCuts = EvaluateTool
-				.getCrossCut(docs, folder);
+				.getCrossCut(trainDocsAll, folder);
+	
+		int option = 1;
+		boolean usingNgram = false;
+		if(option == 0) {
+			ArrayList<ConfusionMatrix> cms = new ArrayList<ConfusionMatrix>();
+			Instances[] instances = RevisionPurposeTagger.getInstance()
+					.prepareForLabelling(trainDocsAll, docs, usingNgram, -1);
+			String trainPath = "C:\\Not Backed Up\\trainCrf.txt";
+			String testPath = "C:\\Not Backed Up\\testCrf.txt";
+			String modelPath = "C:\\Not Backed Up\\crf.model";
+			String testPath2 = "C:\\Not Backed Up\\testPredictCrf.txt";
+			RevisionPurposeTagger.getInstance().transformToTxtForCRFTrain(
+					instances[0], trainDocsAll, trainPath);
+			RevisionPurposeTagger.getInstance().transformToTxtForCRF(
+					instances[1], docs, testPath);
+			RevisionPurposeTagger.getInstance().trainAndTag(trainPath,
+					modelPath, testPath, testPath2);
+			RevisionPurposeTagger.getInstance().readResultToDocs(docs,
+					testPath2);
+			/*for(RevisionDocument doc: docs) {
+				doc.materializeRevisionPurpose();
+				RevisionDocumentWriter.writeToDoc(doc, doc.getDocumentName());;
+			}*/
+			cms.add(PurposeEvaluator.getConfusionMatrixOneSurface(docs));
+			EvaluateTool.printEvaluation(cms);
+		} else {
 		ArrayList<ConfusionMatrix> cms = new ArrayList<ConfusionMatrix>();
 		for (int i = 0; i < folder; i++) {
 			ArrayList<RevisionDocument> trainDocs = crossCuts.get(i).get(0);
@@ -614,7 +647,7 @@ public class RevisionPurposeTagger {
 			 * tagger.transformToTxtForCRF(data[1], testDocs,
 			 * "C:\\Not Backed Up\\testCrf.txt");
 			 */
-			boolean usingNgram = true;
+			
 			Instances[] instances = RevisionPurposeTagger.getInstance()
 					.prepareForLabelling(trainDocs, testDocs, usingNgram, -1);
 			String trainPath = "C:\\Not Backed Up\\trainCrf.txt";
@@ -633,6 +666,7 @@ public class RevisionPurposeTagger {
 		}
 		//PurposeEvaluator.evaluatePurposeCorrelation2(docs);
 		EvaluateTool.printEvaluation(cms);
+		}
 		
 	}
 }

@@ -40,7 +40,8 @@ public class EvaluateMain {
 		int evaluateMethod = 4;
 		// String trainPath = "D:/annotationTool/annotated/class3";
 		// String trainPath = "/Users/faz23/Desktop/34/annotated/allData";
-		String trainPath = "C:\\Not Backed Up\\data\\newSample";
+		//String trainPath = "C:\\Not Backed Up\\data\\trainData2";
+		String trainPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\temp_alldata";
 		// String testPath = "D:/annotationTool/annotated/class4";
 		// String testPath = "/Users/faz23/Desktop/34/annotated/allData2";
 		String testPath = "C:\\Not Backed Up\\data\\trainData3";
@@ -79,16 +80,17 @@ public class EvaluateMain {
 			int folder = 10;
 			crossValidateAlignClassify(allData, folder, 2);
 		} else if (option == CLASSIFY) {
-			int folder = 7;
+			int folder = 10;
 			// Open this for cross surface classification
-			resultPath = "C:\\Not Backed Up\\data\\surfaceAllOp.xlsx";
+			//resultPath = "C:\\Not Backed Up\\data\\surfaceAllOp.xlsx";
+			resultPath = "C:\\Not Backed Up\\allResults";
 			// crossValidateClassify(allData, folder, true, resultPath);
 			boolean autoAligned = false;
 			boolean highLevel = false;
-			crossValidateClassifyCorrelation(allData, folder, 1, autoAligned, highLevel);
+			//crossValidateClassifyCorrelation(allData, folder, 1, autoAligned, highLevel);
 			// Open this for jumbo classification
 			// resultPath = "/Users/faz23/Desktop/34/annotated/allResults2";
-			// crossValidateClassifyJumbo(allData, folder, true, resultPath);
+			 crossValidateClassifyJumbo(allData, folder, true, resultPath);
 		}
 	}
 
@@ -216,7 +218,7 @@ public class EvaluateMain {
 																				// rev
 																				// purpose
 			if (i == RevisionPurpose.CD_REBUTTAL_RESERVATION
-					|| i == RevisionPurpose.ORGANIZATION)
+					||i == RevisionPurpose.WORDUSAGE_CLARITY_CASCADED)
 				continue;
 			purposes.add(RevisionPurpose.getPurposeName(i));
 			System.out.println("Running:" + RevisionPurpose.getPurposeName(i));
@@ -322,6 +324,14 @@ public class EvaluateMain {
 			 * resultRow.addExperiment(experiment);
 			 * resultRow.getResult(experiment).fromEvaluation(eval);
 			 */
+			
+			 System.out.println("*****************Unigram baseline*******************");
+			 experiment = "Unigram"; 
+			 eval =
+			 rpc.classifyADRevisionPurpose(trainDocs, testDocs, usingNgram,
+			 -1); resultRow.addExperiment(experiment);
+			 resultRow.getResult(experiment).fromEvaluation(eval);
+			 
 			System.out
 					.println("*****************All features*******************");
 			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
@@ -329,7 +339,15 @@ public class EvaluateMain {
 			experiment = "All features";
 			resultRow.addExperiment(experiment);
 			resultRow.getResult(experiment).fromEvaluation(eval);
-
+			results.add(resultRow);
+			
+			System.out.println("*****************Majority*******************");
+			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
+			  usingNgram, 5); experiment = "Majority";
+			  resultRow.addExperiment(experiment);
+			  resultRow.getResult(experiment).fromEvaluation(eval);
+			  
+			  results.add(resultRow);
 			/*
 			 * System.out.println("*****************Majority*******************")
 			 * ; eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,

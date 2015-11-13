@@ -130,11 +130,13 @@ public class WekaAssist {
 			} else {
 				// System.out.println(featureTable.getFeatureName(i));
 				// System.out.println(featureTable.getType(i).toString());
+				if(features[i]!=null)
 				vals[i + 1] = (Double) features[i];
 			}
 		}
 		vals[vals.length - 1] = insts.attribute(vals.length - 1)
 				.addStringValue(ID);
+	
 		Instance instance = new DenseInstance(1.0, vals);
 		insts.add(instance);
 	}
@@ -504,7 +506,7 @@ public class WekaAssist {
 		//BestFirst search = new BestFirst();
 		Ranker search = new Ranker();
 		
-		search.setNumToSelect(50);
+		search.setNumToSelect(500);
 		filter.setEvaluator(eval);
 		filter.setSearch(search);
 		filter.setInputFormat(train); // initializing the filter once with
@@ -518,6 +520,27 @@ public class WekaAssist {
 		newData[1] = newTest;
 		System.out.println("Dataset features filtered from "+train.numAttributes()+"features to "+ newTrain.numAttributes());
 		return newData;
+	}
+	
+	public static Instances selectFeatures(Instances train)
+			throws Exception {
+		AttributeSelection filter = new AttributeSelection(); // package
+																// weka.filters.supervised.attribute!
+		//CfsSubsetEval eval = new CfsSubsetEval();
+		GainRatioAttributeEval eval = new GainRatioAttributeEval();
+		//GreedyStepwise search = new GreedyStepwise();
+		//search.setSearchBackwards(true);
+		//BestFirst search = new BestFirst();
+		Ranker search = new Ranker();
+		
+		search.setNumToSelect(500);
+		filter.setEvaluator(eval);
+		filter.setSearch(search);
+		filter.setInputFormat(train); // initializing the filter once with
+										// training set
+		System.out.println("Selecting features...");
+		Instances newTrain = Filter.useFilter(train, filter);
+		return newTrain;
 	}
 	
 	public static Instances removeID(Instances inst) throws Exception {
@@ -557,7 +580,9 @@ public class WekaAssist {
 			csc.setCostMatrix(newCostMatrix);
 			classifier = csc;
 			// -----end of balancing------------//
-			classifier = setTagFilter(classifier, trainset);
+			//classifier = setTagFilter(classifier, trainset);
+			trainset = removeID(trainset);
+			testset = removeID(testset);
 			classifier.buildClassifier(trainset);
 			System.out.println("Classifier is done!");
 			Evaluation eval = new Evaluation(trainset);

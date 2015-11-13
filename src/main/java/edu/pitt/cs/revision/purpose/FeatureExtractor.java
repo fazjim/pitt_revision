@@ -947,7 +947,9 @@ public class FeatureExtractor {
 		if (!batchMode) {
 			String oldText = extractOldSentence(doc, oldIndexes);
 			String newText = extractNewSentence(doc, newIndexes);
-			Hashtable<String, Double> posTable = spa.collectSimplePOSRatio(spa
+			//if(oldText==null||oldText.length()==0) oldText = "Dummy";
+			//if(newText==null||newText.length()==0) newText = "Dummy";
+			Hashtable<String, Double> posTable = StanfordParserAssist.getInstance().collectSimplePOSRatio(StanfordParserAssist.getInstance()
 					.annotateSingleSentence(oldText));
 			for (String pos : posTable.keySet()) {
 				double ratio = posTable.get(pos);
@@ -955,7 +957,7 @@ public class FeatureExtractor {
 				featureVector[index] = ratio;
 			}
 
-			posTable = spa.collectSimplePOSRatio(spa
+			posTable = StanfordParserAssist.getInstance().collectSimplePOSRatio(StanfordParserAssist.getInstance()
 					.annotateSingleSentence(newText));
 			for (String pos : posTable.keySet()) {
 				double ratio = posTable.get(pos);
@@ -1035,10 +1037,11 @@ public class FeatureExtractor {
 		if (!batchMode) {
 			String oldSentence = extractOldSentence(doc, oldIndexes);
 			String newSentence = extractNewSentence(doc, newIndexes);
-
-			Hashtable<String, Double> posTable = spa.collectSimplePOSDiff(
-					spa.annotateSingleSentence(oldSentence),
-					spa.annotateSingleSentence(newSentence));
+			if(oldSentence==null||oldSentence.length()==0) oldSentence = "Dummy";
+			if(newSentence==null||newSentence.length()==0) newSentence = "Dummy";
+			Hashtable<String, Double> posTable = StanfordParserAssist.getInstance().collectSimplePOSDiff(
+					StanfordParserAssist.getInstance().annotateSingleSentence(oldSentence),
+					StanfordParserAssist.getInstance().annotateSingleSentence(newSentence));
 
 			String pos = "JJ";
 			int featureIndex = features.getIndex("JJ_DIFF");
@@ -1304,8 +1307,8 @@ public class FeatureExtractor {
 	public void insertLanguageGroup() {
 		insertSimplePOSFeatureRatio();
 		insertPOSDiff();
-		insertGrammarErrorFeature();
-		insertSpellErrorFeature();
+		//insertGrammarErrorFeature();
+		//insertSpellErrorFeature();
 	}
 
 	public void extractLanguageGroup(RevisionDocument doc, RevisionUnit ru) {
@@ -1314,8 +1317,8 @@ public class FeatureExtractor {
 		// String newSentence = extractNewSentence(doc, ru);
 		extractSimplePOSFeatures(doc, ru);
 		extractPOSDiff(doc, ru);
-		extractGrammarErrorFeature(doc, ru);
-		extractSpellErrorFeature(doc, ru);
+		//extractGrammarErrorFeature(doc, ru);
+		//extractSpellErrorFeature(doc, ru);
 	}
 
 	public void extractLanguageGroup(RevisionDocument doc,
@@ -1548,7 +1551,7 @@ public class FeatureExtractor {
 		if (remove == 1 || remove > 3)
 			insertTextGroup();
 		if (remove == 2 || remove > 3)
-			//insertLanguageGroup();
+			insertLanguageGroup();
 		if (remove == 3 || remove > 3)
 			insertMetaGroup();
 		// insertOtherGroup();
@@ -1581,7 +1584,7 @@ public class FeatureExtractor {
 		if (remove == 1 || remove > 3)
 			extractTextGroup(doc, ru);
 		if (remove == 2 || remove > 3)
-			//extractLanguageGroup(doc, ru);
+			extractLanguageGroup(doc, ru);
 		if (remove == 3 || remove > 3)
 			extractMetaGroup(doc, ru);
 		// extractOtherGroup(doc, ru);

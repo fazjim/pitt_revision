@@ -37,7 +37,7 @@ public class RevisionPurposePredicter {
 		return tokens;
 	}
 
-	String batchPath = "batch";
+	String batchPath = "/batch";
 
 	/**
 	 * Where the revisions only has one major revision type

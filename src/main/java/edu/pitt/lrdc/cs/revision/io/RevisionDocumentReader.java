@@ -552,13 +552,14 @@ public class RevisionDocumentReader {
 		stack.push(folder);
 		while(!stack.isEmpty()) {
 			File f = stack.pop();
-			File[] files = f.listFiles();
-			for(File sub: files) {
-				if(sub.isDirectory()) stack.push(sub);
-				else {
-					if(sub.getName().endsWith(".xlsx")) {
-						revDocs.add(readDoc(sub.getAbsolutePath()));
-					}
+			if(f.isFile()) {
+				if(f.getName().endsWith(".xlsx"))
+				revDocs.add(readDoc(f.getAbsolutePath()));
+			} else {
+				System.err.println(f.getAbsolutePath());
+				File[] files = f.listFiles();
+				for(File sub: files) {
+					stack.push(sub);
 				}
 			}
 		}

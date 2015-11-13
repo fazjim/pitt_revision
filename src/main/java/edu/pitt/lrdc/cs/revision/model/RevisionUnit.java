@@ -473,6 +473,7 @@ public class RevisionUnit {
 			
 			if (ru.getOldSentenceIndex() !=null && ru.getOldSentenceIndex().size() != 0) {
 				for(Integer index: ru.getOldSentenceIndex())
+					if(index>=0)
 				content += "OLD:"+ RevisionOp.getOpName(ru.getRevision_op()) + ":"
 						+ doc.getOldSentence(index) + "\n";
 			}
