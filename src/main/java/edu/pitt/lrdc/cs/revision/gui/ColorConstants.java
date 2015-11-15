@@ -15,6 +15,8 @@ public class ColorConstants {
 	public static Color cascadedColor = new Color(255, 255, 204);
 	public static Color organizationColor = new Color(153, 153, 255);
 	public static Color unannotatedColor = Color.GRAY;//new Color(242,242,242);
+	public static Color precisionColor = new Color(204,204,0);
+	public static Color unknownColor = Color.DARK_GRAY;
 	
 	public static Color getColor(int revPurpose) {
 		if(revPurpose == RevisionPurpose.CLAIMS_IDEAS) {
@@ -35,6 +37,10 @@ public class ColorConstants {
 			return cascadedColor;
 		} else if(revPurpose == RevisionPurpose.ORGANIZATION) {
 			return organizationColor;
+		} else if(revPurpose == RevisionPurpose.PRECISION) {
+			return precisionColor;
+		} else if(revPurpose == RevisionPurpose.UNKNOWN) {
+			return unknownColor;
 		}
 		return null;
 	}

@@ -21,6 +21,7 @@ public class RevisionPurpose {
 	public static final int NOCHANGE = 0;
 	public static final int SURFACE = 100;
 	public static final int CONTENT = 101;
+	public static final int UNKNOWN = 1000;
 	
 
 	public static String getPurposeName(int index) {
@@ -56,13 +57,15 @@ public class RevisionPurpose {
 			return "Content";
 		} else if(index == RevisionPurpose.PRECISION) {
 			return "Precision";
+		} else if(index == RevisionPurpose.UNKNOWN) {
+			return "Unknown";
 		}
 		return "Dummy";
 	}
 
 	public static int getPurposeIndex(String name) {
 		name = name.toLowerCase();
-		for (int i = CLAIMS_IDEAS; i <= STYLE; i++) {
+		for (int i = CLAIMS_IDEAS; i <= UNKNOWN; i++) {
 			if (getPurposeName(i).toLowerCase().equals(name)) {
 				return i;
 			}

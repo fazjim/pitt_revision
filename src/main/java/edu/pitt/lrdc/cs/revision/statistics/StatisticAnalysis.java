@@ -108,8 +108,8 @@ public class StatisticAnalysis {
 	}
 
 	public static void main(String[] args) throws Exception {
-		//String path = "C:\\Not Backed Up\\data\\trainData2";
-		String path = "C:\\Not Backed Up\\data\\allNewData\\Fan\\kappa3\\jiaoyang";
+		String path = "C:\\Not Backed Up\\data\\trainData";
+		//String path = "C:\\Not Backed Up\\data\\allNewData\\Fan\\kappa3\\jiaoyang";
 		printAllInfoCompleteUnique(RevisionDocumentReader.readDocs(path));
 		//countIES(path);
 		// ArrayList<RevisionDocument> trainDocs = reader
@@ -224,6 +224,8 @@ public class StatisticAnalysis {
 						+ RevisionOp.getOpName(j) + "\t");
 			}
 		}
+		System.out.print("#SentencesD1\t");
+		System.out.print("#SentencesD2\t");
 		System.out.println();
 
 		for (RevisionDocument doc : docs) {
@@ -282,6 +284,8 @@ public class StatisticAnalysis {
 							.print(distribution[(i - 1) * 3 + (j - 1)] + "\t");
 				}
 			}
+			System.out.print(doc.getOldDraftSentences().size()+"\t");
+			System.out.print(doc.getNewDraftSentences().size()+"\t");
 			System.out.println();
 			/*
 			 * for(int i = RevisionPurpose.START;i<=RevisionPurpose.END;i++) {

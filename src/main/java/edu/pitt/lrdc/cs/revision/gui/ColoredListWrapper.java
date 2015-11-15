@@ -64,7 +64,7 @@ class MyListItemRenderer extends JTextField implements
 		setOpaque(true);
 		if (paintColor == true) {
 			if ((item.revisionPurpose >= RevisionPurpose.START
-					&& item.revisionPurpose <= RevisionPurpose.END)||item.revisionPurpose==RevisionPurpose.PRECISION) {
+					&& item.revisionPurpose <= RevisionPurpose.END)||item.revisionPurpose==RevisionPurpose.PRECISION || item.revisionPurpose == RevisionPurpose.UNKNOWN) {
 				// setForeground(ColorConstants.getColor(item.revisionPurpose));
 				setBackground(ColorConstants.getColor(item.revisionPurpose));
 			} else {
