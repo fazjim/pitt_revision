@@ -41,6 +41,7 @@ class MyListItem {
 	public int realIndexInDoc;
 	public int revisionPurpose;
 	public int revisionOp;
+	
 
 	public String toString() {
 		return sentenceStr;
@@ -62,11 +63,14 @@ class MyListItemRenderer extends JTextField implements
 		String sentenceStr = item.sentenceStr;
 		setText(sentenceStr);
 		setOpaque(true);
+		int revPurpose = item.revisionPurpose;
+		
 		if (paintColor == true) {
-			if ((item.revisionPurpose >= RevisionPurpose.START
-					&& item.revisionPurpose <= RevisionPurpose.END)||item.revisionPurpose==RevisionPurpose.PRECISION || item.revisionPurpose == RevisionPurpose.UNKNOWN) {
+			if ((revPurpose >= RevisionPurpose.START && revPurpose <= RevisionPurpose.END)
+					|| revPurpose == RevisionPurpose.PRECISION
+					|| revPurpose == RevisionPurpose.UNKNOWN) {
 				// setForeground(ColorConstants.getColor(item.revisionPurpose));
-				setBackground(ColorConstants.getColor(item.revisionPurpose));
+				setBackground(ColorConstants.getColor(revPurpose));
 			} else {
 				if (item.revisionOp != RevisionOp.NOCHANGE) {
 					setBackground(Color.GRAY);
@@ -225,8 +229,13 @@ public class ColoredListWrapper {
 				if (unit.rPurpose.trim().length() > 0)
 					oldItem.revisionPurpose = RevisionPurpose
 							.getPurposeIndex(unit.rPurpose);
-				else
-					oldItem.revisionPurpose = -1;
+				else {
+					if(unit.rPurposeOld.trim().length()>0) {
+						oldItem.revisionPurpose = RevisionPurpose.getPurposeIndex(unit.rPurposeOld);
+					} else {
+						oldItem.revisionPurpose = -1;
+					}
+				}
 				newIndices[0] = -1;
 			} else {
 				oldItem.sentenceStr = unit.scD1;
@@ -235,8 +244,13 @@ public class ColoredListWrapper {
 				if (unit.rPurpose.trim().length() > 0)
 					oldItem.revisionPurpose = RevisionPurpose
 							.getPurposeIndex(unit.rPurpose);
-				else
-					oldItem.revisionPurpose = -1;
+				else {
+					if(unit.rPurposeOld.trim().length()>0) {
+						oldItem.revisionPurpose = RevisionPurpose.getPurposeIndex(unit.rPurposeOld);
+					} else {
+						oldItem.revisionPurpose = -1;
+					}
+				}
 				newIndices[0] = currentOldRealIndex + 1;
 			}
 		}
@@ -259,8 +273,13 @@ public class ColoredListWrapper {
 				if (unit.rPurpose.trim().length() > 0)
 					newItem.revisionPurpose = RevisionPurpose
 							.getPurposeIndex(unit.rPurpose);
-				else
-					newItem.revisionPurpose = -1;
+				else {
+					if(unit.rPurposeNew.trim().length()>0) {
+						newItem.revisionPurpose = RevisionPurpose.getPurposeIndex(unit.rPurposeNew);
+					} else {
+						newItem.revisionPurpose = -1;
+					}
+				}
 				newIndices[1] = -1;
 			} else {
 				newItem.sentenceStr = unit.scD2;
@@ -269,8 +288,13 @@ public class ColoredListWrapper {
 				if (unit.rPurpose.trim().length() > 0)
 					newItem.revisionPurpose = RevisionPurpose
 							.getPurposeIndex(unit.rPurpose);
-				else
-					newItem.revisionPurpose = -1;
+				else {
+					if(unit.rPurposeNew.trim().length()>0) {
+						newItem.revisionPurpose = RevisionPurpose.getPurposeIndex(unit.rPurposeNew);
+					} else {
+						newItem.revisionPurpose = -1;
+					}
+				}
 				newIndices[1] = currentNewRealIndex + 1;
 			}
 		}
@@ -281,8 +305,12 @@ public class ColoredListWrapper {
 	}
 
 	public void paint() {
+		/*
+		 * List<HeatMapUnit> units = RevisionMapFileGenerator
+		 * .generateUnits4Tagging(doc);
+		 */
 		List<HeatMapUnit> units = RevisionMapFileGenerator
-				.generateUnits4Tagging(doc);
+				.generateUnitsGeneric(doc);
 		RevisionMapFileGenerator.adjustUnits(units);
 		int realOldIndex = 1;
 		int realNewIndex = 1;
@@ -292,14 +320,13 @@ public class ColoredListWrapper {
 			if (unit.aVR - lastAVR > 1)
 				addBlankLine();
 			lastAVR = unit.aVR;
-			
+
 			addLine(unit, unit.oldIndex, unit.newIndex);
 			/*
-			int[] indices = addLine(unit, realOldIndex, realNewIndex);
-			if (indices[0] != -1)
-				realOldIndex = indices[0];
-			if (indices[1] != -1)
-				realNewIndex = indices[1];*/
+			 * int[] indices = addLine(unit, realOldIndex, realNewIndex); if
+			 * (indices[0] != -1) realOldIndex = indices[0]; if (indices[1] !=
+			 * -1) realNewIndex = indices[1];
+			 */
 		}
 
 		oldSentenceList.setListData(oldData.toArray(new MyListItem[oldData
@@ -470,12 +497,12 @@ public class ColoredListWrapper {
 					isNewSelected = false;
 					isOldSelected = false;
 				}
-			}else if (lsm.equals(newSentenceList.getSelectionModel())) {
+			} else if (lsm.equals(newSentenceList.getSelectionModel())) {
 				// System.out.println("new");
 				// int selectIndex = newSentenceList.getSelectedIndex();
 				if (!isNewSelected) {
 					isNewSelected = true;
-				
+
 					if (!isOldSelected) {
 						ArrayList<Integer> selectIndices = getNewSelectedIndexes();
 						ArrayList<Integer> oldIndexes = new ArrayList<Integer>();
