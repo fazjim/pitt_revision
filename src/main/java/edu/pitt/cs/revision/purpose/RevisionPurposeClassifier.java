@@ -404,6 +404,34 @@ public class RevisionPurposeClassifier {
 		return data;
 	}
 
+	public Instances createInstancesSOLO(ArrayList<RevisionDocument> docs,
+			boolean usingNgram) throws IOException {
+		FeatureExtractor fe = new FeatureExtractor();
+		//fe.openBatchMode(batchPath);
+		WekaAssist wa = new WekaAssist();
+		ArrayList<String> categories = new ArrayList<String>();
+		// categories.add(SURFACE_CHANGE);
+		// categories.add(CONTENT_CHANGE);
+		addPurposeCategories(categories);
+		fe.buildFeatures(usingNgram, categories);
+		Instances data = wa.buildInstances(fe.features, usingNgram);
+		for (RevisionDocument doc : docs) {
+			ArrayList<ArrayList<ArrayList<Integer>>> pairs = doc.getPredictedAlignedIndices();
+			for (ArrayList<ArrayList<Integer>> pair : pairs) {
+				ArrayList<Integer> oldIndices = pair.get(0);
+				ArrayList<Integer> newIndices = pair.get(1);
+				Object[] features = fe.extractFeatures(doc, newIndices,
+						oldIndices, usingNgram);
+				String ID = RevisionPurposePredicter.generateID(doc,
+						newIndices, oldIndices);
+				wa.addInstance(features, fe.features, usingNgram, data,
+						RevisionPurpose.getPurposeName(RevisionPurpose.CLAIMS_IDEAS), ID);
+			}
+		}
+		return data;
+	}
+
+	
 	// Simple classification task, AD for revision purpose classification
 	public void classifyADRevisionPurpose(ArrayList<RevisionDocument> docs,
 			boolean usingNgram) throws Exception {

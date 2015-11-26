@@ -185,6 +185,8 @@ public class WekaAssist {
 	public Instances[] addNgram(Instances train, Instances test)
 			throws Exception {
 		StringVectorWrapper ngramWrapper = new StringVectorWrapper();
+		System.err.println("Train is null:"+train==null);
+		System.err.println("Test is null:"+test==null);
 		InstancesPair p = ngramWrapper.applyStringVectorFilter(train, "Text",
 				"TEXTDIFF", test);
 		Instances[] ins = new Instances[2];

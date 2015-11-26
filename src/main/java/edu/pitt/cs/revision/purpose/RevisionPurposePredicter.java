@@ -41,14 +41,121 @@ public class RevisionPurposePredicter {
 
 	/**
 	 * Where the revisions only has one major revision type
+	 * 
 	 * @param trainDocs
 	 * @param testDocs
 	 * @param usingNgram
 	 * @param option
-	 * @throws Exception 
+	 * @throws Exception
+	 */
+	public void predictRevisionsSolo(Instances trainInstances,
+			ArrayList<RevisionDocument> trainDocs,
+			ArrayList<RevisionDocument> testDocs, boolean usingNgram, int option)
+			throws Exception {
+		FeatureExtractor fe = new FeatureExtractor();
+		ArrayList<String> categories = new ArrayList<String>();
+		WekaAssist wa = new WekaAssist();
+		rpc.addPurposeCategories(categories);
+		fe.buildFeatures(usingNgram, categories);
+		Instances trainData = wa.buildInstances(fe.features, usingNgram);
+		for (RevisionDocument doc : trainDocs) {
+			ArrayList<RevisionUnit> basicUnits = doc.getRoot()
+					.getRevisionUnitAtLevel(0);
+			for (RevisionUnit ru : basicUnits) {
+				Object[] features = fe.extractFeatures(doc, ru, usingNgram);
+				wa.addInstance(
+						features,
+						fe.features,
+						usingNgram,
+						trainData,
+						RevisionPurpose.getPurposeName(ru.getRevision_purpose()),
+						"dummy");
+			}
+		}
+		trainInstances = trainData;
+		predictRevisionsSolo(trainInstances, testDocs, usingNgram, option);
+	}
+
+	/**
+	 * Where the revisions only has one major revision type
+	 * 
+	 * @param trainDocs
+	 * @param testDocs
+	 * @param usingNgram
+	 * @param option
+	 * @throws Exception
+	 */
+	public void predictRevisionsSolo(Instances trainData,
+			ArrayList<RevisionDocument> testDocs, boolean usingNgram, int option)
+			throws Exception {
+		Hashtable<String, RevisionDocument> table = new Hashtable<String, RevisionDocument>();
+		for (RevisionDocument doc : testDocs) {
+			// RevisionUnit predictedRoot = new RevisionUnit(true);
+			// predictedRoot.setRevision_level(3); // Default level to 3
+			// doc.setPredictedRoot(predictedRoot);
+			table.put(doc.getDocumentName(), doc);
+		}
+		Instances data = rpc.createInstancesSOLO(testDocs, usingNgram);
+
+		WekaAssist wa = new WekaAssist();
+		Instances[] inst = wa.addNgram(trainData, data);
+		trainData = inst[0];
+		data = inst[1];
+
+		boolean autoBalance = false;
+		Classifier cl = wa.train(trainData,autoBalance);
+		int ID_index = data.attribute("ID").index();
+
+		Hashtable<String, Integer> revIndexTable = new Hashtable<String, Integer>();
+
+		int dataSize = data.numInstances();
+		for (int j = 0; j < dataSize; j++) {
+			Instance instance = data.instance(j);
+			double category = cl.classifyInstance(instance);
+			// String ID =
+			// data.instance(ID_index).stringValue(instance.attribute(ID_index));
+			String ID = instance.stringValue(instance.attribute(ID_index));
+			AlignStruct as = AlignStruct.parseID(ID);
+			// System.out.println(ID);
+			RevisionDocument doc = table.get(as.documentpath);
+			RevisionUnit ru = new RevisionUnit(doc.getPredictedRoot());
+			ru.setNewSentenceIndex(as.newIndices);
+			ru.setOldSentenceIndex(as.oldIndices);
+			if (as.newIndices == null || as.newIndices.size() == 0) {
+				ru.setRevision_op(RevisionOp.DELETE);
+			} else if (as.oldIndices == null || as.oldIndices.size() == 0) {
+				ru.setRevision_op(RevisionOp.ADD);
+			} else {
+				ru.setRevision_op(RevisionOp.MODIFY);
+			}
+
+			int purpose = (int) category + 1;
+			ru.setRevision_purpose(purpose);
+			ru.setRevision_level(0);
+			if (revIndexTable.containsKey(as.documentpath)) {
+				ru.setRevision_index(revIndexTable.get(as.documentpath));
+				revIndexTable.put(as.documentpath,
+						revIndexTable.get(as.documentpath) + 1);
+			} else {
+				ru.setRevision_index(1);
+				revIndexTable.put(as.documentpath, 2);
+			}
+			doc.getPredictedRoot().addUnit(ru);
+		}
+	}
+
+	/**
+	 * Where the revisions only has one major revision type
+	 * 
+	 * @param trainDocs
+	 * @param testDocs
+	 * @param usingNgram
+	 * @param option
+	 * @throws Exception
 	 */
 	public void predictRevisionsSolo(ArrayList<RevisionDocument> trainDocs,
-			ArrayList<RevisionDocument> testDocs, boolean usingNgram, int option) throws Exception {
+			ArrayList<RevisionDocument> testDocs, boolean usingNgram, int option)
+			throws Exception {
 		Hashtable<String, RevisionDocument> table = new Hashtable<String, RevisionDocument>();
 		FeatureExtractor fe = new FeatureExtractor();
 		ArrayList<String> categories = new ArrayList<String>();
@@ -61,7 +168,7 @@ public class RevisionPurposePredicter {
 			// doc.setPredictedRoot(predictedRoot);
 			table.put(doc.getDocumentName(), doc);
 		}
-		//rpc.addPurposeCategories2(categories);
+		// rpc.addPurposeCategories2(categories);
 		rpc.addPurposeCategories(categories);
 		fe.buildFeatures(usingNgram, categories);
 		Instances trainData = wa.buildInstances(fe.features, usingNgram);
@@ -75,12 +182,14 @@ public class RevisionPurposePredicter {
 						Object[] features = fe.extractFeatures(doc, ru,
 								usingNgram);
 						wa.addInstance(features, fe.features, usingNgram,
-								trainData, RevisionPurpose.getPurposeName(ru.getRevision_purpose()), "dummy");
+								trainData, RevisionPurpose.getPurposeName(ru
+										.getRevision_purpose()), "dummy");
 					}
 				} else {
 					Object[] features = fe.extractFeatures(doc, ru, usingNgram);
 					wa.addInstance(features, fe.features, usingNgram,
-							trainData, RevisionPurpose.getPurposeName(ru.getRevision_purpose()), "dummy");
+							trainData, RevisionPurpose.getPurposeName(ru
+									.getRevision_purpose()), "dummy");
 				}
 			}
 		}
@@ -96,8 +205,13 @@ public class RevisionPurposePredicter {
 				 * rpc.transformPurpose2(ru), buildID(doc, ru)); } } else {
 				 */
 				Object[] features = fe.extractFeatures(doc, ru, usingNgram);
-				wa.addInstance(features, fe.features, usingNgram, testData,
-						RevisionPurpose.getPurposeName(ru.getRevision_purpose()), buildID(doc, ru));
+				wa.addInstance(
+						features,
+						fe.features,
+						usingNgram,
+						testData,
+						RevisionPurpose.getPurposeName(ru.getRevision_purpose()),
+						buildID(doc, ru));
 				// }
 			}
 		}
@@ -108,6 +222,7 @@ public class RevisionPurposePredicter {
 			trainData = inst[0];
 			testData = inst[1];
 		}
+
 		boolean autoBalance = false;
 		Classifier cl = wa.train(trainData, autoBalance);
 		int ID_index = testData.attribute("ID").index();
@@ -123,7 +238,7 @@ public class RevisionPurposePredicter {
 			RevisionDocument doc = table.get(info[0]);
 			for (RevisionUnit ru : doc.getPredictedRoot().getUnits()) {
 				if (ru.getRevision_index() == Integer.parseInt(info[1])) {
-					int purpose = (int)category + 1;
+					int purpose = (int) category + 1;
 					ru.setRevision_purpose(purpose);
 					break;
 				}
@@ -131,7 +246,7 @@ public class RevisionPurposePredicter {
 		}
 
 	}
-	
+
 	/**
 	 * Predict revisions with training and testing data
 	 * 
