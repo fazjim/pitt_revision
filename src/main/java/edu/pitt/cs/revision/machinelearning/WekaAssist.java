@@ -427,7 +427,7 @@ public class WekaAssist {
 	public static Evaluation majorityTrainTest(Instances trainset,
 			Instances testset) throws Exception {
 		Classifier classifier = new ZeroR();
-		CostSensitiveClassifier csc = new CostSensitiveClassifier();
+		/*CostSensitiveClassifier csc = new CostSensitiveClassifier();
 		csc.setClassifier(classifier);
 		double w = getWeight(trainset);
 		System.out.println("Weight:" + w);
@@ -435,7 +435,7 @@ public class WekaAssist {
 		newCostMatrix.setCell(0, 1, w);
 		newCostMatrix.setCell(1, 0, 1.0);
 		csc.setCostMatrix(newCostMatrix);
-		classifier = csc;
+		classifier = csc;*/
 		// -----end of balancing------------//
 		classifier = setTagFilter(classifier, trainset);
 		classifier.buildClassifier(trainset);

@@ -22,16 +22,21 @@ import edu.pitt.lrdc.cs.revision.evaluate.ResultInfoRow;
  *
  */
 public class ResultInfoWriter {
-	//Print double better
+	// Print double better
 	public static String outputDouble(double val) {
 		val = val * 100;
 		String valStr = Double.toString(val);
-		if(valStr.length()>5) valStr = valStr.substring(0, 5);
+		if (valStr.length() > 5)
+			valStr = valStr.substring(0, 5);
 		return valStr;
 	}
+
 	public static void persist(ArrayList<ResultInfoRow> results,
-			Hashtable<String, LatexTableWriter> writerIndex, String purposeName, String outputFolder) throws IOException, IllegalArgumentException, IllegalAccessException {
-		String filePath = outputFolder + "/allResults_"+purposeName.substring(0, 4)+".xlsx";
+			Hashtable<String, LatexTableWriter> writerIndex,
+			String purposeName, String outputFolder) throws IOException,
+			IllegalArgumentException, IllegalAccessException {
+		String filePath = outputFolder + "/allResults_"
+				+ purposeName.substring(0, 4) + ".xlsx";
 		FileOutputStream fileOut = new FileOutputStream(filePath);
 		XSSFWorkbook xwb = new XSSFWorkbook();
 
@@ -41,7 +46,10 @@ public class ResultInfoWriter {
 			Field[] fields = ResultInfo.class.getDeclaredFields();
 			for (Field field : fields) {
 				String name = field.getName();
-				LatexTableWriter latexWriter = writerIndex.get(name);
+
+				LatexTableWriter latexWriter = null;
+				if (writerIndex != null)
+					latexWriter = writerIndex.get(name);
 				XSSFSheet sheet = xwb.createSheet(name);
 				XSSFRow header = sheet.createRow(0);
 				int colIndex = 0;
@@ -73,9 +81,11 @@ public class ResultInfoWriter {
 				avgRow.createCell(0).setCellValue("AVG:");
 				for (String experiment : experiments) {
 					int index = colIndexes.get(experiment);
-					double val = avg.get(index)/results.size();
+					double val = avg.get(index) / results.size();
 					avgRow.createCell(index).setCellValue(val);
-					latexWriter.setValue(experiment, purposeName, outputDouble(val));
+					if (latexWriter != null)
+						latexWriter.setValue(experiment, purposeName,
+								outputDouble(val));
 				}
 			}
 

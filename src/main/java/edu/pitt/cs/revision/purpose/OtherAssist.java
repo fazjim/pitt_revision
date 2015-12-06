@@ -102,8 +102,8 @@ public class OtherAssist {
 		//String[] sentences = getSentences(doc, ru);
 		//String oldSentence = sentences[0];
 		//String newSentence = sentences[1];
-		int oldSize = oldSentence.toLowerCase().trim().split(" ").length;
-		int newSize = newSentence.toLowerCase().trim().split(" ").length;
+		//int oldSize = oldSentence.toLowerCase().trim().split(" ").length;
+		//int newSize = newSentence.toLowerCase().trim().split(" ").length;
 		
 		String[] oldTokens = oldSentence.toLowerCase().trim().split(" ");
 		String[] newTokens = newSentence.toLowerCase().trim().split(" ");
@@ -140,8 +140,8 @@ public class OtherAssist {
 		
 		double lenNew = 0.0;
 		Iterator<String> it2 = newMap.keySet().iterator();
-		while(it.hasNext()) {
-			String word = it.next();
+		while(it2.hasNext()) {
+			String word = it2.next();
 			lenNew += Math.pow(newMap.get(word),2);
 		}
 		

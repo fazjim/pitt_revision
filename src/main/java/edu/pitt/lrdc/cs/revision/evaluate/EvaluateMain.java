@@ -40,11 +40,11 @@ public class EvaluateMain {
 		int evaluateMethod = 4;
 		// String trainPath = "D:/annotationTool/annotated/class3";
 		// String trainPath = "/Users/faz23/Desktop/34/annotated/allData";
-		//String trainPath = "C:\\Not Backed Up\\data\\trainData2";
+		// String trainPath = "C:\\Not Backed Up\\data\\trainData2";
 		String trainPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\temp_alldata";
 		// String testPath = "D:/annotationTool/annotated/class4";
 		// String testPath = "/Users/faz23/Desktop/34/annotated/allData2";
-		String testPath = "C:\\Not Backed Up\\data\\trainData3";
+		String testPath = "C:\\Not Backed Up\\data\\trainData";
 		String clausePath = "C:\\Not Backed Up\\data_phrase_science\\BarnettPhraseAlign";
 		// String anotherPath = "D:/annotationTool/annotated/class2";
 		ArrayList<RevisionDocument> trainFolder = RevisionDocumentReader
@@ -60,7 +60,7 @@ public class EvaluateMain {
 		// allData.addAll(trainFolder);
 		// allData.addAll(testFolder);
 		// allData.addAll(anotherFolder);
-		allData.addAll(trainFolder);
+		allData.addAll(testFolder);
 		String resultPath = "dummy";
 		if (option == ALIGN) {
 			evaluateMethod = 2;// modify later to allow human input
@@ -82,15 +82,16 @@ public class EvaluateMain {
 		} else if (option == CLASSIFY) {
 			int folder = 10;
 			// Open this for cross surface classification
-			//resultPath = "C:\\Not Backed Up\\data\\surfaceAllOp.xlsx";
+			// resultPath = "C:\\Not Backed Up\\data\\surfaceAllOp.xlsx";
 			resultPath = "C:\\Not Backed Up\\allResults";
 			// crossValidateClassify(allData, folder, true, resultPath);
 			boolean autoAligned = false;
 			boolean highLevel = false;
-			//crossValidateClassifyCorrelation(allData, folder, 1, autoAligned, highLevel);
+			// crossValidateClassifyCorrelation(allData, folder, 1, autoAligned,
+			// highLevel);
 			// Open this for jumbo classification
 			// resultPath = "/Users/faz23/Desktop/34/annotated/allResults2";
-			 crossValidateClassifyJumbo(allData, folder, true, resultPath);
+			crossValidateClassifyJumbo2(allData, folder, true, resultPath);
 		}
 	}
 
@@ -172,6 +173,84 @@ public class EvaluateMain {
 	 * @param resultPath
 	 * @throws Exception
 	 */
+	public static void crossValidateClassifyJumbo2(
+			ArrayList<RevisionDocument> docs, int folder, boolean usingNgram,
+			String resultPath) throws Exception {
+		ArrayList<ArrayList<ArrayList<RevisionDocument>>> crossCuts = EvaluateTool
+				.getCrossCut(docs, folder);
+		ArrayList<ArrayList<ResultInfoRow>> allResults = new ArrayList<ArrayList<ResultInfoRow>>();
+
+		/*
+		 * Hashtable<String, LatexTableWriter> writers = new Hashtable<String,
+		 * LatexTableWriter>(); Field[] fields =
+		 * ResultInfo.class.getDeclaredFields(); for (Field field : fields) {
+		 * String name = field.getName(); LatexTableWriter latexWriter = new
+		 * LatexTableWriter(name); writers.put(name, latexWriter); }
+		 */
+
+		// Generate a result for each individual purpose
+		/*
+		 * for (int i = RevisionPurpose.START; i <= RevisionPurpose.END; i++) {
+		 * if (i == RevisionPurpose.CD_REBUTTAL_RESERVATION) continue; String
+		 * purposeName = RevisionPurpose.getPurposeName(i);
+		 * allAddColumn(writers, purposeName); }
+		 */
+
+		ArrayList<String> experiments = new ArrayList<String>();
+		ArrayList<Integer> options = new ArrayList<Integer>();
+		experiments.add("Majority");
+		options.add(100);
+		experiments.add("Unigram");
+		options.add(-1);
+		experiments.add("All features");
+		options.add(10);
+		// experiments.add("Language features");
+		// options.add(4);
+		experiments.add("Embedding features");
+		options.add(3);
+		experiments.add("Textual+unigram");
+		options.add(1);
+		experiments.add("PDTB+unigram");
+		options.add(2);
+		experiments.add("Location+unigram");
+		options.add(0);
+
+		// allAddRow(writers, experiments);
+		// allMakeTable(writers);
+
+		ArrayList<ResultInfoRow> results = new ArrayList<ResultInfoRow>();
+		for (int j = 0; j < folder; j++) { // Do a cross validation
+			ResultInfoRow resultRow = new ResultInfoRow();
+			ArrayList<RevisionDocument> trainDocs = crossCuts.get(j).get(0);
+			ArrayList<RevisionDocument> testDocs = crossCuts.get(j).get(1);
+
+			RevisionPurposeClassifier rpc = new RevisionPurposeClassifier();
+			for (int k = 0; k < experiments.size(); k++) { // Try a group of
+															// features
+				String experiment = experiments.get(k);
+				Evaluation eval = rpc.classifyADRevisionPurposeSolo(trainDocs,
+						testDocs, usingNgram,  options.get(k));
+				resultRow.addExperiment(experiment);
+				resultRow.getResult(experiment).fromEvaluation(eval);
+			}
+			results.add(resultRow);
+		}
+
+		ResultInfoWriter.persist(results, null, "All-Groups", resultPath);
+
+		// Generate a result for surface vs. text-based
+
+	}
+
+	/**
+	 * All the revision purposes in a jumbo
+	 * 
+	 * @param docs
+	 * @param folder
+	 * @param usingNgram
+	 * @param resultPath
+	 * @throws Exception
+	 */
 	public static void crossValidateClassifyJumbo(
 			ArrayList<RevisionDocument> docs, int folder, boolean usingNgram,
 			String resultPath) throws Exception {
@@ -198,14 +277,18 @@ public class EvaluateMain {
 		ArrayList<String> experiments = new ArrayList<String>();
 		ArrayList<Integer> options = new ArrayList<Integer>();
 		experiments.add("Majority");
-		options.add(5);
+		options.add(100);
 		experiments.add("Unigram");
 		options.add(-1);
 		experiments.add("All features");
-		options.add(4);
+		options.add(10);
+		// experiments.add("Language features");
+		// options.add(4);
+		experiments.add("Embedding features");
+		options.add(3);
 		experiments.add("Textual+unigram");
 		options.add(1);
-		experiments.add("Language+unigram");
+		experiments.add("PDTB+unigram");
 		options.add(2);
 		experiments.add("Location+unigram");
 		options.add(0);
@@ -218,7 +301,7 @@ public class EvaluateMain {
 																				// rev
 																				// purpose
 			if (i == RevisionPurpose.CD_REBUTTAL_RESERVATION
-					||i == RevisionPurpose.WORDUSAGE_CLARITY_CASCADED)
+					|| i == RevisionPurpose.WORDUSAGE_CLARITY_CASCADED)
 				continue;
 			purposes.add(RevisionPurpose.getPurposeName(i));
 			System.out.println("Running:" + RevisionPurpose.getPurposeName(i));
@@ -324,14 +407,15 @@ public class EvaluateMain {
 			 * resultRow.addExperiment(experiment);
 			 * resultRow.getResult(experiment).fromEvaluation(eval);
 			 */
-			
-			 System.out.println("*****************Unigram baseline*******************");
-			 experiment = "Unigram"; 
-			 eval =
-			 rpc.classifyADRevisionPurpose(trainDocs, testDocs, usingNgram,
-			 -1); resultRow.addExperiment(experiment);
-			 resultRow.getResult(experiment).fromEvaluation(eval);
-			 
+
+			System.out
+					.println("*****************Unigram baseline*******************");
+			experiment = "Unigram";
+			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
+					usingNgram, -1);
+			resultRow.addExperiment(experiment);
+			resultRow.getResult(experiment).fromEvaluation(eval);
+
 			System.out
 					.println("*****************All features*******************");
 			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
@@ -340,14 +424,15 @@ public class EvaluateMain {
 			resultRow.addExperiment(experiment);
 			resultRow.getResult(experiment).fromEvaluation(eval);
 			results.add(resultRow);
-			
+
 			System.out.println("*****************Majority*******************");
 			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
-			  usingNgram, 5); experiment = "Majority";
-			  resultRow.addExperiment(experiment);
-			  resultRow.getResult(experiment).fromEvaluation(eval);
-			  
-			  results.add(resultRow);
+					usingNgram, 5);
+			experiment = "Majority";
+			resultRow.addExperiment(experiment);
+			resultRow.getResult(experiment).fromEvaluation(eval);
+
+			results.add(resultRow);
 			/*
 			 * System.out.println("*****************Majority*******************")
 			 * ; eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,

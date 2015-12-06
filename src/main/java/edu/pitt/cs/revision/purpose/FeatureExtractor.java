@@ -195,12 +195,12 @@ public class FeatureExtractor {
 		 * But right now I choose to trust the power of the machine
 		 */
 		int DIFF_CHANGED = features.getIndex("DIFF_CHANGED");
-		if(oldSentence.equals(newSentence)) {
+		if (oldSentence.equals(newSentence)) {
 			featureVector[DIFF_CHANGED] = Boolean.toString(true);
 		} else {
 			featureVector[DIFF_CHANGED] = Boolean.toString(false);
 		}
-		
+
 		int oldCapitalNum = OtherAssist.getCapitalNum(oldSentence);
 		int newCapitalNum = OtherAssist.getCapitalNum(newSentence);
 		int numDiffCapital = Math.abs(newCapitalNum - oldCapitalNum);
@@ -529,10 +529,14 @@ public class FeatureExtractor {
 		double val_person_old_num = 0.0;
 		double val_loc_new_num = 0.0;
 		double val_loc_old_num = 0.0;
-		if(val_person_new == true) val_person_new_num = 1.0;
-		if(val_person_old == true) val_person_old_num = 1.0;
-		if(val_loc_new == true) val_loc_new_num = 1.0;
-		if(val_loc_old == true) val_loc_old_num = 1.0;
+		if (val_person_new == true)
+			val_person_new_num = 1.0;
+		if (val_person_old == true)
+			val_person_old_num = 1.0;
+		if (val_loc_new == true)
+			val_loc_new_num = 1.0;
+		if (val_loc_old == true)
+			val_loc_old_num = 1.0;
 		diff_person = val_person_new_num - val_person_old_num;
 		diff_loc = val_loc_new_num - val_loc_old_num;
 
@@ -947,18 +951,22 @@ public class FeatureExtractor {
 		if (!batchMode) {
 			String oldText = extractOldSentence(doc, oldIndexes);
 			String newText = extractNewSentence(doc, newIndexes);
-			//if(oldText==null||oldText.length()==0) oldText = "Dummy";
-			//if(newText==null||newText.length()==0) newText = "Dummy";
-			Hashtable<String, Double> posTable = StanfordParserAssist.getInstance().collectSimplePOSRatio(StanfordParserAssist.getInstance()
-					.annotateSingleSentence(oldText));
+			// if(oldText==null||oldText.length()==0) oldText = "Dummy";
+			// if(newText==null||newText.length()==0) newText = "Dummy";
+			Hashtable<String, Double> posTable = StanfordParserAssist
+					.getInstance().collectSimplePOSRatio(
+							StanfordParserAssist.getInstance()
+									.annotateSingleSentence(oldText));
 			for (String pos : posTable.keySet()) {
 				double ratio = posTable.get(pos);
 				int index = features.getIndex(pos + "_OLD");
 				featureVector[index] = ratio;
 			}
 
-			posTable = StanfordParserAssist.getInstance().collectSimplePOSRatio(StanfordParserAssist.getInstance()
-					.annotateSingleSentence(newText));
+			posTable = StanfordParserAssist.getInstance()
+					.collectSimplePOSRatio(
+							StanfordParserAssist.getInstance()
+									.annotateSingleSentence(newText));
 			for (String pos : posTable.keySet()) {
 				double ratio = posTable.get(pos);
 				int index = features.getIndex(pos + "_NEW");
@@ -1037,11 +1045,16 @@ public class FeatureExtractor {
 		if (!batchMode) {
 			String oldSentence = extractOldSentence(doc, oldIndexes);
 			String newSentence = extractNewSentence(doc, newIndexes);
-			if(oldSentence==null||oldSentence.length()==0) oldSentence = "Dummy";
-			if(newSentence==null||newSentence.length()==0) newSentence = "Dummy";
-			Hashtable<String, Double> posTable = StanfordParserAssist.getInstance().collectSimplePOSDiff(
-					StanfordParserAssist.getInstance().annotateSingleSentence(oldSentence),
-					StanfordParserAssist.getInstance().annotateSingleSentence(newSentence));
+			if (oldSentence == null || oldSentence.length() == 0)
+				oldSentence = "Dummy";
+			if (newSentence == null || newSentence.length() == 0)
+				newSentence = "Dummy";
+			Hashtable<String, Double> posTable = StanfordParserAssist
+					.getInstance().collectSimplePOSDiff(
+							StanfordParserAssist.getInstance()
+									.annotateSingleSentence(oldSentence),
+							StanfordParserAssist.getInstance()
+									.annotateSingleSentence(newSentence));
 
 			String pos = "JJ";
 			int featureIndex = features.getIndex("JJ_DIFF");
@@ -1272,7 +1285,7 @@ public class FeatureExtractor {
 		insertOp();
 		insertLenFeature();
 		insertDaTextualFeature();
-		//insertNERFeature();
+		// insertNERFeature();
 		// insertOverlapFeature();
 	}
 
@@ -1285,7 +1298,7 @@ public class FeatureExtractor {
 		extractOpFeatures(ru);
 		extractLENFeature(doc, ru);
 		extractDaTextualFeature(doc, ru);
-		//extractNERFeature(doc, ru);
+		// extractNERFeature(doc, ru);
 		// extractOverlapFeature(doc, ru);
 	}
 
@@ -1299,7 +1312,7 @@ public class FeatureExtractor {
 		extractOpFeatures(newIndexes, oldIndexes);
 		extractLENFeature(doc, newIndexes, oldIndexes);
 		extractDaTextualFeature(doc, newIndexes, oldIndexes);
-		//extractNERFeature(doc, newIndexes, oldIndexes);
+		// extractNERFeature(doc, newIndexes, oldIndexes);
 		// extractOverlapFeature(doc, ru);
 	}
 
@@ -1307,8 +1320,8 @@ public class FeatureExtractor {
 	public void insertLanguageGroup() {
 		insertSimplePOSFeatureRatio();
 		insertPOSDiff();
-		//insertGrammarErrorFeature();
-		//insertSpellErrorFeature();
+		// insertGrammarErrorFeature();
+		// insertSpellErrorFeature();
 	}
 
 	public void extractLanguageGroup(RevisionDocument doc, RevisionUnit ru) {
@@ -1317,8 +1330,8 @@ public class FeatureExtractor {
 		// String newSentence = extractNewSentence(doc, ru);
 		extractSimplePOSFeatures(doc, ru);
 		extractPOSDiff(doc, ru);
-		//extractGrammarErrorFeature(doc, ru);
-		//extractSpellErrorFeature(doc, ru);
+		// extractGrammarErrorFeature(doc, ru);
+		// extractSpellErrorFeature(doc, ru);
 	}
 
 	public void extractLanguageGroup(RevisionDocument doc,
@@ -1475,23 +1488,23 @@ public class FeatureExtractor {
 	// -------------------------Putting everything
 	// together-------------------------------
 	// buildup features
-	public void buildFeatures(boolean usingNgram, ArrayList<String> categories) {
+	public void buildFeatures(boolean usingNgram, ArrayList<String> categories)
+			throws IOException {
 		insertCategory(categories);
 		if (usingNgram)
 			insertText(); // Text always start from the first
 
 		insertLocGroup();
 		insertTextGroup();
-		//insertLanguageGroup();
+		// insertLanguageGroup();
 		insertMetaGroup();
 		// insertOtherGroup();
-
+		//PDTBFeatureExtractor.getInstance().insertFeature(features);
 	}
 
-	
 	// extract features
 	public Object[] extractFeatures(RevisionDocument doc, RevisionUnit ru,
-			boolean usingNgram) {
+			boolean usingNgram) throws IOException {
 		featureVector = new Object[features.getSize()];
 		if (usingNgram) {
 			String sentence = extractSentence(doc, ru);
@@ -1500,15 +1513,18 @@ public class FeatureExtractor {
 		}
 		extractLocGroup(doc, ru);
 		extractTextGroup(doc, ru);
-		//extractLanguageGroup(doc, ru);
+		// extractLanguageGroup(doc, ru);
 		extractMetaGroup(doc, ru);
 		// extractOtherGroup(doc, ru);
+		/*PDTBFeatureExtractor.getInstance().extractFeature(features,
+				featureVector, doc, ru.getNewSentenceIndex(),
+				ru.getOldSentenceIndex());*/
 		return featureVector;
 	}
 
 	public Object[] extractFeatures(RevisionDocument doc,
 			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes,
-			boolean usingNgram) {
+			boolean usingNgram) throws IOException {
 		featureVector = new Object[features.getSize()];
 		if (usingNgram) {
 			String sentence = extractSentence(doc, newIndexes, oldIndexes, true);
@@ -1517,9 +1533,11 @@ public class FeatureExtractor {
 		}
 		extractLocGroup(doc, newIndexes, oldIndexes);
 		extractTextGroup(doc, newIndexes, oldIndexes);
-		//extractLanguageGroup(doc, newIndexes, oldIndexes);
+		// extractLanguageGroup(doc, newIndexes, oldIndexes);
 		extractMetaGroup(doc, newIndexes, oldIndexes);
 		// extractOtherGroup(doc, ru);
+		//PDTBFeatureExtractor.getInstance().extractFeature(features,
+		//		featureVector, doc, newIndexes, oldIndexes);
 		return featureVector;
 		// String sentence = extractSentence(doc, ru);
 		// if (usingNgram)
@@ -1540,20 +1558,25 @@ public class FeatureExtractor {
 	}
 
 	public void buildFeatures(boolean usingNgram, ArrayList<String> categories,
-			int remove) {
+			int remove) throws IOException {
 		insertCategory(categories);
 		if (usingNgram)
 			insertText(); // Text always start from the first
 		if (remove == -1)
 			return;
-		if (remove == 0 || remove > 3)
+		if (remove == 0 || remove == 10)
 			insertLocGroup();
-		if (remove == 1 || remove > 3)
+		if (remove == 1 || remove == 10)
 			insertTextGroup();
-		if (remove == 2 || remove > 3)
+		if (remove == 2 || remove == 10)
+			// insertLanguageGroup();
+			PDTBFeatureExtractor.getInstance().insertFeature(features);
+		if (remove == 3 || remove == 10)
+			// insertMetaGroup();
+			SentenceEmbeddingFeatureExtractor.getInstance().insertFeature(
+					features);
+		if (remove == 4 || remove == 10)
 			insertLanguageGroup();
-		if (remove == 3 || remove > 3)
-			insertMetaGroup();
 		// insertOtherGroup();
 		// insertLocationFeature();
 		// insertNERFeature();
@@ -1570,7 +1593,7 @@ public class FeatureExtractor {
 
 	// extract features
 	public Object[] extractFeatures(RevisionDocument doc, RevisionUnit ru,
-			boolean usingNgram, int remove) {
+			boolean usingNgram, int remove) throws IOException {
 		featureVector = new Object[features.getSize()];
 		if (usingNgram) {
 			String sentence = extractSentence(doc, ru);
@@ -1579,15 +1602,23 @@ public class FeatureExtractor {
 		}
 		if (remove == -1)
 			return featureVector;
-		if (remove == 0 || remove > 3)
+		if (remove == 0 || remove == 10)
 			extractLocGroup(doc, ru);
-		if (remove == 1 || remove > 3)
+		if (remove == 1 || remove == 10)
 			extractTextGroup(doc, ru);
-		if (remove == 2 || remove > 3)
-			extractLanguageGroup(doc, ru);
-		if (remove == 3 || remove > 3)
-			extractMetaGroup(doc, ru);
+		if (remove == 2 || remove == 10)
+			// extractLanguageGroup(doc, ru);
+			PDTBFeatureExtractor.getInstance().extractFeature(features,
+					featureVector, doc, ru.getNewSentenceIndex(),
+					ru.getOldSentenceIndex());
+		if (remove == 3 || remove == 10)
+			// extractMetaGroup(doc, ru);
+			SentenceEmbeddingFeatureExtractor.getInstance().extractFeature(
+					features, featureVector, doc, ru.getNewSentenceIndex(),
+					ru.getOldSentenceIndex());
 		// extractOtherGroup(doc, ru);
+		if (remove == 4 || remove == 10)
+			extractLanguageGroup(doc, ru);
 		return featureVector;
 		// String sentence = extractSentence(doc, ru);
 		// if (usingNgram)
