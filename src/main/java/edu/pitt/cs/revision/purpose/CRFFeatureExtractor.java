@@ -1,8 +1,13 @@
 package edu.pitt.cs.revision.purpose;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Hashtable;
 
+import edu.pitt.cs.revision.batch.BatchFeatureWriter;
+import edu.pitt.cs.revision.batch.SentenceInfo;
+import edu.pitt.cs.revision.machinelearning.StanfordParserAssist;
 import edu.pitt.lrdc.cs.revision.alignment.model.HeatMapUnit;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
 import edu.pitt.lrdc.cs.revision.model.RevisionOp;
@@ -25,64 +30,66 @@ class EssayInfo {
 	boolean parsed = false;
 }
 
-public class CRFFeatureExtractor extends FeatureExtractor{
+public class CRFFeatureExtractor extends FeatureExtractor {
 
 	private EssayInfo essayInfo = new EssayInfo();
-	
+
 	public EssayInfo getEssayInfo(ArrayList<ArrayList<HeatMapUnit>> essay) {
-		if(essayInfo.parsed==false) {
+		if (essayInfo.parsed == false) {
 			int pD1Num = 1;
 			int pD2Num = 1;
 			int tempS1Num = 1;
 			int tempS2Num = 1;
 			ArrayList<Integer> sentences1 = new ArrayList<Integer>();
 			ArrayList<Integer> sentences2 = new ArrayList<Integer>();
-			for(ArrayList<HeatMapUnit> paragraph: essay) {
-				for(HeatMapUnit unit: paragraph) {
-					if(unit.pD1>pD1Num) {
+			for (ArrayList<HeatMapUnit> paragraph : essay) {
+				for (HeatMapUnit unit : paragraph) {
+					if (unit.pD1 > pD1Num) {
 						sentences1.add(tempS1Num);
 						pD1Num = unit.pD1;
 						tempS1Num = unit.sD1;
 					} else {
-						if(unit.sD1>tempS1Num) tempS1Num = unit.sD1;
+						if (unit.sD1 > tempS1Num)
+							tempS1Num = unit.sD1;
 					}
-					
-					if(unit.pD2>pD2Num) {
+
+					if (unit.pD2 > pD2Num) {
 						sentences2.add(tempS2Num);
 						pD2Num = unit.pD2;
 						tempS2Num = unit.sD2;
 					} else {
-						if(unit.sD2>tempS2Num) tempS2Num = unit.sD2;
+						if (unit.sD2 > tempS2Num)
+							tempS2Num = unit.sD2;
 					}
 				}
 			}
 			sentences1.add(tempS1Num);
 			sentences2.add(tempS2Num);
-			
+
 			essayInfo.pD1Num = pD1Num;
 			essayInfo.pD2Num = pD2Num;
-			
+
 			int[] pS1Num = new int[pD1Num];
 			int[] pS2Num = new int[pD2Num];
-			for(int i = 0;i<sentences1.size();i++) {
+			for (int i = 0; i < sentences1.size(); i++) {
 				pS1Num[i] = sentences1.get(i);
 			}
-			for(int i = 0;i<sentences2.size();i++) {
+			for (int i = 0; i < sentences2.size(); i++) {
 				pS2Num[i] = sentences2.get(i);
 			}
 			essayInfo.pS1Num = pS1Num;
 			essayInfo.pS2Num = pS2Num;
 			essayInfo.parsed = true;
-		} 
-			return essayInfo;
+		}
+		return essayInfo;
 	}
-	
+
 	public void extractTextFeatures(String text) {
 		int TEXT = features.getIndex("Text");
 		featureVector[TEXT] = text;
 	}
 
-	//Extract diff
+	// Extract diff
 	public void extractTextFeatures2(String scD1, String scD2) {
 		String[] tokens = scD1.split(" ");
 		String[] newTokens = scD2.split(" ");
@@ -106,14 +113,14 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 		featureVector[featureIndex] = diff;
 
 	}
-	
 
-	
-	public void extractLocGroup(HeatMapUnit hmu, ArrayList<ArrayList<HeatMapUnit>> essay) {
+	public void extractLocGroup(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay) {
 		extractLocFeature(hmu, essay);
 	}
-	
-	public void extractLocFeature(HeatMapUnit hmu, ArrayList<ArrayList<HeatMapUnit>> essay) {
+
+	public void extractLocFeature(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay) {
 		// ru.getNewParagraphNo();
 		int LOC_PAR = features.getIndex("LOC_PAR_NEW");
 		int LOC_WHOLE = features.getIndex("LOC_WHOLE_NEW");
@@ -124,40 +131,39 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 
 		double val_par = 0.0;
 		double val_whole = 0.0;
-		
 
-		if (hmu.sD2!=-1) {
-			
-				int paragraphNo = hmu.pD2;
-				val_par = hmu.sD2 * 1.0/ getEssayInfo(essay).pS2Num[paragraphNo-1];
-				val_whole = paragraphNo * 1.0 / getEssayInfo(essay).pD2Num;
+		if (hmu.sD2 != -1) {
 
-				if (paragraphNo == 1) {
-					featureVector[LOC_ISFIRSTPAR] = Boolean.toString(true);
-				} else {
-					featureVector[LOC_ISFIRSTPAR] = Boolean.toString(false);
-				}
+			int paragraphNo = hmu.pD2;
+			val_par = hmu.sD2 * 1.0
+					/ getEssayInfo(essay).pS2Num[paragraphNo - 1];
+			val_whole = paragraphNo * 1.0 / getEssayInfo(essay).pD2Num;
 
-				int lastParaNo = getEssayInfo(essay).pD2Num;
-				if (paragraphNo == lastParaNo) {
-					featureVector[LOC_ISLASTPARA] = Boolean.toString(true);
-				} else {
-					featureVector[LOC_ISLASTPARA] = Boolean.toString(false);
-				}
+			if (paragraphNo == 1) {
+				featureVector[LOC_ISFIRSTPAR] = Boolean.toString(true);
+			} else {
+				featureVector[LOC_ISFIRSTPAR] = Boolean.toString(false);
+			}
 
-				if (hmu.sD2 == 1) {
-					featureVector[LOC_ISFIRSTSEN] = Boolean.toString(true);
-				} else {
-					featureVector[LOC_ISFIRSTSEN] = Boolean.toString(false);
-				}
+			int lastParaNo = getEssayInfo(essay).pD2Num;
+			if (paragraphNo == lastParaNo) {
+				featureVector[LOC_ISLASTPARA] = Boolean.toString(true);
+			} else {
+				featureVector[LOC_ISLASTPARA] = Boolean.toString(false);
+			}
 
-				if (hmu.sD2 == getEssayInfo(essay).pS2Num[hmu.pD2-1]) {
-					featureVector[LOC_ISLASTSEN] = Boolean.toString(true);
-				} else {
-					featureVector[LOC_ISLASTSEN] = Boolean.toString(false);
-				}
+			if (hmu.sD2 == 1) {
+				featureVector[LOC_ISFIRSTSEN] = Boolean.toString(true);
+			} else {
+				featureVector[LOC_ISFIRSTSEN] = Boolean.toString(false);
+			}
 
-			
+			if (hmu.sD2 == getEssayInfo(essay).pS2Num[hmu.pD2 - 1]) {
+				featureVector[LOC_ISLASTSEN] = Boolean.toString(true);
+			} else {
+				featureVector[LOC_ISLASTSEN] = Boolean.toString(false);
+			}
+
 		} else {
 			featureVector[LOC_ISFIRSTPAR] = Boolean.toString(false);
 			featureVector[LOC_ISLASTPARA] = Boolean.toString(false);
@@ -179,7 +185,8 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 		double val_whole_old = 0.0;
 		if (hmu.sD1 != -1) {
 			int paragraphNo = hmu.pD1;
-			val_par_old = hmu.sD1 * 1.0/  getEssayInfo(essay).pS1Num[paragraphNo-1];
+			val_par_old = hmu.sD1 * 1.0
+					/ getEssayInfo(essay).pS1Num[paragraphNo - 1];
 			val_whole_old = paragraphNo * 1.0 / getEssayInfo(essay).pD1Num;
 
 			if (paragraphNo == 1) {
@@ -188,7 +195,6 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 				featureVector[LOC_ISFIRSTPAR] = Boolean.toString(false);
 			}
 
-			
 			if (paragraphNo == getEssayInfo(essay).pD1Num) {
 				featureVector[LOC_ISLASTPARA] = Boolean.toString(true);
 			} else {
@@ -201,7 +207,7 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 				featureVector[LOC_ISFIRSTSEN] = Boolean.toString(false);
 			}
 
-			if (hmu.sD1 == getEssayInfo(essay).pS1Num[paragraphNo-1]) {
+			if (hmu.sD1 == getEssayInfo(essay).pS1Num[paragraphNo - 1]) {
 				featureVector[LOC_ISLASTSEN] = Boolean.toString(true);
 			} else {
 				featureVector[LOC_ISLASTSEN] = Boolean.toString(false);
@@ -222,8 +228,9 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 		featureVector[LOC_WHOLE_DIFF] = val_whole - val_whole_old;
 
 	}
-	
-	public void extractTextGroup(HeatMapUnit hmu, ArrayList<ArrayList<HeatMapUnit>> essay) {
+
+	public void extractTextGroup(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay) {
 		extractClaimKeywords(hmu, essay);
 		extractEvidenceKeywords(hmu, essay);
 		extractRebuttalKeywords(hmu, essay);
@@ -232,11 +239,12 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 		extractOpFeatures(hmu, essay);
 		extractLENFeature(hmu, essay);
 		extractDaTextualFeature(hmu, essay);
-		//extractNERFeature(doc, ru);
+		// extractNERFeature(doc, ru);
 		// extractOverlapFeature(doc, ru);
 	}
-	
-	public void extractClaimKeywords(HeatMapUnit hmu, ArrayList<ArrayList<HeatMapUnit>> essay) {
+
+	public void extractClaimKeywords(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay) {
 		String newText = hmu.scD2;
 		double isReasoning = 0.0;
 		for (String word : claimKeywords) {
@@ -259,8 +267,9 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 		featureIndex = features.getIndex(ck);
 		featureVector[featureIndex] = isReasoning;
 	}
-	
-	public void extractEvidenceKeywords(HeatMapUnit hmu, ArrayList<ArrayList<HeatMapUnit>> essay) {
+
+	public void extractEvidenceKeywords(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay) {
 		String newText = hmu.scD2;
 		double isReasoning = 0.0;
 		for (String word : evidenceKeywords) {
@@ -283,8 +292,10 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 		featureIndex = features.getIndex(ek);
 		featureVector[featureIndex] = isReasoning;
 	}
+
 	// extract features
-	public void extractRebuttalKeywords(HeatMapUnit hmu, ArrayList<ArrayList<HeatMapUnit>> essay) {
+	public void extractRebuttalKeywords(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay) {
 		String newText = hmu.scD2;
 		double isReasoning = 0.0;
 		for (String word : rebutKeywords) {
@@ -308,7 +319,8 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 		featureVector[featureIndex] = isReasoning;
 	}
 
-	public void extractReasoningKeywords(HeatMapUnit hmu, ArrayList<ArrayList<HeatMapUnit>> essay) {
+	public void extractReasoningKeywords(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay) {
 		String newText = hmu.scD2;
 		double isReasoning = 0.0;
 		for (String word : reasonKeywords) {
@@ -332,7 +344,8 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 		featureVector[featureIndex] = isReasoning;
 	}
 
-	public void extractCommaFeatures(HeatMapUnit hmu, ArrayList<ArrayList<HeatMapUnit>> essay) {
+	public void extractCommaFeatures(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay) {
 		double hasCommaOldVal = 0.0;
 		double numCommaOldVal = 0.0;
 		double hasCommaNewVal = 0.0;
@@ -373,23 +386,24 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 		featureVector[featureIndex] = numCommaDiff;
 	}
 
-	public void extractOpFeatures(HeatMapUnit hmu, ArrayList<ArrayList<HeatMapUnit>> essay) {
+	public void extractOpFeatures(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay) {
 		int featureIndex = features.getIndex("REVISION_OP");
 		double val = 0;
 		if (hmu.rType.equals("Add")) {
 			val = 1;
 		} else if (hmu.rType.equals("Delete")) {
 			val = 0;
-		} else if(hmu.rType.equals("Modify")) {
+		} else if (hmu.rType.equals("Modify")) {
 			val = -1;
-		}
-		else {
+		} else {
 			val = 2;
 		}
 		featureVector[featureIndex] = val;
 	}
 
-	public void extractLENFeature(HeatMapUnit hmu, ArrayList<ArrayList<HeatMapUnit>> essay) {
+	public void extractLENFeature(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay) {
 		String oldSent = hmu.scD1;
 		String newSent = hmu.scD2;
 
@@ -402,24 +416,25 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 				.length());
 	}
 
-	public void extractDaTextualFeature(HeatMapUnit hmu, ArrayList<ArrayList<HeatMapUnit>> essay) {
+	public void extractDaTextualFeature(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay) {
 		/**
 		 * I believe putting these together into one function would save a lot
 		 * of computation cost
 		 * 
 		 * But right now I trust the power of the machine
 		 */
-		
+
 		String oldSentence = hmu.scD1;
 		String newSentence = hmu.scD2;
-		
+
 		int DIFF_CHANGED = features.getIndex("DIFF_CHANGED");
-		if(oldSentence.equals(newSentence)) {
+		if (oldSentence.equals(newSentence)) {
 			featureVector[DIFF_CHANGED] = Boolean.toString(true);
 		} else {
 			featureVector[DIFF_CHANGED] = Boolean.toString(false);
 		}
-		
+
 		int oldCapitalNum = OtherAssist.getCapitalNum(oldSentence);
 		int newCapitalNum = OtherAssist.getCapitalNum(newSentence);
 		int numDiffCapital = Math.abs(newCapitalNum - oldCapitalNum);
@@ -490,9 +505,8 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 		featureVector[RATIO_PARAGRAPH_TOKEN] = 0.0 * 1.0;
 	}
 
-	
-	public Object[] extractFeatures(HeatMapUnit hmu, ArrayList<ArrayList<HeatMapUnit>> essay,
-			boolean usingNgram) {
+	public Object[] extractFeatures(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay, boolean usingNgram) {
 		featureVector = new Object[features.getSize()];
 		if (usingNgram) {
 			extractTextFeatures(hmu.scD1 + hmu.scD2);
@@ -500,20 +514,163 @@ public class CRFFeatureExtractor extends FeatureExtractor{
 		}
 		extractLocGroup(hmu, essay);
 		extractTextGroup(hmu, essay);
-		//extractLanguageGroup(doc, ru);
+		// extractLanguageGroup(doc, ru);
 		// extractMetaGroup(doc, ru);
 		// extractOtherGroup(doc, ru);
 		return featureVector;
 	}
 
-	public ArrayList<Object[]> extractFeatures(ArrayList<ArrayList<HeatMapUnit>> essay,
-			boolean usingNgram) {
+	public void extractLanguageGroup(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay) {
+		// String sentence = extractSentence(doc, ru);
+		// String oldSentence = extractOldSentence(doc, ru);
+		// String newSentence = extractNewSentence(doc, ru);
+		extractSimplePOSFeatures(hmu, essay);
+		extractPOSDiff(hmu, essay);
+		// extractGrammarErrorFeature(doc, ru);
+		// extractSpellErrorFeature(doc, ru);
+	}
+
+	public void extractPOSDiff(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay) {
+		String oldSentence = hmu.scD1;
+		String newSentence = hmu.scD2;
+		if (oldSentence == null || oldSentence.length() == 0)
+			oldSentence = "Dummy";
+		if (newSentence == null || newSentence.length() == 0)
+			newSentence = "Dummy";
+		Hashtable<String, Double> posTable = StanfordParserAssist.getInstance()
+				.collectSimplePOSDiff(
+						StanfordParserAssist.getInstance()
+								.annotateSingleSentence(oldSentence),
+						StanfordParserAssist.getInstance()
+								.annotateSingleSentence(newSentence));
+
+		String pos = "JJ";
+		int featureIndex = features.getIndex("JJ_DIFF");
+		featureVector[featureIndex] = posTable.get(pos);
+
+		pos = "NN";
+		featureIndex = features.getIndex("NN_DIFF");
+		featureVector[featureIndex] = posTable.get(pos);
+
+		pos = "RB";
+		featureIndex = features.getIndex("RB_DIFF");
+		featureVector[featureIndex] = posTable.get(pos);
+
+		pos = "VB";
+		featureIndex = features.getIndex("VB_DIFF");
+		featureVector[featureIndex] = posTable.get(pos);
+	}
+
+	public void extractSimplePOSFeatures(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay) {
+		String oldText = hmu.scD1;
+		String newText = hmu.scD2;
+		// if(oldText==null||oldText.length()==0) oldText = "Dummy";
+		// if(newText==null||newText.length()==0) newText = "Dummy";
+		Hashtable<String, Double> posTable = StanfordParserAssist.getInstance()
+				.collectSimplePOSRatio(
+						StanfordParserAssist.getInstance()
+								.annotateSingleSentence(oldText));
+		for (String pos : posTable.keySet()) {
+			double ratio = posTable.get(pos);
+			int index = features.getIndex(pos + "_OLD");
+			featureVector[index] = ratio;
+		}
+
+		posTable = StanfordParserAssist.getInstance().collectSimplePOSRatio(
+				StanfordParserAssist.getInstance().annotateSingleSentence(
+						newText));
+		for (String pos : posTable.keySet()) {
+			double ratio = posTable.get(pos);
+			int index = features.getIndex(pos + "_NEW");
+			featureVector[index] = ratio;
+
+		}
+	}
+
+	public Object[] extractFeatures(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc,
+			boolean usingNgram) throws IOException {
+		featureVector = new Object[features.getSize()];
+		if (usingNgram) {
+			extractTextFeatures(hmu.scD1 + hmu.scD2);
+			extractTextFeatures2(hmu.scD1, hmu.scD2);
+		}
+		extractLocGroup(hmu, essay);
+		extractTextGroup(hmu, essay);
+		extractLanguageGroup(hmu, essay);
+		// extractMetaGroup(doc, ru);
+		// extractOtherGroup(doc, ru);
+		ArrayList<Integer> newIndices = new ArrayList<Integer>();
+		ArrayList<Integer> oldIndices = new ArrayList<Integer>();
+		if (hmu.realNewIndex != -1)
+			newIndices.add(hmu.realNewIndex);
+		if (hmu.realOldIndex != -1)
+			oldIndices.add(hmu.realOldIndex);
+		/*
+		 * SentenceEmbeddingFeatureExtractor.getInstance().extractFeature(
+		 * features, featureVector, doc, newIndices, oldIndices);
+		 */
+		SentenceEmbeddingFeatureExtractor.getInstance().extractCohesion(
+				features, featureVector, doc, newIndices, oldIndices);
+		PDTBFeatureExtractor.getInstance().extractFeature(features,
+				featureVector, doc, newIndices, oldIndices);
+		PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
+				featureVector, doc, newIndices, oldIndices);
+		return featureVector;
+	}
+
+	public Object[] extractFeatures(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc,
+			boolean usingNgram, int remove) throws IOException {
+		featureVector = new Object[features.getSize()];
+		if (usingNgram) {
+			extractTextFeatures(hmu.scD1 + hmu.scD2);
+			extractTextFeatures2(hmu.scD1, hmu.scD2);
+		}
+		extractLocGroup(hmu, essay);
+		extractTextGroup(hmu, essay);
+		// extractLanguageGroup(doc, ru);
+		// extractMetaGroup(doc, ru);
+		// extractOtherGroup(doc, ru);
+		ArrayList<Integer> newIndices = new ArrayList<Integer>();
+		ArrayList<Integer> oldIndices = new ArrayList<Integer>();
+		if (hmu.realNewIndex != -1)
+			newIndices.add(hmu.realNewIndex);
+		if (hmu.realOldIndex != -1)
+			oldIndices.add(hmu.realOldIndex);
+		SentenceEmbeddingFeatureExtractor.getInstance().extractFeature(
+				features, featureVector, doc, newIndices, oldIndices);
+		PDTBFeatureExtractor.getInstance().extractFeature(features,
+				featureVector, doc, newIndices, oldIndices);
+
+		return featureVector;
+	}
+
+	public ArrayList<Object[]> extractFeatures(
+			ArrayList<ArrayList<HeatMapUnit>> essay, boolean usingNgram) {
 		essayInfo = new EssayInfo();
 		essayInfo.parsed = false;
 		ArrayList<Object[]> features = new ArrayList<Object[]>();
-		for(ArrayList<HeatMapUnit> paragraph: essay) {
-			for(HeatMapUnit hmu: paragraph) {
-				features.add(extractFeatures(hmu,essay,usingNgram));
+		for (ArrayList<HeatMapUnit> paragraph : essay) {
+			for (HeatMapUnit hmu : paragraph) {
+				features.add(extractFeatures(hmu, essay, usingNgram));
+			}
+		}
+		return features;
+	}
+
+	public ArrayList<Object[]> extractFeatures(
+			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc,
+			boolean usingNgram) throws IOException {
+		essayInfo = new EssayInfo();
+		essayInfo.parsed = false;
+		ArrayList<Object[]> features = new ArrayList<Object[]>();
+		for (ArrayList<HeatMapUnit> paragraph : essay) {
+			for (HeatMapUnit hmu : paragraph) {
+				features.add(extractFeatures(hmu, essay, doc, usingNgram));
 			}
 		}
 		return features;

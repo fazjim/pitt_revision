@@ -57,7 +57,8 @@ public class RevisionMapFileGenerator {
 
 	public static ArrayList<ArrayList<HeatMapUnit>> getUnits4CRF(
 			RevisionDocument doc) {
-		List<HeatMapUnit> units = generateUnits4Tagging(doc);
+		//List<HeatMapUnit> units = generateUnits4Tagging(doc);
+		List<HeatMapUnit> units = generateUnitsGeneric(doc);
 		adjustUnits(units);
 		ArrayList<ArrayList<HeatMapUnit>> segmentedUnits = new ArrayList<ArrayList<HeatMapUnit>>();
 		int currentP = -1;

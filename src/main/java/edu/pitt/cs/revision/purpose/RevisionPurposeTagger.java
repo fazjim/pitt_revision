@@ -214,9 +214,10 @@ public class RevisionPurposeTagger {
 					.getUnits4CRF(doc);
 			ArrayList<Object[]> featureArr = null; 
 			try {
-				featureArr = fe.extractFeatures(units,
+				featureArr = fe.extractFeatures(units,doc,
 					usingNgram);
 			}catch(Exception exp) {
+				exp.printStackTrace();
 				System.out.println(doc.getDocumentName());
 			}
 			int index = 0;
@@ -269,7 +270,7 @@ public class RevisionPurposeTagger {
 		for (RevisionDocument doc : testDocs) {
 			ArrayList<ArrayList<HeatMapUnit>> units = RevisionMapFileGenerator
 					.getUnits4CRF(doc);
-			ArrayList<Object[]> featureArr = fe.extractFeatures(units,
+			ArrayList<Object[]> featureArr = fe.extractFeatures(units,doc,
 					usingNgram);
 			int index = 0;
 			for (ArrayList<HeatMapUnit> paragraph : units) {
@@ -598,19 +599,21 @@ public class RevisionPurposeTagger {
 		//String folderPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang2";
 		
 		String trainPathAll = "C:\\Not Backed Up\\data\\trainDataCRFVersion";
-		String  folderPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang";
+		//String  folderPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang";
+		//String  folderPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\temp_alldata";
 		//String trainPathAll = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang2";
-
+		String folderPath = "C:\\Not Backed Up\\data\\naaclData\\C1";
+		
 		ArrayList<RevisionDocument> docs = RevisionDocumentReader
 				.readDocs(folderPath);
 		ArrayList<RevisionDocument> trainDocsAll = RevisionDocumentReader.readDocs(trainPathAll);
 		int folder = 10;
 		
 		ArrayList<ArrayList<ArrayList<RevisionDocument>>> crossCuts = EvaluateTool
-				.getCrossCut(trainDocsAll, folder);
+				.getCrossCut(docs, folder);
 	
 		int option = 1;
-		boolean usingNgram = false;
+		boolean usingNgram = true;
 		if(option == 0) {
 			ArrayList<ConfusionMatrix> cms = new ArrayList<ConfusionMatrix>();
 			Instances[] instances = RevisionPurposeTagger.getInstance()

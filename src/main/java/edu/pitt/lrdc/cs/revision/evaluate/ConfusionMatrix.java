@@ -54,6 +54,73 @@ public class ConfusionMatrix {
 		attrTable[predictedIndex][realIndex]++;
 	}
 	
+	public double getOverallKappa() {
+		double[] sumRows = new double[attrTable.length];
+		double[] sumColumns = new double[attrTable.length];
+		double sumOfWeights = 0;
+		for (int i = 0; i < attrTable.length; i++) {
+			for (int j = 0; j < attrTable.length; j++) {
+				sumRows[i] += attrTable[i][j];
+				sumColumns[j] += attrTable[i][j];
+				sumOfWeights += attrTable[i][j];
+			}
+		}
+		double correct = 0, chanceAgreement = 0;
+		for (int i = 0; i < attrTable.length; i++) {
+			chanceAgreement += (sumRows[i] * sumColumns[i]);
+			correct += attrTable[i][i];
+		}
+		chanceAgreement /= (sumOfWeights * sumOfWeights);
+		correct /= sumOfWeights;
+
+		if (chanceAgreement < 1) {
+			return (correct - chanceAgreement) / (1 - chanceAgreement);
+		} else {
+			return 1;
+		}
+	}
+	
+	public double getIndivdiualKappa(String name) {
+		int index = attributeIndex.get(name);
+		int[][] individualMatrix = new int[2][2]; 
+		for(int i = 0;i<attributeIndex.size();i++) {
+			for(int j = 0;j<attributeIndex.size();j++) {
+				if(i == index && j == index) {
+					individualMatrix[1][1] += attrTable[i][j];
+				} else if(i == index && j != index) {
+					individualMatrix[1][0] += attrTable[i][j];
+				} else if(i != index && j == index) {
+					individualMatrix[0][1] += attrTable[i][j];
+				} else {
+					individualMatrix[0][0] += attrTable[i][j];
+				}
+			}
+		}
+		double[] sumRows = new double[individualMatrix.length];
+		double[] sumColumns = new double[individualMatrix.length];
+		double sumOfWeights = 0;
+		for (int i = 0; i < individualMatrix.length; i++) {
+			for (int j = 0; j < individualMatrix.length; j++) {
+				sumRows[i] += individualMatrix[i][j];
+				sumColumns[j] += individualMatrix[i][j];
+				sumOfWeights += individualMatrix[i][j];
+			}
+		}
+		double correct = 0, chanceAgreement = 0;
+		for (int i = 0; i < individualMatrix.length; i++) {
+			chanceAgreement += (sumRows[i] * sumColumns[i]);
+			correct += individualMatrix[i][i];
+		}
+		chanceAgreement /= (sumOfWeights * sumOfWeights);
+		correct /= sumOfWeights;
+
+		if (chanceAgreement < 1) {
+			return (correct - chanceAgreement) / (1 - chanceAgreement);
+		} else {
+			return 1;
+		}
+	}
+	
 	public double getBinaryPrec(String name, boolean isOne) {
 		int index = attributeIndex.get(name);
 		if(isOne) {
@@ -155,7 +222,7 @@ public class ConfusionMatrix {
 	public String toString() {
 		String tableStr = "";
 		//header
-		tableStr += "Predict/Real";
+		tableStr += "Real/Predict";
 		for(int i = 0;i<attributes.size();i++)  {
 			tableStr += "\t" + attributes.get(i);
 		}
@@ -165,7 +232,7 @@ public class ConfusionMatrix {
 		for(int i = 0;i<attributes.size();i++) {
 			tableStr += attributes.get(i);
 			for(int j = 0;j<attributes.size();j++) {
-				tableStr += "\t"+ attrTable[i][j];
+				tableStr += "\t"+ attrTable[j][i];
 			}
 			tableStr += "\n";
 		}

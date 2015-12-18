@@ -27,6 +27,7 @@ import weka.classifiers.functions.SMO;
 import weka.classifiers.meta.CostSensitiveClassifier;
 import weka.classifiers.meta.FilteredClassifier;
 import weka.classifiers.rules.ZeroR;
+import weka.classifiers.trees.J48;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Attribute;
 import weka.core.Capabilities;
@@ -185,8 +186,8 @@ public class WekaAssist {
 	public Instances[] addNgram(Instances train, Instances test)
 			throws Exception {
 		StringVectorWrapper ngramWrapper = new StringVectorWrapper();
-		System.err.println("Train is null:"+train==null);
-		System.err.println("Test is null:"+test==null);
+		System.err.println("Train is null:"+(train==null));
+		System.err.println("Test is null:"+(test==null));
 		InstancesPair p = ngramWrapper.applyStringVectorFilter(train, "Text",
 				"TEXTDIFF", test);
 		Instances[] ins = new Instances[2];
@@ -390,7 +391,8 @@ public class WekaAssist {
 		 * // new IBk(), // new IBk(3), // new IBk(5), // new NaiveBayes(), //
 		 * new J48(), new SMO(), // newVote(), // new R1() };
 		 */
-		Classifier classifier = new RandomForest();
+		//Classifier classifier = new RandomForest();
+		Classifier classifier = new SMO();
 		classifier = setTagFilter(classifier, trainSet);
 		if (autoBalance) {
 			CostSensitiveClassifier csc = new CostSensitiveClassifier();
@@ -445,6 +447,40 @@ public class WekaAssist {
 		return eval;
 	}
 
+	public static Evaluation crossTrainTest(Instances trainset,
+			Instances testset, String name) throws Exception {
+		Classifier classifier = null;
+		if(name.equals("RF")) {
+			classifier = new RandomForest();
+		} else if(name.equals("DT")) {
+			classifier = new J48();
+		} else if(name.equals("SVM")) {
+			classifier = new SMO();
+		}
+		
+		boolean sample = false;
+		if (sample == true) {
+			CostSensitiveClassifier csc = new CostSensitiveClassifier();
+			csc.setClassifier(classifier);
+			double w = getWeight(trainset);
+			System.out.println("Weight:" + w);
+			CostMatrix newCostMatrix = new CostMatrix(2);
+			newCostMatrix.setCell(0, 1, w);
+			newCostMatrix.setCell(1, 0, 1.0);
+			csc.setCostMatrix(newCostMatrix);
+			classifier = csc;
+		}
+		// -----end of balancing------------//
+		classifier = setTagFilter(classifier, trainset);
+		classifier.buildClassifier(trainset);
+		System.out.println("Classifier is done!");
+		Evaluation eval = new Evaluation(trainset);
+		eval.evaluateModel(classifier, testset);
+		WekaAssist.printResult(eval);
+		detailedErrorAnalysis(eval, classifier, testset);
+		return eval;
+	}
+	
 	public static Evaluation crossTrainTest(Instances trainset,
 			Instances testset) throws Exception {
 		Classifier classifier = new RandomForest();
@@ -508,7 +544,7 @@ public class WekaAssist {
 		//BestFirst search = new BestFirst();
 		Ranker search = new Ranker();
 		
-		search.setNumToSelect(500);
+		search.setNumToSelect(100);
 		filter.setEvaluator(eval);
 		filter.setSearch(search);
 		filter.setInputFormat(train); // initializing the filter once with

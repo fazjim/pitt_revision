@@ -403,6 +403,38 @@ public class RevisionPurposeClassifier {
 		return data;
 	}
 
+	
+	public Instances createInstancesSOLO5Class(ArrayList<RevisionDocument> docs,
+			boolean usingNgram) throws IOException {
+		FeatureExtractor fe = new FeatureExtractor();
+		fe.setOnline(true);
+		// fe.openBatchMode(batchPath);
+		WekaAssist wa = new WekaAssist();
+		ArrayList<String> categories = new ArrayList<String>();
+		// categories.add(SURFACE_CHANGE);
+		// categories.add(CONTENT_CHANGE);
+		addPurposeCategories(categories);
+		fe.buildFeatures(usingNgram, categories);
+		Instances data = wa.buildInstances(fe.features, usingNgram);
+		for (RevisionDocument doc : docs) {
+			ArrayList<ArrayList<ArrayList<Integer>>> pairs = doc
+					.getPredictedAlignedIndices();
+			for (ArrayList<ArrayList<Integer>> pair : pairs) {
+				ArrayList<Integer> oldIndices = pair.get(0);
+				ArrayList<Integer> newIndices = pair.get(1);
+				Object[] features = fe.extractFeatures(doc, newIndices,
+						oldIndices, usingNgram);
+				String ID = RevisionPurposePredicter.generateID(doc,
+						newIndices, oldIndices);
+				wa.addInstance(features, fe.features, usingNgram, data,
+						RevisionPurpose
+								.getPurposeName(RevisionPurpose.CLAIMS_IDEAS),
+						ID);
+			}
+		}
+		return data;
+	}
+	
 	public Instances createInstancesSOLO(ArrayList<RevisionDocument> docs,
 			boolean usingNgram) throws IOException {
 		FeatureExtractor fe = new FeatureExtractor();
@@ -713,6 +745,9 @@ public class RevisionPurposeClassifier {
 	 * @return
 	 */
 	public boolean filterRevision(RevisionUnit ru, int option) {
+		if (ru.getOldSentence() != null && ru.getNewSentence() != null
+				&& ru.getOldSentence().equals(ru.getNewSentence()))
+			return false;
 		int revOp = ru.getRevision_op();
 		if (option == ALLOP) {
 			return true;
@@ -1039,6 +1074,154 @@ public class RevisionPurposeClassifier {
 	 */
 	public Evaluation classifyADRevisionPurposeSolo(
 			ArrayList<RevisionDocument> trainDocs,
+			ArrayList<RevisionDocument> testDocs, boolean usingNgram,
+			int remove, String classifier) throws Exception {
+		WekaAssist wa = new WekaAssist();
+		FeatureExtractor fe = new FeatureExtractor();
+		// fe.openBatchMode(batchPath);
+		ArrayList<String> categories = new ArrayList<String>();
+
+		// addPurposeCategories2(categories);
+		categories.add(RevisionPurpose
+				.getPurposeName(RevisionPurpose.CLAIMS_IDEAS));
+		// categories.add(RevisionPurpose
+		// .getPurposeName(RevisionPurpose.CD_REBUTTAL_RESERVATION));
+		categories.add(RevisionPurpose
+				.getPurposeName(RevisionPurpose.CD_WARRANT_REASONING_BACKING));
+
+		categories
+				.add(RevisionPurpose.getPurposeName(RevisionPurpose.EVIDENCE));
+		categories
+				.add(RevisionPurpose
+						.getPurposeName(RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT));
+		categories.add(RevisionPurpose.getPurposeName(RevisionPurpose.SURFACE));
+		/*
+		 * for (int i = RevisionPurpose.START; i <= RevisionPurpose.END; i++) {
+		 * categories.add(RevisionPurpose.getPurposeName(i)); }
+		 */
+
+		fe.buildFeatures(usingNgram, categories, remove);// do not use ngram
+		System.out.println("Loading data");
+		// First step, build up instances
+		Instances trainData = wa.buildInstances(fe.features, usingNgram); // Using
+																			// the
+																			// feature
+																			// table
+																			// to
+																			// build
+																			// the
+																			// structure
+
+		Instances testData = wa.buildInstances(fe.features, usingNgram);
+
+		int buildOp = ALLOP;
+		HashSet<String> ids = new HashSet<String>();
+		// Collect all the revision units
+		// ArrayList<RevisionUnit> rus = new ArrayList<RevisionUnit>();
+		for (RevisionDocument doc : trainDocs) {
+			ArrayList<RevisionUnit> basicUnits = doc.getRoot()
+					.getRevisionUnitAtLevel(0);
+			for (RevisionUnit ru : basicUnits) {
+				if (filterRevision(ru, buildOp)) {
+					/*
+					 * Object[] features = fe.extractFeatures(doc, ru,
+					 * usingNgram, remove); wa.addInstance(features,
+					 * fe.features, usingNgram, trainData,
+					 * transformPurposeBinary(ru, revPurpose), "dummy");
+					 */
+					String id = doc.getDocumentName() + "_" + ru.getUniqueID();
+					if (!ids.contains(id)) {
+						ids.add(id);
+						Object[] features = fe.extractFeatures(doc, ru,
+								usingNgram, remove);
+						int p = ru.getRevision_purpose();
+						if (p != RevisionPurpose.CD_REBUTTAL_RESERVATION) {
+							String purposeName = RevisionPurpose
+									.getPurposeName(p);
+							if (p == RevisionPurpose.WORDUSAGE_CLARITY_CASCADED
+									|| p == RevisionPurpose.WORDUSAGE_CLARITY
+									|| p == RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING
+									|| p == RevisionPurpose.ORGANIZATION || p == RevisionPurpose.PRECISION)
+								purposeName = RevisionPurpose
+										.getPurposeName(RevisionPurpose.SURFACE);
+							/*
+							 * boolean found = false; for(int i =
+							 * 0;i<categories.size();i++) {
+							 * if(categories.get(i).equals(purposeName)) found =
+							 * true; } if(found == false) throw new
+							 * Exception("Error is "+purposeName);
+							 */
+
+							wa.addInstance(features, fe.features, usingNgram,
+									trainData, purposeName, "dummy");
+						}
+					}
+				}
+			}
+		}
+		System.out.println("Train data loaded");
+		for (RevisionDocument doc : testDocs) {
+			ArrayList<RevisionUnit> basicUnits = doc.getRoot()
+					.getRevisionUnitAtLevel(0);
+			for (RevisionUnit ru : basicUnits) {
+				if (filterRevision(ru, buildOp)) {
+					/*
+					 * Object[] features = fe.extractFeatures(doc, ru,
+					 * usingNgram, remove); wa.addInstance(features,
+					 * fe.features, usingNgram, testData,
+					 * transformPurposeBinary(ru, revPurpose), "dummy");
+					 */
+					String id = doc.getDocumentName() + "_" + ru.getUniqueID();
+					if (!ids.contains(id)) {
+						ids.add(id);
+						Object[] features = fe.extractFeatures(doc, ru,
+								usingNgram, remove);
+						int p = ru.getRevision_purpose();
+						if (p != RevisionPurpose.CD_REBUTTAL_RESERVATION) {
+							String purposeName = RevisionPurpose
+									.getPurposeName(p);
+							if (p == RevisionPurpose.WORDUSAGE_CLARITY_CASCADED
+									|| p == RevisionPurpose.WORDUSAGE_CLARITY
+									|| p == RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING
+									|| p == RevisionPurpose.ORGANIZATION || p == RevisionPurpose.PRECISION)
+								purposeName = RevisionPurpose
+										.getPurposeName(RevisionPurpose.SURFACE);
+							/*
+							 * boolean found = false; for(int i =
+							 * 0;i<categories.size();i++) {
+							 * if(categories.get(i).equals(purposeName)) found =
+							 * true; } if(found == false) throw new
+							 * Exception("Error is "+purposeName);
+							 */
+
+							wa.addInstance(features, fe.features, usingNgram,
+									testData, purposeName, "dummy");
+						}
+					}
+				}
+			}
+		}
+		System.out.println("Test data loaded");
+		System.out.println("Data loaded");
+
+		if (usingNgram) {
+			System.out.println("Adding ngrams");
+			Instances[] inst = wa.addNgram(trainData, testData);
+			trainData = inst[0];
+			testData = inst[1];
+		}
+		System.out.println("Starts classification");
+		// Temporarily change this to 10 fold
+		// trainData.addAll(testData);
+		WekaAssist.saveInstances(trainData, "tmp.arff");
+		if (remove == 100)
+			return WekaAssist.majorityTrainTest(trainData, testData);
+		return WekaAssist.crossTrainTest(trainData, testData, classifier);
+		// WekaAssist.crossvalidataion(trainData, 10);
+	}
+
+	public Evaluation classifyADRevisionPurposeSolo(
+			ArrayList<RevisionDocument> trainDocs,
 			ArrayList<RevisionDocument> testDocs, boolean usingNgram, int remove)
 			throws Exception {
 		WekaAssist wa = new WekaAssist();
@@ -1097,7 +1280,7 @@ public class RevisionPurposeClassifier {
 					if (!ids.contains(id)) {
 						ids.add(id);
 						Object[] features = fe.extractFeatures(doc, ru,
-								usingNgram,remove);
+								usingNgram, remove);
 						int p = ru.getRevision_purpose();
 						if (p != RevisionPurpose.CD_REBUTTAL_RESERVATION) {
 							String purposeName = RevisionPurpose
@@ -1139,7 +1322,7 @@ public class RevisionPurposeClassifier {
 					if (!ids.contains(id)) {
 						ids.add(id);
 						Object[] features = fe.extractFeatures(doc, ru,
-								usingNgram,remove);
+								usingNgram, remove);
 						int p = ru.getRevision_purpose();
 						if (p != RevisionPurpose.CD_REBUTTAL_RESERVATION) {
 							String purposeName = RevisionPurpose

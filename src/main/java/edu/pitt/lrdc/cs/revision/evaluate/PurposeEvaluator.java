@@ -553,9 +553,9 @@ public class PurposeEvaluator {
 		cm.addAttribute(RevisionPurpose
 				.getPurposeName(RevisionPurpose.CD_WARRANT_REASONING_BACKING));
 		cm.addAttribute(RevisionPurpose
-				.getPurposeName(RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT));
-		cm.addAttribute(RevisionPurpose
 				.getPurposeName(RevisionPurpose.EVIDENCE));
+		cm.addAttribute(RevisionPurpose
+				.getPurposeName(RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT));
 		cm.addAttribute(RevisionPurpose.getPurposeName(RevisionPurpose.SURFACE));
 		cm.initMatrix();
 		return cm;

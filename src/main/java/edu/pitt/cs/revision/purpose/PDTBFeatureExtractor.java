@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -374,12 +375,12 @@ public class PDTBFeatureExtractor {
 		}
 		if (fName.contains("Annotation_")) {
 			String annotationStr = "Annotation_";
-			int index = 0 + annotationStr.length();
-			fName = fName.substring(index + 1);
+			int index = fName.indexOf(annotationStr) + annotationStr.length();
+			fName = fName.substring(index);
 		}
 		if (fName.contains(" - ")) {
 			int index = fName.indexOf("-");
-			fName = fName.substring(index + 1).trim();
+			fName = fName.substring(0, index).trim();
 		}
 
 		String[] strToTrim = { "Fan", "Christian", "Fian" };
@@ -430,6 +431,59 @@ public class PDTBFeatureExtractor {
 		return instance;
 	}
 
+	public void insertARG1ARG2(FeatureName features) {
+		ArrayList<Object> options = new ArrayList<Object>();
+		for (int i = 0; i <= 9; i++) {
+			for (int j = 0; j <= 9; j++) {
+				options.add(Integer.toString(i) + "_" + Integer.toString(j));
+			}
+		}
+		features.insertFeature("OLD_PDTB_ARG2_ARG1", options);
+		features.insertFeature("NEW_PDTB_ARG2_ARG1", options);
+	}
+
+	public void extractFeatureARG1ARG2(FeatureName features,
+			Object[] featureVector, RevisionDocument doc,
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes,
+			String name) {
+		Hashtable<Integer, Integer> pdtbArg1_OLD = pdtbArg1Results_OLD
+				.get(name);
+		Hashtable<Integer, Integer> pdtbArg2_OLD = pdtbArg2Results_OLD
+				.get(name);
+		Hashtable<Integer, Integer> pdtbArg1_NEW = pdtbArg1Results_NEW
+				.get(name);
+		Hashtable<Integer, Integer> pdtbArg2_NEW = pdtbArg2Results_NEW
+				.get(name);
+
+		Collections.sort(newIndexes);
+		Collections.sort(oldIndexes);
+
+		String oldArg2 = Integer.toString(0);
+		String oldArg1 = Integer.toString(0);
+		String newArg2 = Integer.toString(0);
+		String newArg1 = Integer.toString(0);
+
+		if (oldIndexes != null && oldIndexes.size() > 0) {
+			if (pdtbArg2_OLD.containsKey(oldIndexes.get(0)))
+				oldArg2 = Integer.toString(pdtbArg2_OLD.get(oldIndexes.get(0)));
+			if (pdtbArg1_OLD.containsKey(oldIndexes.size() - 1))
+				oldArg1 = Integer.toString(pdtbArg1_OLD.get(oldIndexes
+						.get(oldIndexes.size() - 1)));
+		}
+
+		if (newIndexes != null && newIndexes.size() > 0) {
+			if (pdtbArg2_NEW.containsKey(newIndexes.get(0)))
+				newArg2 = Integer.toString(pdtbArg2_NEW.get(newIndexes.get(0)));
+			if (pdtbArg1_NEW.containsKey(newIndexes.get(newIndexes.size() - 1)))
+				newArg1 = Integer.toString(pdtbArg1_NEW.get(newIndexes
+						.get(newIndexes.size() - 1)));
+		}
+		int fIndex = features.getIndex("OLD_PDTB_ARG2_ARG1");
+		featureVector[fIndex] = oldArg2 + "_" + oldArg1;
+		fIndex = features.getIndex("NEW_PDTB_ARG2_ARG1");
+		featureVector[fIndex] = newArg2 + "_" + newArg1;
+	}
+
 	public void insertFeature(FeatureName features) {
 		// First test that this does not work
 		for (int i = 1; i <= 9; i++) {
@@ -439,6 +493,7 @@ public class PDTBFeatureExtractor {
 			features.insertFeature("NEW_PDTB_ARG2_" + i, Boolean.TYPE);
 		}
 
+		// insertARG1ARG2(features);
 		/*
 		 * ArrayList<Object> options = new ArrayList<Object>(); for(int i =
 		 * 1;i<=9;i++) { options.add(Integer.toString(i)); }
@@ -449,11 +504,26 @@ public class PDTBFeatureExtractor {
 		 */
 	}
 
+	public void extractFeatureARG1ARG2(FeatureName features,
+			Object[] featureVector, RevisionDocument doc,
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes) {
+		String name = getRealNameRevision(doc.getDocumentName());
+		//System.out.println(name);
+		if (pdtbArg1Results_OLD.get(name).size() == 0
+				&& pdtbArg2Results_OLD.get(name).size() == 0
+				&& pdtbArg1Results_NEW.get(name).size() == 0
+				&& pdtbArg2Results_NEW.get(name).size() == 0) {
+			readInfo(doc);
+		}
+		extractFeatureARG1ARG2(features, featureVector, doc, newIndexes,
+				oldIndexes, name);
+	}
+
 	public void extractFeature(FeatureName features, Object[] featureVector,
 			RevisionDocument doc, ArrayList<Integer> newIndexes,
 			ArrayList<Integer> oldIndexes) {
 		String name = getRealNameRevision(doc.getDocumentName());
-		System.out.println(name);
+		//System.out.println(name);
 		if (pdtbArg1Results_OLD.get(name).size() == 0
 				&& pdtbArg2Results_OLD.get(name).size() == 0
 				&& pdtbArg1Results_NEW.get(name).size() == 0

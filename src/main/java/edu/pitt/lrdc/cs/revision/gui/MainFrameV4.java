@@ -303,9 +303,11 @@ public class MainFrameV4 extends JFrame {
 			fileName = fileName.substring(0, fileName.indexOf("-")).trim();
 		File folder = new File(path);
 		File[] subs = folder.listFiles();
-		for (File sub : subs) {
-			if (sub.getName().contains(fileName)) {
-				return sub.getAbsolutePath();
+		if (subs != null) {
+			for (File sub : subs) {
+				if (sub.getName().contains(fileName)) {
+					return sub.getAbsolutePath();
+				}
 			}
 		}
 		return null;

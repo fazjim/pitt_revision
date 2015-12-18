@@ -40,7 +40,6 @@ public class StringVectorWrapper {
 	public InstancesPair applyStringVectorFilter(Instances data,
 			String attribute, String attribute2, Instances otherData) throws Exception {
 		StringToWordVector filter_ngram = new StringToWordVector();
-		ArrayList<Attribute> ngrams = new ArrayList<Attribute>();
 		
 		Attribute ngram = data.attribute(attribute);
 		if (ngram != null) {
@@ -49,7 +48,7 @@ public class StringVectorWrapper {
 
 			filter_ngram.setAttributeIndicesArray(attributes);
 			filter_ngram.setUseStoplist(false);
-			filter_ngram.setLowerCaseTokens(false);
+			filter_ngram.setLowerCaseTokens(true);
 			filter_ngram.setAttributeNamePrefix(attribute + "_");
 			NGramTokenizer tokenizer_pos = new NGramTokenizer();
 			tokenizer_pos.setOptions(weka.core.Utils

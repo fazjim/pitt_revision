@@ -41,14 +41,183 @@ public class SentenceEmbeddingFeatureExtractor {
 	}
 
 	public void insertFeature(FeatureName features) {
-		//insertDivide(features);
+		insertDivide(features);
 		insertSubtract(features);
+		// insertDivideAVG(features);
+		// insertSubtractAVG(features);
 	}
 
 	public void insertDivide(FeatureName features) {
 		for (int i = 0; i < dimension; i++) {
 			features.insertFeature("WORD2VEC_DIVIDE_" + i, Double.TYPE);
 		}
+	}
+
+	public void insertDivideAVG(FeatureName features) {
+		for (int i = 0; i < dimension; i++) {
+			features.insertFeature("WORD2VEC_DIVIDE_AVG_" + i, Double.TYPE);
+		}
+	}
+
+	public void insertCohesion(FeatureName features) {
+		features.insertFeature("COHESION_CHANGE_UP", Double.TYPE);
+		features.insertFeature("COHESION_CHANGE_DOWN", Double.TYPE);
+	}
+
+	public void extractCohesion(FeatureName features, Object[] featureVector,
+			RevisionDocument doc, ArrayList<Integer> newIndexes,
+			ArrayList<Integer> oldIndexes) {
+		double cohesionUpOld = 0;
+		double cohesionUpNew = 0;
+		double cohesionDownOld = 0;
+		double cohesionDownNew = 0;
+
+		int lastIndexOld = -1;
+		int nextIndexOld = -1;
+		int lastIndexNew = -1;
+		int nextIndexNew = -1;
+
+		for (Integer oldIndex : oldIndexes) {
+			if (oldIndex < lastIndexOld)
+				lastIndexOld = oldIndex;
+			if (oldIndex > nextIndexOld)
+				nextIndexOld = oldIndex;
+		}
+
+		for (Integer newIndex : newIndexes) {
+			if (newIndex < lastIndexNew)
+				lastIndexNew = newIndex;
+			if (newIndex > nextIndexNew)
+				nextIndexNew = newIndex;
+		}
+
+		String oldSentenceUp = null;
+		String oldSentenceDown = null;
+		String beforeOldSentence = null;
+		String afterOldSentence = null;
+		String newSentenceUp = null;
+		String newSentenceDown = null;
+		String beforeNewSentence = null;
+		String afterNewSentence = null;
+
+		if (lastIndexOld == -1) {
+			oldSentenceUp = null;
+			beforeOldSentence = null;
+		} else {
+			oldSentenceUp = doc.getOldSentence(lastIndexOld);
+			int beforeIndex = lastIndexOld - 1;
+			if (beforeIndex <= 0
+					|| doc.getParaNoOfOldSentence(beforeIndex) != doc
+							.getParaNoOfOldSentence(lastIndexOld)) {
+				beforeOldSentence = null;
+			} else {
+				beforeOldSentence = doc.getOldSentence(beforeIndex);
+			}
+		}
+
+		if (nextIndexOld == -1) {
+			oldSentenceDown = null;
+			afterOldSentence = null;
+		} else {
+			oldSentenceDown = doc.getOldSentence(nextIndexOld);
+			int afterIndex = nextIndexOld + 1;
+			if (afterIndex > doc.getOldDraftSentences().size()
+					|| doc.getParaNoOfOldSentence(afterIndex) != doc
+							.getParaNoOfOldSentence(nextIndexOld)) {
+				afterOldSentence = null;
+			} else {
+				afterOldSentence = doc.getOldSentence(nextIndexOld);
+			}
+		}
+
+		if (lastIndexNew == -1) {
+			newSentenceUp = null;
+			beforeNewSentence = null;
+		} else {
+			newSentenceUp = doc.getNewSentence(lastIndexNew);
+			int beforeIndex = lastIndexNew - 1;
+			if (beforeIndex <= 0
+					|| doc.getParaNoOfNewSentence(beforeIndex) != doc
+							.getParaNoOfNewSentence(lastIndexNew)) {
+				beforeNewSentence = null;
+			} else {
+				beforeNewSentence = doc.getNewSentence(beforeIndex);
+			}
+		}
+
+		if (nextIndexNew == -1) {
+			newSentenceDown = null;
+			afterNewSentence = null;
+		} else {
+			newSentenceDown = doc.getNewSentence(nextIndexNew);
+			int afterIndex = nextIndexNew + 1;
+			if (afterIndex > doc.getNewDraftSentences().size()
+					|| doc.getParaNoOfNewSentence(afterIndex) != doc
+							.getParaNoOfNewSentence(nextIndexNew)) {
+				afterNewSentence = null;
+			} else {
+				afterNewSentence = doc.getNewSentence(nextIndexNew);
+			}
+		}
+		
+		cohesionUpOld = calculateSim(beforeOldSentence, oldSentenceUp);
+		cohesionUpNew = calculateSim(beforeNewSentence, newSentenceUp);
+		cohesionDownOld = calculateSim(afterOldSentence, oldSentenceDown);
+		cohesionDownNew = calculateSim(afterNewSentence, newSentenceDown);
+		
+
+		int index = features.getIndex("COHESION_CHANGE_UP");
+		featureVector[index] = cohesionUpNew-cohesionUpOld;
+		index = features.getIndex("COHESION_CHANGE_DOWN");
+		featureVector[index] = cohesionDownNew - cohesionDownOld;
+	}
+
+	public double calculateSim(String sentence1, String sentence2) {
+		if (sentence1 == null || sentence2 == null)
+			return 0;
+		String[] oldTokens = sentence1.split(" ");
+		String[] newTokens = sentence2.split(" ");
+		double[] s1Array = new double[dimension];
+		double[] s2Array = new double[dimension];
+		for (String oldToken : oldTokens) {
+			oldToken = oldToken.trim();
+			if (!oldToken.equals(","))
+				oldToken = oldToken.replace(",", "");
+			oldToken = oldToken.toLowerCase();
+			if (!oldToken.equals(".") && !oldToken.equals(",")) {
+				if (w2v.hasWord(oldToken)) {
+					double[] tmp = w2v.getWordVector(oldToken);
+					addArray(s1Array, tmp);
+				}
+			}
+		}
+
+		for (String newToken : newTokens) {
+			newToken = newToken.trim();
+			newToken = newToken.toLowerCase();
+			if (!newToken.equals(","))
+				newToken = newToken.replace(",", "");
+			if (!newToken.equals(".") && !newToken.equals(",")) {
+				if (w2v.hasWord(newToken)) {
+					double[] tmp = w2v.getWordVector(newToken);
+					addArray(s2Array, tmp);
+				}
+			}
+		}
+
+		return calculateCosine(s1Array, s2Array);
+	}
+
+	public double calculateCosine(double[] s1, double[] s2) {
+		double absS1 = 0;
+		double absS2 = 0;
+		double multi = 0;
+		for (int i = 0; i < s1.length; i++) {
+			multi += s1[i] * s2[i];
+			absS1 += s1[i] * s1[i];
+			absS2 += s2[i] * s2[i];
+		}
+		return multi / Math.sqrt(absS1) * Math.sqrt(absS2);
 	}
 
 	public void extractDivide(FeatureName features, Object[] featureVector,
@@ -60,9 +229,24 @@ public class SentenceEmbeddingFeatureExtractor {
 		}
 	}
 
+	public void extractDivideAVG(FeatureName features, Object[] featureVector,
+			double[] oldFeature, double[] newFeature) {
+		double[] results = divideArray(newFeature, oldFeature);
+		for (int i = 0; i < dimension; i++) {
+			int index = features.getIndex("WORD2VEC_DIVIDE_AVG_" + i);
+			featureVector[index] = results[i];
+		}
+	}
+
 	public void insertSubtract(FeatureName features) {
 		for (int i = 0; i < dimension; i++) {
 			features.insertFeature("WORD2VEC_SUB_" + i, Double.TYPE);
+		}
+	}
+
+	public void insertSubtractAVG(FeatureName features) {
+		for (int i = 0; i < dimension; i++) {
+			features.insertFeature("WORD2VEC_SUB_AVG" + i, Double.TYPE);
 		}
 	}
 
@@ -74,7 +258,16 @@ public class SentenceEmbeddingFeatureExtractor {
 			featureVector[index] = results[i];
 		}
 	}
-	
+
+	public void extractSubtractAVG(FeatureName features,
+			Object[] featureVector, double[] oldFeature, double[] newFeature) {
+		double[] results = divideArray(newFeature, oldFeature);
+		for (int i = 0; i < dimension; i++) {
+			int index = features.getIndex("WORD2VEC_SUB_AVG" + i);
+			featureVector[index] = results[i];
+		}
+	}
+
 	public void addArray(double[] src, double[] newArray) {
 		for (int i = 0; i < src.length; i++) {
 			src[i] += newArray[i];
@@ -88,7 +281,7 @@ public class SentenceEmbeddingFeatureExtractor {
 		}
 		return result;
 	}
-	
+
 	public double[] subArray(double[] src, double[] newArray) {
 		double[] result = new double[src.length];
 		for (int i = 0; i < src.length; i++) {
@@ -114,6 +307,11 @@ public class SentenceEmbeddingFeatureExtractor {
 		double[] oldFeatures = new double[dimension];
 		double[] newFeatures = new double[dimension];
 
+		double[] oldFeaturesAvg = new double[dimension];
+		double[] newFeaturesAvg = new double[dimension];
+		int oldN = 0;
+		int newN = 0;
+
 		for (String oldToken : oldTokens) {
 			oldToken = oldToken.trim();
 			oldToken = oldToken.toLowerCase();
@@ -121,6 +319,7 @@ public class SentenceEmbeddingFeatureExtractor {
 				if (w2v.hasWord(oldToken)) {
 					double[] tmp = w2v.getWordVector(oldToken);
 					addArray(oldFeatures, tmp);
+					oldN++;
 				}
 			}
 		}
@@ -131,11 +330,23 @@ public class SentenceEmbeddingFeatureExtractor {
 				if (w2v.hasWord(newToken)) {
 					double[] tmp = w2v.getWordVector(newToken);
 					addArray(newFeatures, tmp);
+					newN++;
 				}
 			}
 		}
-		//extractDivide(features, featureVector, oldFeatures, newFeatures);
+
+		for (int i = 0; i < dimension; i++) {
+			oldFeaturesAvg[i] = oldFeatures[i] / oldN;
+		}
+		for (int i = 0; i < dimension; i++) {
+			newFeaturesAvg[i] = newFeatures[i] / newN;
+		}
+		extractDivide(features, featureVector, oldFeatures, newFeatures);
 		extractSubtract(features, featureVector, oldFeatures, newFeatures);
+		// extractDivideAVG(features, featureVector, oldFeaturesAvg,
+		// newFeaturesAvg);
+		// extractSubtractAVG(features, featureVector, oldFeaturesAvg,
+		// newFeaturesAvg);
 	}
 
 	public static void main(String[] args) throws IOException {

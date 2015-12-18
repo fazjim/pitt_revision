@@ -48,6 +48,8 @@ public class EvaluateTool {
 		System.out.println("Avg Prec:" + getAvgPrec(matrice));
 		System.out.println("Avg Recall: " + getAvgRecall(matrice));
 		System.out.println("Avg FMeasure: "+getAvgFMeasure(matrice));
+		System.out.println("Kappa: "+getAverageKappa(matrice));
+		System.out.println("Overall Kappa: "+getOverallKappa(matrice));
 		System.out.println("Each category");
 		ArrayList<String> attrs = matrice.get(0).getAttrs();
 		for(String attr: attrs) {
@@ -56,6 +58,8 @@ public class EvaluateTool {
 			System.out.println("RECALL:"+getAvgRecall(attr,matrice));
 			System.out.println("F Measure:"+getAvgFMeasure(attr,matrice));
 			System.out.println("UnWeighted F:"+getAvgUnweightedFMeasure(attr,matrice));
+			System.out.println("Kappa:"+getAverageKappa(attr,matrice));
+			System.out.println("Overall Kappa:"+getOverallKappa(attr,matrice));
 		}
 	}
 	
@@ -208,6 +212,49 @@ public class EvaluateTool {
 		return cm.getFMeasure(name);
 	}
 	
+	public static double getOverallKappa(String name, ArrayList<ConfusionMatrix> matrice) {
+		ConfusionMatrix cm  = matrice.get(0);
+		for(int i = 1;i<matrice.size();i++) {
+			cm.merge(matrice.get(i));
+		}
+		return cm.getIndivdiualKappa(name);
+	}
+	
+	public static double getAverageKappa(String name, ArrayList<ConfusionMatrix> matrice) {
+		double fAll = 0;
+		int cnt = 0;
+		for(ConfusionMatrix matrix: matrice) {
+			double f = matrix.getIndivdiualKappa(name);
+			if(f!=-1) {
+				fAll += f;
+				cnt ++;
+			}
+		}
+		if(cnt == 0) return -1;
+		return fAll/cnt;
+	}
+	
+	public static double getOverallKappa(ArrayList<ConfusionMatrix> matrice) {
+		ConfusionMatrix cm  = matrice.get(0);
+		for(int i = 1;i<matrice.size();i++) {
+			cm.merge(matrice.get(i));
+		}
+		return cm.getOverallKappa();
+	}
+	
+	public static double getAverageKappa(ArrayList<ConfusionMatrix> matrice) {
+		double fAll = 0;
+		int cnt = 0;
+		for(ConfusionMatrix matrix: matrice) {
+			double f = matrix.getOverallKappa();
+			if(f!=-1) {
+				fAll += f;
+				cnt ++;
+			}
+		}
+		if(cnt == 0) return -1;
+		return fAll/cnt;
+	}
 	
 	public static double getOverallUnweightedF(String name, ArrayList<ConfusionMatrix> matrice) {
 		ConfusionMatrix cm  = matrice.get(0);
