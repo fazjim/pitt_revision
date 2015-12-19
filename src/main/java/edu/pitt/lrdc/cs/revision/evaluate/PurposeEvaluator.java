@@ -569,7 +569,7 @@ public class PurposeEvaluator {
 					.getRevision_purpose());
 			if (ru.getRevision_purpose() != RevisionPurpose.CD_REBUTTAL_RESERVATION) {
 				int purpose = ru.getRevision_purpose();
-				if (purpose == RevisionPurpose.ORGANIZATION
+				if (purpose == RevisionPurpose.PRECISION || purpose == RevisionPurpose.ORGANIZATION
 						|| purpose == RevisionPurpose.CONVENTIONS_GRAMMAR_SPELLING
 						|| purpose == RevisionPurpose.WORDUSAGE_CLARITY
 						|| purpose == RevisionPurpose.WORDUSAGE_CLARITY_CASCADED) {
@@ -642,6 +642,7 @@ public class PurposeEvaluator {
 				cm.count(predictedRevisionMap.get(key), realRevisionMap.get(key));
 			}
 			else {
+				cm.count(RevisionPurpose.getPurposeName(RevisionPurpose.SURFACE), realRevisionMap.get(key));
 				//System.out.println(key);
 				try {
 				writeErrorLog(doc.getDocumentName() +": "+key);

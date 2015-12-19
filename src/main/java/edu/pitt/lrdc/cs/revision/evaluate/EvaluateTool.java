@@ -50,6 +50,8 @@ public class EvaluateTool {
 		System.out.println("Avg FMeasure: "+getAvgFMeasure(matrice));
 		System.out.println("Kappa: "+getAverageKappa(matrice));
 		System.out.println("Overall Kappa: "+getOverallKappa(matrice));
+		System.out.println("Accuracy: "+getAverageAccuracy(matrice));
+		System.out.println("Overall Accuracy: "+getOverallAccuracy(matrice));
 		System.out.println("Each category");
 		ArrayList<String> attrs = matrice.get(0).getAttrs();
 		for(String attr: attrs) {
@@ -225,6 +227,28 @@ public class EvaluateTool {
 		int cnt = 0;
 		for(ConfusionMatrix matrix: matrice) {
 			double f = matrix.getIndivdiualKappa(name);
+			if(f!=-1) {
+				fAll += f;
+				cnt ++;
+			}
+		}
+		if(cnt == 0) return -1;
+		return fAll/cnt;
+	}
+	
+	public static double getOverallAccuracy(ArrayList<ConfusionMatrix> matrice) {
+		ConfusionMatrix cm  = matrice.get(0);
+		for(int i = 1;i<matrice.size();i++) {
+			cm.merge(matrice.get(i));
+		}
+		return cm.getOverallAccuracy();
+	}
+	
+	public static double getAverageAccuracy(ArrayList<ConfusionMatrix> matrice) {
+		double fAll = 0;
+		int cnt = 0;
+		for(ConfusionMatrix matrix: matrice) {
+			double f = matrix.getOverallAccuracy();
 			if(f!=-1) {
 				fAll += f;
 				cnt ++;

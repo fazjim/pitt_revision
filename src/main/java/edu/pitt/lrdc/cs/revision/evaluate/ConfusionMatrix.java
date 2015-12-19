@@ -80,6 +80,17 @@ public class ConfusionMatrix {
 		}
 	}
 	
+	public double getOverallAccuracy() {	
+		double correct = 0, all = 0;
+		for (int i = 0; i < attrTable.length; i++) {
+			correct += attrTable[i][i];
+			for(int j = 0;j<attrTable.length;j++) {
+				all += attrTable[i][j];
+			}
+		}
+		return correct/all;
+	}
+	
 	public double getIndivdiualKappa(String name) {
 		int index = attributeIndex.get(name);
 		int[][] individualMatrix = new int[2][2]; 
@@ -216,6 +227,7 @@ public class ConfusionMatrix {
 		double prec = getPrec(name);
 		double recall = getRecall(name);
 		if(prec<0||recall<0) return -1;
+		if(prec == 0 && recall == 0) return -1;
 		return prec*recall*2/(prec + recall);
 	}
 	

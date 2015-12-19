@@ -18,6 +18,7 @@ import edu.pitt.lrdc.cs.revision.io.ResultInfoWriter;
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentReader;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
 import edu.pitt.lrdc.cs.revision.model.RevisionPurpose;
+import edu.pitt.lrdc.cs.revision.model.RevisionUnit;
 
 /**
  * The main function for all the evaluations
@@ -63,8 +64,6 @@ public class EvaluateMain {
 		ArrayList<RevisionDocument> allData = new ArrayList<RevisionDocument>();
 		// allData.addAll(trainFolder);
 		// allData.addAll(testFolder);
-		// allData.addAll(anotherFolder);
-		// allData.addAll(trainFolder);
 		allData.addAll(trainFolder);
 		String resultPath = "dummy";
 		if (option == ALIGN) {
@@ -96,8 +95,9 @@ public class EvaluateMain {
 			// highLevel);
 			// Open this for jumbo classification
 			// resultPath = "/Users/faz23/Desktop/34/annotated/allResults2";
-			//crossValidateClassifyJumbo2(allData, folder, true, resultPath);
-			trainTestClassifyJumbo2(trainFolder, testFolder, true, resultPath);
+			crossValidateClassifyJumbo2(allData, folder, true, resultPath);
+			// trainTestClassifyJumbo2(testFolder, trainFolder, true,
+			// resultPath);
 		}
 	}
 
@@ -204,21 +204,28 @@ public class EvaluateMain {
 
 		ArrayList<String> experiments = new ArrayList<String>();
 		ArrayList<Integer> options = new ArrayList<Integer>();
-		/*
-		 * experiments.add("Majority"); options.add(100);
-		 * experiments.add("Unigram"); options.add(-1);
-		 * experiments.add("All features-OLD"); options.add(11);
-		 */
-		experiments.add("All features");
-		options.add(10);
+		Hashtable<String, ArrayList<ConfusionMatrix>> cmsTable = new Hashtable<String, ArrayList<ConfusionMatrix>>();
+		Hashtable<String, ArrayList<ConfusionMatrix>> cmsParaTable = new Hashtable<String, ArrayList<ConfusionMatrix>>();
+
+		experiments.add("Majority");
+		options.add(100);
+		experiments.add("Unigram");
+		options.add(-1);
+		experiments.add("All features-OLD");
+		options.add(11);
+
+		experiments.add("PDTB+OLD");
+		options.add(2);
 		// experiments.add("Language features");
 		// options.add(4);
 
 		experiments.add("Embedding features");
 		options.add(3);
 		// experiments.add("Textual+unigram"); options.add(1);
-		experiments.add("PDTB+OLD");
-		options.add(2);
+		
+		
+		experiments.add("All features");
+		options.add(10);
 		// experiments.add("Location+unigram"); options.add(0);
 
 		// allAddRow(writers, experiments);
@@ -232,21 +239,28 @@ public class EvaluateMain {
 		double[][] confusionMatrixRF = new double[5][5];
 		double[][] confusionMatrixSVM = new double[5][5];
 
-		ArrayList<ConfusionMatrix> cms = new ArrayList<ConfusionMatrix>();
+		for (String experiment : experiments) {
+			if (!experiment.equals("Majority") && !experiment.equals("Unigram")) {
+				ArrayList<ConfusionMatrix> cms = new ArrayList<ConfusionMatrix>();
+				ArrayList<ConfusionMatrix> cmsPara = new ArrayList<ConfusionMatrix>();
+				cmsTable.put(experiment, cms);
+				cmsParaTable.put(experiment, cmsPara);
+			}
+		}
 		for (int j = 0; j < folder; j++) { // Do a cross validation
 			ResultInfoRow resultRow;
 			ArrayList<RevisionDocument> trainDocs = crossCuts.get(j).get(0);
 			ArrayList<RevisionDocument> testDocs = crossCuts.get(j).get(1);
 
 			RevisionPurposeClassifier rpc = new RevisionPurposeClassifier();
-			// String[] classifiers = { "DT", "SVM", "RF" };
-			String[] classifiers = { "SVM" };
+			String[] classifiers = { "DT", "SVM", "RF" };
+			// String[] classifiers = { "SVM" };
 			for (String classifier : classifiers) {
 				resultRow = new ResultInfoRow();
 				for (int k = 0; k < experiments.size(); k++) { // Try a group of
 																// features
 					String experiment = experiments.get(k);
-
+					System.out.println("**********PROCESSSING EXPERIMENT: "+experiment+" ***********");
 					Evaluation eval = rpc.classifyADRevisionPurposeSolo(
 							trainDocs, testDocs, usingNgram, options.get(k),
 							classifier);
@@ -267,7 +281,74 @@ public class EvaluateMain {
 							}
 						}
 					}
-					resultRow.getResult(experiment).fromEvaluation(eval);
+					resultRow.getResult(experiment).fromEvaluation(eval, 5);
+
+					if (cmsTable.containsKey(experiment)) {
+						RevisionPurposeTagger.getInstance()
+								.setTagLevelParagraph(false);
+						Instances[] instances = RevisionPurposeTagger
+								.getInstance().prepareForLabelling(trainDocs,
+										testDocs, usingNgram, options.get(k));
+						String trainPath = "C:\\Not Backed Up\\trainCrf.txt";
+						String testPath = "C:\\Not Backed Up\\testCrf.txt";
+						String modelPath = "C:\\Not Backed Up\\crf.model";
+						String testPath2 = "C:\\Not Backed Up\\testPredictCrf.txt";
+						RevisionPurposeTagger.getInstance()
+								.transformToTxtForCRFTrain(instances[0],
+										trainDocs, trainPath);
+						RevisionPurposeTagger.getInstance()
+								.transformToTxtForCRF(instances[1], testDocs,
+										testPath);
+						RevisionPurposeTagger.getInstance().trainAndTag(
+								trainPath, modelPath, testPath, testPath2);
+						RevisionPurposeTagger.getInstance().readResultToDocs(
+								testDocs, testPath2);
+						cmsTable.get(experiment)
+								.add(PurposeEvaluator
+										.getConfusionMatrixOneSurface(testDocs));
+						for (RevisionDocument testDoc : testDocs) {
+							ArrayList<RevisionUnit> predictedUnits = testDoc
+									.getPredictedRoot().getRevisionUnitAtLevel(
+											0);
+							for (RevisionUnit unit : predictedUnits) {
+								unit.setAbandoned();
+							}
+						}
+
+						RevisionPurposeTagger.getInstance()
+								.setTagLevelParagraph(true);
+						Instances[] instancesPara = RevisionPurposeTagger
+								.getInstance().prepareForLabelling(trainDocs,
+										testDocs, usingNgram, options.get(k));
+						String trainPathPara = "C:\\Not Backed Up\\trainCrfPara.txt";
+						String testPathPara = "C:\\Not Backed Up\\testCrfPara.txt";
+						String modelPathPara = "C:\\Not Backed Up\\crfPara.model";
+						String testPath2Para = "C:\\Not Backed Up\\testPredictCrf.txt";
+						RevisionPurposeTagger.getInstance()
+								.transformToTxtForCRFTrain(instancesPara[0],
+										trainDocs, trainPathPara);
+						RevisionPurposeTagger.getInstance()
+								.transformToTxtForCRF(instancesPara[1],
+										testDocs, testPathPara);
+						RevisionPurposeTagger.getInstance().trainAndTag(
+								trainPathPara, modelPathPara, testPathPara,
+								testPath2Para);
+						RevisionPurposeTagger.getInstance().readResultToDocs(
+								testDocs, testPath2Para);
+						cmsParaTable
+								.get(experiment)
+								.add(PurposeEvaluator
+										.getConfusionMatrixOneSurface(testDocs));
+						for (RevisionDocument testDoc : testDocs) {
+							ArrayList<RevisionUnit> predictedUnits = testDoc
+									.getPredictedRoot().getRevisionUnitAtLevel(
+											0);
+							for (RevisionUnit unit : predictedUnits) {
+								unit.setAbandoned();
+							}
+						}
+
+					}
 
 				}
 				if (classifier.equals("DT")) {
@@ -279,27 +360,20 @@ public class EvaluateMain {
 				}
 			}
 
-			Instances[] instances = RevisionPurposeTagger.getInstance()
-					.prepareForLabelling(trainDocs, testDocs, usingNgram, -1);
-			String trainPath = "C:\\Not Backed Up\\trainCrf.txt";
-			String testPath = "C:\\Not Backed Up\\testCrf.txt";
-			String modelPath = "C:\\Not Backed Up\\crf.model";
-			String testPath2 = "C:\\Not Backed Up\\testPredictCrf.txt";
-			RevisionPurposeTagger.getInstance().transformToTxtForCRFTrain(
-					instances[0], trainDocs, trainPath);
-			RevisionPurposeTagger.getInstance().transformToTxtForCRF(
-					instances[1], testDocs, testPath);
-			RevisionPurposeTagger.getInstance().trainAndTag(trainPath,
-					modelPath, testPath, testPath2);
-			RevisionPurposeTagger.getInstance().readResultToDocs(testDocs,
-					testPath2);
-
-			cms.add(PurposeEvaluator.getConfusionMatrixOneSurface(testDocs));
-
 		}
-		EvaluateTool.printEvaluation(cms);
-		// ResultInfoWriter.persist(resultsDT, null, "DT-Groups", resultPath);
-		// ResultInfoWriter.persist(resultsRF, null, "RF-Groups", resultPath);
+
+		Iterator<String> it = cmsTable.keySet().iterator();
+		while (it.hasNext()) {
+			String experiment = it.next();
+			System.out
+					.println("+++++++++Experiment:" + experiment + "++++++++");
+			System.out.println("Essay");
+			EvaluateTool.printEvaluation(cmsTable.get(experiment));
+			System.out.println("Paragraph");
+			EvaluateTool.printEvaluation(cmsParaTable.get(experiment));
+		}
+		ResultInfoWriter.persist(resultsDT, null, "DT-Groups", resultPath);
+		ResultInfoWriter.persist(resultsRF, null, "RF-Groups", resultPath);
 		ResultInfoWriter.persist(resultsSVM, null, "SVM-Groups", resultPath);
 
 		// Generate a result for surface vs. text-based
@@ -345,14 +419,26 @@ public class EvaluateMain {
 		// experiments.add("Language features");
 		// options.add(4);
 
-		// experiments.add("Embedding features"); options.add(3);
+		 experiments.add("Embedding features"); options.add(3);
 		// experiments.add("Textual+unigram"); options.add(1);
-		// experiments.add("PDTB+OLD"); options.add(2);
+		 experiments.add("PDTB+OLD"); options.add(2);
 		// experiments.add("Location+unigram"); options.add(0);
 
 		// allAddRow(writers, experiments);
 		// allMakeTable(writers);
 
+		Hashtable<String, ArrayList<ConfusionMatrix>> cmsTable = new Hashtable<String, ArrayList<ConfusionMatrix>>();
+		Hashtable<String, ArrayList<ConfusionMatrix>> cmsParaTable = new Hashtable<String, ArrayList<ConfusionMatrix>>();
+
+		for (String experiment : experiments) {
+			if (!experiment.equals("Majority") && !experiment.equals("Unigram")) {
+				ArrayList<ConfusionMatrix> cms = new ArrayList<ConfusionMatrix>();
+				ArrayList<ConfusionMatrix> cmsPara = new ArrayList<ConfusionMatrix>();
+				cmsTable.put(experiment, cms);
+				cmsParaTable.put(experiment, cmsPara);
+			}
+		}
+		
 		ArrayList<ResultInfoRow> resultsDT = new ArrayList<ResultInfoRow>();
 		ArrayList<ResultInfoRow> resultsRF = new ArrayList<ResultInfoRow>();
 		ArrayList<ResultInfoRow> resultsSVM = new ArrayList<ResultInfoRow>();
@@ -362,6 +448,7 @@ public class EvaluateMain {
 		double[][] confusionMatrixSVM = new double[5][5];
 
 		ArrayList<ConfusionMatrix> cms = new ArrayList<ConfusionMatrix>();
+		ArrayList<ConfusionMatrix> cmsPara = new ArrayList<ConfusionMatrix>();
 
 		ResultInfoRow resultRow;
 
@@ -393,7 +480,74 @@ public class EvaluateMain {
 						}
 					}
 				}
-				resultRow.getResult(experiment).fromEvaluation(eval);
+				resultRow.getResult(experiment).fromEvaluation(eval, 5);
+				if (cmsTable.containsKey(experiment)) {
+					RevisionPurposeTagger.getInstance()
+							.setTagLevelParagraph(false);
+					Instances[] instances = RevisionPurposeTagger
+							.getInstance().prepareForLabelling(trainDocs,
+									testDocs, usingNgram, options.get(k));
+					String trainPath = "C:\\Not Backed Up\\trainCrf.txt";
+					String testPath = "C:\\Not Backed Up\\testCrf.txt";
+					String modelPath = "C:\\Not Backed Up\\crf.model";
+					String testPath2 = "C:\\Not Backed Up\\testPredictCrf.txt";
+					RevisionPurposeTagger.getInstance()
+							.transformToTxtForCRFTrain(instances[0],
+									trainDocs, trainPath);
+					RevisionPurposeTagger.getInstance()
+							.transformToTxtForCRF(instances[1], testDocs,
+									testPath);
+					RevisionPurposeTagger.getInstance().trainAndTag(
+							trainPath, modelPath, testPath, testPath2);
+					RevisionPurposeTagger.getInstance().readResultToDocs(
+							testDocs, testPath2);
+					cmsTable.get(experiment)
+							.add(PurposeEvaluator
+									.getConfusionMatrixOneSurface(testDocs));
+					for (RevisionDocument testDoc : testDocs) {
+						ArrayList<RevisionUnit> predictedUnits = testDoc
+								.getPredictedRoot().getRevisionUnitAtLevel(
+										0);
+						for (RevisionUnit unit : predictedUnits) {
+							unit.setAbandoned();
+						}
+					}
+
+					RevisionPurposeTagger.getInstance()
+							.setTagLevelParagraph(true);
+					Instances[] instancesPara = RevisionPurposeTagger
+							.getInstance().prepareForLabelling(trainDocs,
+									testDocs, usingNgram, options.get(k));
+					String trainPathPara = "C:\\Not Backed Up\\trainCrfPara.txt";
+					String testPathPara = "C:\\Not Backed Up\\testCrfPara.txt";
+					String modelPathPara = "C:\\Not Backed Up\\crfPara.model";
+					String testPath2Para = "C:\\Not Backed Up\\testPredictCrf.txt";
+					RevisionPurposeTagger.getInstance()
+							.transformToTxtForCRFTrain(instancesPara[0],
+									trainDocs, trainPathPara);
+					RevisionPurposeTagger.getInstance()
+							.transformToTxtForCRF(instancesPara[1],
+									testDocs, testPathPara);
+					RevisionPurposeTagger.getInstance().trainAndTag(
+							trainPathPara, modelPathPara, testPathPara,
+							testPath2Para);
+					RevisionPurposeTagger.getInstance().readResultToDocs(
+							testDocs, testPath2Para);
+					cmsParaTable
+							.get(experiment)
+							.add(PurposeEvaluator
+									.getConfusionMatrixOneSurface(testDocs));
+					for (RevisionDocument testDoc : testDocs) {
+						ArrayList<RevisionUnit> predictedUnits = testDoc
+								.getPredictedRoot().getRevisionUnitAtLevel(
+										0);
+						for (RevisionUnit unit : predictedUnits) {
+							unit.setAbandoned();
+						}
+					}
+
+				}
+
 
 			}
 			if (classifier.equals("DT")) {
@@ -405,26 +559,20 @@ public class EvaluateMain {
 			}
 		}
 
-		Instances[] instances = RevisionPurposeTagger.getInstance()
-				.prepareForLabelling(trainDocs, testDocs, usingNgram, -1);
-		String trainPath = "C:\\Not Backed Up\\trainCrf.txt";
-		String testPath = "C:\\Not Backed Up\\testCrf.txt";
-		String modelPath = "C:\\Not Backed Up\\crf.model";
-		String testPath2 = "C:\\Not Backed Up\\testPredictCrf.txt";
-		RevisionPurposeTagger.getInstance().transformToTxtForCRFTrain(
-				instances[0], trainDocs, trainPath);
-		RevisionPurposeTagger.getInstance().transformToTxtForCRF(instances[1],
-				testDocs, testPath);
-		RevisionPurposeTagger.getInstance().trainAndTag(trainPath, modelPath,
-				testPath, testPath2);
-		RevisionPurposeTagger.getInstance().readResultToDocs(testDocs,
-				testPath2);
+		
+		Iterator<String> it = cmsTable.keySet().iterator();
+		while (it.hasNext()) {
+			String experiment = it.next();
+			System.out
+					.println("+++++++++Experiment:" + experiment + "++++++++");
+			System.out.println("Essay");
+			EvaluateTool.printEvaluation(cmsTable.get(experiment));
+			System.out.println("Paragraph");
+			EvaluateTool.printEvaluation(cmsParaTable.get(experiment));
+		}
 
-		cms.add(PurposeEvaluator.getConfusionMatrixOneSurface(testDocs));
-
-		EvaluateTool.printEvaluation(cms);
-		// ResultInfoWriter.persist(resultsDT, null, "DT-Groups", resultPath);
-		// ResultInfoWriter.persist(resultsRF, null, "RF-Groups", resultPath);
+		ResultInfoWriter.persist(resultsDT, null, "DT-Groups", resultPath);
+		ResultInfoWriter.persist(resultsRF, null, "RF-Groups", resultPath);
 		ResultInfoWriter.persist(resultsSVM, null, "SVM-Groups", resultPath);
 		// Generate a result for surface vs. text-based
 		// printCM("DT", confusionMatrixDT);
@@ -523,7 +671,7 @@ public class EvaluateMain {
 					Evaluation eval = rpc.classifyADRevisionPurpose(trainDocs,
 							testDocs, usingNgram, i, options.get(k));
 					resultRow.addExperiment(experiment);
-					resultRow.getResult(experiment).fromEvaluation(eval);
+					resultRow.getResult(experiment).fromEvaluation(eval, 5);
 				}
 				results.add(resultRow);
 			}
@@ -619,7 +767,7 @@ public class EvaluateMain {
 			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
 					usingNgram, -1);
 			resultRow.addExperiment(experiment);
-			resultRow.getResult(experiment).fromEvaluation(eval);
+			resultRow.getResult(experiment).fromEvaluation(eval, 2);
 
 			System.out
 					.println("*****************All features*******************");
@@ -627,7 +775,7 @@ public class EvaluateMain {
 					usingNgram, 4);
 			experiment = "All features";
 			resultRow.addExperiment(experiment);
-			resultRow.getResult(experiment).fromEvaluation(eval);
+			resultRow.getResult(experiment).fromEvaluation(eval, 2);
 			results.add(resultRow);
 
 			System.out.println("*****************Majority*******************");
@@ -635,7 +783,7 @@ public class EvaluateMain {
 					usingNgram, 5);
 			experiment = "Majority";
 			resultRow.addExperiment(experiment);
-			resultRow.getResult(experiment).fromEvaluation(eval);
+			resultRow.getResult(experiment).fromEvaluation(eval, 2);
 
 			results.add(resultRow);
 			/*
@@ -728,7 +876,7 @@ public class EvaluateMain {
 			Aligner aligner = new Aligner();
 			aligner.align(trainDocs, testDocs, distOption);
 			RevisionPurposePredicter predictor = new RevisionPurposePredicter();
-			predictor.predictRevisions(trainDocs, testDocs, false, 1);
+			predictor.predictRevisions(trainDocs, testDocs, true, 1);
 			/*
 			 * RevisionPurposeClassifier rpc = new RevisionPurposeClassifier();
 			 * 

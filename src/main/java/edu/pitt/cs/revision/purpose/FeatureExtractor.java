@@ -1325,8 +1325,9 @@ public class FeatureExtractor {
 
 	// ---------------------Language group------------------------------
 	public void insertLanguageGroup() {
-		insertSimplePOSFeatureRatio();
-		insertPOSDiff();
+		// insertSimplePOSFeatureRatio();
+		// insertPOSDiff();
+
 		// insertGrammarErrorFeature();
 		// insertSpellErrorFeature();
 	}
@@ -1335,8 +1336,10 @@ public class FeatureExtractor {
 		// String sentence = extractSentence(doc, ru);
 		// String oldSentence = extractOldSentence(doc, ru);
 		// String newSentence = extractNewSentence(doc, ru);
-		extractSimplePOSFeatures(doc, ru);
-		extractPOSDiff(doc, ru);
+
+		// extractSimplePOSFeatures(doc, ru);
+		// extractPOSDiff(doc, ru);
+
 		// extractGrammarErrorFeature(doc, ru);
 		// extractSpellErrorFeature(doc, ru);
 	}
@@ -1493,9 +1496,11 @@ public class FeatureExtractor {
 	}
 
 	boolean isOnline = false;
+
 	public void setOnline(boolean isOnline) {
 		this.isOnline = isOnline;
 	}
+
 	// -------------------------Putting everything
 	// together-------------------------------
 	// buildup features
@@ -1507,13 +1512,15 @@ public class FeatureExtractor {
 
 		insertLocGroup();
 		insertTextGroup();
-		insertLanguageGroup();
+		// insertLanguageGroup();
+		//
 		// insertMetaGroup();
 		if (!isOnline) {
-			//SentenceEmbeddingFeatureExtractor.getInstance().insertFeature(
-			//		features);
-			SentenceEmbeddingFeatureExtractor.getInstance().insertCohesion(
-					features);
+			// SentenceEmbeddingFeatureExtractor.getInstance().insertFeature(
+			// features);
+
+			// SentenceEmbeddingFeatureExtractor.getInstance().insertCohesion(
+			// features);
 			// insertOtherGroup();
 			PDTBFeatureExtractor.getInstance().insertFeature(features);
 			PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
@@ -1534,6 +1541,7 @@ public class FeatureExtractor {
 		// extractLanguageGroup(doc, ru);
 		extractMetaGroup(doc, ru);
 		if (!isOnline) {
+			// extractLanguageGroup(doc, ru);
 			SentenceEmbeddingFeatureExtractor.getInstance().extractFeature(
 					features, featureVector, doc, ru.getNewSentenceIndex(),
 					ru.getOldSentenceIndex());
@@ -1545,6 +1553,7 @@ public class FeatureExtractor {
 		return featureVector;
 	}
 
+	
 	public Object[] extractFeatures(RevisionDocument doc,
 			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes,
 			boolean usingNgram) throws IOException {
@@ -1562,13 +1571,66 @@ public class FeatureExtractor {
 		// PDTBFeatureExtractor.getInstance().extractFeature(features,
 		// featureVector, doc, newIndexes, oldIndexes);
 		if (!isOnline) {
-			SentenceEmbeddingFeatureExtractor.getInstance().extractFeature(
-					features, featureVector, doc,newIndexes,
-					oldIndexes);
+			
+			SentenceEmbeddingFeatureExtractor.getInstance().extractCohesion(
+					features, featureVector, doc, newIndexes, oldIndexes);
+			
+			extractLanguageGroup(doc, newIndexes, oldIndexes);
 			// extractOtherGroup(doc, ru);
 			PDTBFeatureExtractor.getInstance().extractFeature(features,
-					featureVector, doc, newIndexes,
-					oldIndexes);
+					featureVector, doc, newIndexes, oldIndexes);
+			PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
+					featureVector, doc, newIndexes, oldIndexes);
+			
+		}
+		return featureVector;
+		// String sentence = extractSentence(doc, ru);
+		// if (usingNgram)
+		// extractTextFeatures(sentence);
+		// extractLocFeature(doc, ru);
+		// extractNERFeature(sentence);
+		// extractLENFeature(sentence);
+		// extractSimplePOSFeatures(sentence);
+		//
+		// extractReasoningKeywords(sentence);
+		// extractCommaFeatures(sentence);
+		// extractOpFeatures(ru);
+		//
+		// extractDaTextualFeature(doc, ru);
+
+		// extractComplexPOSFeatures(sentence);
+		// extractKeywordOverlap(sentence, extractTopKeywords(doc));
+	}
+	
+	public Object[] extractFeatures(RevisionDocument doc,
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes,
+			boolean usingNgram, int option) throws IOException {
+		featureVector = new Object[features.getSize()];
+		if (usingNgram) {
+			String sentence = extractSentence(doc, newIndexes, oldIndexes, true);
+			extractTextFeatures(sentence);
+			extractTextFeatures2(doc, newIndexes, oldIndexes);
+		}
+		extractLocGroup(doc, newIndexes, oldIndexes);
+		extractTextGroup(doc, newIndexes, oldIndexes);
+		// extractLanguageGroup(doc, newIndexes, oldIndexes);
+		extractMetaGroup(doc, newIndexes, oldIndexes);
+		// extractOtherGroup(doc, ru);
+		// PDTBFeatureExtractor.getInstance().extractFeature(features,
+		// featureVector, doc, newIndexes, oldIndexes);
+		if (!isOnline) {
+			if(option == 3) {
+			SentenceEmbeddingFeatureExtractor.getInstance().extractCohesion(
+					features, featureVector, doc, newIndexes, oldIndexes);
+			}
+			extractLanguageGroup(doc, newIndexes, oldIndexes);
+			// extractOtherGroup(doc, ru);
+			if(option == 2) {
+			PDTBFeatureExtractor.getInstance().extractFeature(features,
+					featureVector, doc, newIndexes, oldIndexes);
+			PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
+					featureVector, doc, newIndexes, oldIndexes);
+			}
 		}
 		return featureVector;
 		// String sentence = extractSentence(doc, ru);
@@ -1591,25 +1653,32 @@ public class FeatureExtractor {
 
 	public void buildFeatures(boolean usingNgram, ArrayList<String> categories,
 			int remove) throws IOException {
+		features = new FeatureName();
 		insertCategory(categories);
+		System.out.println("=======================REMOVE IS:" + remove);
 		if (usingNgram)
 			insertText(); // Text always start from the first
 		if (remove == -1)
 			return;
-		if (remove == 0 || remove == 10 || remove == 11 || remove == 3 || remove == 2)
+		if (remove == 0 || remove == 10 || remove == 11 || remove == 3
+				|| remove == 2)
 			insertLocGroup();
-		if (remove == 1 || remove == 10 || remove == 11 || remove == 3 || remove == 2)
+		if (remove == 1 || remove == 10 || remove == 11 || remove == 3
+				|| remove == 2)
 			insertTextGroup();
-		if (remove == 2 || remove == 10 || remove == 3 || remove == 2)
-			// insertLanguageGroup();
+		if (remove == 2 || remove == 10) {
 			PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
-		if (remove == 3 || remove == 10)
+			PDTBFeatureExtractor.getInstance().insertFeature(features);
+		}
+		if (remove == 3 || remove == 10) {
 			// insertMetaGroup();
 			// SentenceEmbeddingFeatureExtractor.getInstance().insertFeature(
 			// features);
 			SentenceEmbeddingFeatureExtractor.getInstance().insertCohesion(
 					features);
-		if (remove == 4 || remove == 10 || remove == 11 || remove == 3 || remove == 2)
+		}
+		if (remove == 4 || remove == 10 || remove == 11 || remove == 3
+				|| remove == 2)
 			insertLanguageGroup();
 		// insertOtherGroup();
 		// insertLocationFeature();
@@ -1636,15 +1705,21 @@ public class FeatureExtractor {
 		}
 		if (remove == -1)
 			return featureVector;
-		if (remove == 0 || remove == 10 || remove == 11|| remove == 3 || remove == 2)
+		if (remove == 0 || remove == 10 || remove == 11 || remove == 3
+				|| remove == 2)
 			extractLocGroup(doc, ru);
-		if (remove == 1 || remove == 10 || remove == 11|| remove == 3 || remove == 2)
+		if (remove == 1 || remove == 10 || remove == 11 || remove == 3
+				|| remove == 2)
 			extractTextGroup(doc, ru);
-		if (remove == 2 || remove == 10)
+		if (remove == 2 || remove == 10) {
 			// extractLanguageGroup(doc, ru);
 			PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
 					featureVector, doc, ru.getNewSentenceIndex(),
 					ru.getOldSentenceIndex());
+			PDTBFeatureExtractor.getInstance().extractFeature(features,
+					featureVector, doc, ru.getNewSentenceIndex(),
+					ru.getOldSentenceIndex());
+		}
 		if (remove == 3 || remove == 10)
 			// extractMetaGroup(doc, ru);
 			// SentenceEmbeddingFeatureExtractor.getInstance().extractFeature(
@@ -1654,7 +1729,8 @@ public class FeatureExtractor {
 					features, featureVector, doc, ru.getNewSentenceIndex(),
 					ru.getOldSentenceIndex());
 		// extractOtherGroup(doc, ru);
-		if (remove == 4 || remove == 10 || remove == 11|| remove == 3 || remove == 2)
+		if (remove == 4 || remove == 10 || remove == 11 || remove == 3
+				|| remove == 2)
 			extractLanguageGroup(doc, ru);
 		return featureVector;
 		// String sentence = extractSentence(doc, ru);

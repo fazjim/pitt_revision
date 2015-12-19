@@ -1,5 +1,7 @@
 package edu.pitt.lrdc.cs.revision.evaluate;
 
+import java.util.ArrayList;
+
 import weka.classifiers.Evaluation;
 
 /**
@@ -184,7 +186,16 @@ public class ResultInfo {
 
 
 
-	public void fromEvaluation(Evaluation eval) {
+	public void fromEvaluation(Evaluation eval, int classNum) {
+		double precisionAll = 0;
+		double recallAll = 0;
+		double fMeasureAll = 0;
+		
+		for(int i = 0;i<classNum;i++) {
+			precisionAll += eval.precision(i);
+			recallAll += eval.recall(i);
+			fMeasureAll += eval.fMeasure(i);
+		}
 		prec0 = eval.precision(0);
 		recall0 = eval.recall(0);
 		f0 = eval.fMeasure(0);
@@ -194,9 +205,10 @@ public class ResultInfo {
 		f1 = eval.fMeasure(1);
 		
 		kappa = eval.kappa();
-		unweightedAvgPrec = (prec0+prec1)/2;
-		unweightedAvgRecall = (recall0+recall1)/2;
-		unweightedAvgFvalue = (f0+f1)/2;
+		
+		unweightedAvgPrec = precisionAll/classNum;
+		unweightedAvgRecall = recallAll/classNum;
+		unweightedAvgFvalue = fMeasureAll/classNum;
 		//unweightedAvgFvalue = eval.unweightedMacroFmeasure();
 		accuracy = eval.pctCorrect();
 		

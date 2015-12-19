@@ -7,6 +7,7 @@ import java.util.Hashtable;
 
 import edu.pitt.cs.revision.batch.BatchFeatureWriter;
 import edu.pitt.cs.revision.batch.SentenceInfo;
+import edu.pitt.cs.revision.machinelearning.FeatureName;
 import edu.pitt.cs.revision.machinelearning.StanfordParserAssist;
 import edu.pitt.lrdc.cs.revision.alignment.model.HeatMapUnit;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
@@ -34,6 +35,8 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 
 	private EssayInfo essayInfo = new EssayInfo();
 
+	
+	
 	public EssayInfo getEssayInfo(ArrayList<ArrayList<HeatMapUnit>> essay) {
 		if (essayInfo.parsed == false) {
 			int pD1Num = 1;
@@ -600,7 +603,7 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 		}
 		extractLocGroup(hmu, essay);
 		extractTextGroup(hmu, essay);
-		extractLanguageGroup(hmu, essay);
+		//extractLanguageGroup(hmu, essay);
 		// extractMetaGroup(doc, ru);
 		// extractOtherGroup(doc, ru);
 		ArrayList<Integer> newIndices = new ArrayList<Integer>();
@@ -613,12 +616,14 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 		 * SentenceEmbeddingFeatureExtractor.getInstance().extractFeature(
 		 * features, featureVector, doc, newIndices, oldIndices);
 		 */
-		SentenceEmbeddingFeatureExtractor.getInstance().extractCohesion(
-				features, featureVector, doc, newIndices, oldIndices);
-		PDTBFeatureExtractor.getInstance().extractFeature(features,
-				featureVector, doc, newIndices, oldIndices);
-		PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
-				featureVector, doc, newIndices, oldIndices);
+		if (!isOnline) {
+			//SentenceEmbeddingFeatureExtractor.getInstance().extractCohesion(
+			//		features, featureVector, doc, newIndices, oldIndices);
+			PDTBFeatureExtractor.getInstance().extractFeature(features,
+					featureVector, doc, newIndices, oldIndices);
+			PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
+					featureVector, doc, newIndices, oldIndices);
+		}
 		return featureVector;
 	}
 
@@ -641,10 +646,23 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 			newIndices.add(hmu.realNewIndex);
 		if (hmu.realOldIndex != -1)
 			oldIndices.add(hmu.realOldIndex);
-		SentenceEmbeddingFeatureExtractor.getInstance().extractFeature(
-				features, featureVector, doc, newIndices, oldIndices);
-		PDTBFeatureExtractor.getInstance().extractFeature(features,
-				featureVector, doc, newIndices, oldIndices);
+		if (remove == 2 || remove == 10){
+			// extractLanguageGroup(doc, ru);
+			PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
+					featureVector, doc, newIndices,
+					oldIndices);
+			PDTBFeatureExtractor.getInstance().extractFeature(features,
+					featureVector, doc, newIndices, oldIndices);
+		}
+		if (remove == 3 || remove == 10)
+			// extractMetaGroup(doc, ru);
+			// SentenceEmbeddingFeatureExtractor.getInstance().extractFeature(
+			// features, featureVector, doc, ru.getNewSentenceIndex(),
+			// ru.getOldSentenceIndex());
+			SentenceEmbeddingFeatureExtractor.getInstance().extractCohesion(
+					features, featureVector, doc, newIndices,
+					oldIndices);
+		
 
 		return featureVector;
 	}
@@ -671,6 +689,20 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 		for (ArrayList<HeatMapUnit> paragraph : essay) {
 			for (HeatMapUnit hmu : paragraph) {
 				features.add(extractFeatures(hmu, essay, doc, usingNgram));
+			}
+		}
+		return features;
+	}
+	
+	public ArrayList<Object[]> extractFeatures(
+			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc,
+			boolean usingNgram,int remove) throws IOException {
+		essayInfo = new EssayInfo();
+		essayInfo.parsed = false;
+		ArrayList<Object[]> features = new ArrayList<Object[]>();
+		for (ArrayList<HeatMapUnit> paragraph : essay) {
+			for (HeatMapUnit hmu : paragraph) {
+				features.add(extractFeatures(hmu, essay, doc, usingNgram,remove));
 			}
 		}
 		return features;

@@ -89,8 +89,9 @@ public class PDTBFeatureExtractor {
 				}
 			}
 		}
-		if (argOptions.size() == 0)
+		if (argOptions.size() == 0){
 			System.err.println("Searched:" + searchStr);
+		}
 
 		int realArgNo = -1;
 		// Assume that there are few coincidence, and if multiple options exist,

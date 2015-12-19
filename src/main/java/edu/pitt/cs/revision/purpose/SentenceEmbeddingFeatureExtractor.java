@@ -3,7 +3,8 @@ package edu.pitt.cs.revision.purpose;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-
+import java.util.HashSet;
+import java.util.List;
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
 import org.deeplearning4j.models.word2vec.Word2Vec;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -16,7 +17,8 @@ public class SentenceEmbeddingFeatureExtractor {
 	private Word2Vec w2v;
 	private String path = "C:\\Not Backed Up\\word2vec\\GoogleNews-vectors-negative300.bin.gz";
 	private int dimension = 300;
-
+	HashSet<String> stopWords = new HashSet<String>();
+	
 	public Word2Vec getW2v() {
 		return w2v;
 	}
@@ -27,6 +29,12 @@ public class SentenceEmbeddingFeatureExtractor {
 		File gModel = new File(path);
 		w2v = (Word2Vec) WordVectorSerializer.loadGoogleModel(gModel, true);
 
+		List<String> stopWordsList =  w2v.getStopWords();
+		System.err.println("Stop Words size:"+stopWordsList.size());
+		for(String stopWord: stopWordsList) {
+			stopWords.add(stopWord);
+		}
+		
 		long time2 = System.currentTimeMillis();
 		System.err.println("Loading word2vec costs:" + (time2 - time1) / 1000
 				+ " seconds");
@@ -60,6 +68,8 @@ public class SentenceEmbeddingFeatureExtractor {
 	}
 
 	public void insertCohesion(FeatureName features) {
+		features.insertFeature("COHESION_UP", Double.TYPE);
+		features.insertFeature("COHESION_DOWN", Double.TYPE);
 		features.insertFeature("COHESION_CHANGE_UP", Double.TYPE);
 		features.insertFeature("COHESION_CHANGE_DOWN", Double.TYPE);
 	}
@@ -159,17 +169,36 @@ public class SentenceEmbeddingFeatureExtractor {
 				afterNewSentence = doc.getNewSentence(nextIndexNew);
 			}
 		}
-		
+
 		cohesionUpOld = calculateSim(beforeOldSentence, oldSentenceUp);
 		cohesionUpNew = calculateSim(beforeNewSentence, newSentenceUp);
 		cohesionDownOld = calculateSim(afterOldSentence, oldSentenceDown);
 		cohesionDownNew = calculateSim(afterNewSentence, newSentenceDown);
-		
 
-		int index = features.getIndex("COHESION_CHANGE_UP");
-		featureVector[index] = cohesionUpNew-cohesionUpOld;
-		index = features.getIndex("COHESION_CHANGE_DOWN");
-		featureVector[index] = cohesionDownNew - cohesionDownOld;
+		int indexUp = features.getIndex("COHESION_UP");
+		int indexDown = features.getIndex("COHESION_DOWN");
+		int indexChangeUp = features.getIndex("COHESION_CHANGE_UP");
+		int indexChangeDown = features.getIndex("COHESION_CHANGE_DOWN");
+		
+		if (newIndexes == null || newIndexes.size() == 0
+				|| (newIndexes.size() == 1 && newIndexes.get(0) == -1)) {
+			featureVector[indexUp] = cohesionUpOld;
+			featureVector[indexDown] = cohesionDownOld;
+			featureVector[indexChangeUp] = 0.0;
+			featureVector[indexChangeDown] = 0.0;
+			
+		} else if (oldIndexes == null || oldIndexes.size() == 0
+				|| (oldIndexes.size() == 1 && oldIndexes.get(0) == -1)) {
+			featureVector[indexUp] = cohesionUpNew;
+			featureVector[indexDown] = cohesionDownNew;
+			featureVector[indexChangeUp] = 0.0;
+			featureVector[indexChangeDown] = 0.0;
+		} else {
+			featureVector[indexUp] = 0.0;
+			featureVector[indexDown] = 0.0;
+			featureVector[indexChangeUp] = cohesionUpNew-cohesionUpOld;
+			featureVector[indexChangeDown] = cohesionDownNew-cohesionDownOld;
+		}
 	}
 
 	public double calculateSim(String sentence1, String sentence2) {
@@ -185,7 +214,7 @@ public class SentenceEmbeddingFeatureExtractor {
 				oldToken = oldToken.replace(",", "");
 			oldToken = oldToken.toLowerCase();
 			if (!oldToken.equals(".") && !oldToken.equals(",")) {
-				if (w2v.hasWord(oldToken)) {
+				if (w2v.hasWord(oldToken)&&!stopWords.contains(oldToken)) {
 					double[] tmp = w2v.getWordVector(oldToken);
 					addArray(s1Array, tmp);
 				}
@@ -198,7 +227,7 @@ public class SentenceEmbeddingFeatureExtractor {
 			if (!newToken.equals(","))
 				newToken = newToken.replace(",", "");
 			if (!newToken.equals(".") && !newToken.equals(",")) {
-				if (w2v.hasWord(newToken)) {
+				if (w2v.hasWord(newToken)&&!stopWords.contains(newToken)) {
 					double[] tmp = w2v.getWordVector(newToken);
 					addArray(s2Array, tmp);
 				}
@@ -316,7 +345,7 @@ public class SentenceEmbeddingFeatureExtractor {
 			oldToken = oldToken.trim();
 			oldToken = oldToken.toLowerCase();
 			if (!oldToken.equals(".") && !oldToken.equals(",")) {
-				if (w2v.hasWord(oldToken)) {
+				if (w2v.hasWord(oldToken)&&!stopWords.contains(oldToken)) {
 					double[] tmp = w2v.getWordVector(oldToken);
 					addArray(oldFeatures, tmp);
 					oldN++;
@@ -327,7 +356,7 @@ public class SentenceEmbeddingFeatureExtractor {
 			newToken = newToken.trim();
 			newToken = newToken.toLowerCase();
 			if (!newToken.equals(".") && !newToken.equals(",")) {
-				if (w2v.hasWord(newToken)) {
+				if (w2v.hasWord(newToken)&&!stopWords.contains(newToken)) {
 					double[] tmp = w2v.getWordVector(newToken);
 					addArray(newFeatures, tmp);
 					newN++;
@@ -351,5 +380,6 @@ public class SentenceEmbeddingFeatureExtractor {
 
 	public static void main(String[] args) throws IOException {
 		String word = "Hello";
+		SentenceEmbeddingFeatureExtractor.getInstance();
 	}
 }

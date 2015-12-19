@@ -405,7 +405,7 @@ public class RevisionPurposeClassifier {
 
 	
 	public Instances createInstancesSOLO5Class(ArrayList<RevisionDocument> docs,
-			boolean usingNgram) throws IOException {
+			boolean usingNgram,int option) throws IOException {
 		FeatureExtractor fe = new FeatureExtractor();
 		fe.setOnline(true);
 		// fe.openBatchMode(batchPath);
@@ -414,16 +414,16 @@ public class RevisionPurposeClassifier {
 		// categories.add(SURFACE_CHANGE);
 		// categories.add(CONTENT_CHANGE);
 		addPurposeCategories(categories);
-		fe.buildFeatures(usingNgram, categories);
+		fe.buildFeatures(usingNgram, categories,option);
 		Instances data = wa.buildInstances(fe.features, usingNgram);
 		for (RevisionDocument doc : docs) {
 			ArrayList<ArrayList<ArrayList<Integer>>> pairs = doc
-					.getPredictedAlignedIndices();
+					.getAlignedIndices();
 			for (ArrayList<ArrayList<Integer>> pair : pairs) {
 				ArrayList<Integer> oldIndices = pair.get(0);
 				ArrayList<Integer> newIndices = pair.get(1);
 				Object[] features = fe.extractFeatures(doc, newIndices,
-						oldIndices, usingNgram);
+						oldIndices, usingNgram,option);
 				String ID = RevisionPurposePredicter.generateID(doc,
 						newIndices, oldIndices);
 				wa.addInstance(features, fe.features, usingNgram, data,
@@ -1209,6 +1209,12 @@ public class RevisionPurposeClassifier {
 			Instances[] inst = wa.addNgram(trainData, testData);
 			trainData = inst[0];
 			testData = inst[1];
+			Instances trainDataRem = WekaAssist.removeID(trainData);
+			Instances testDataRem = WekaAssist.removeID(testData);
+			if(trainDataRem==null) System.err.println("NULLLLLLLLLLLL");
+			Instances[] trainTestInstances = WekaAssist.selectFeatures(trainDataRem, testDataRem);
+			trainData = trainTestInstances[0];
+			testData = trainTestInstances[1];
 		}
 		System.out.println("Starts classification");
 		// Temporarily change this to 10 fold

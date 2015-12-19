@@ -771,6 +771,66 @@ public class RevisionDocument {
 		return allVals;
 	}
 
+	public ArrayList<ArrayList<ArrayList<Integer>>> getAlignedIndices() {
+		ArrayList<ArrayList<ArrayList<Integer>>> allVals = new ArrayList<ArrayList<ArrayList<Integer>>>();
+		int newSentNum = this.newDraftSentences.size();
+		int oldSentNum = this.oldDraftSentences.size();
+		HashSet<Integer> usedOld = new HashSet<Integer>(); // mark the ones that
+															// has been aligned
+		for (int i = 1; i <= newSentNum; i++) {
+			ArrayList<Integer> oldAligns = this.getOldFromNew(i);
+			ArrayList<Integer> newAligns = new ArrayList<Integer>();
+			if (oldAligns != null && oldAligns.size() > 0) { // new sentence is
+																// aligned
+				HashSet<Integer> tempNewAligns = new HashSet<Integer>();
+				for (Integer oldAlign : oldAligns) {
+					usedOld.add(oldAlign);
+					ArrayList<Integer> newA = this
+							.getNewFromOld(oldAlign);
+					for (Integer temp : newA) { // Get the aligned sentences of
+												// the old sentence
+						tempNewAligns.add(temp);
+					}
+				}
+				for (Integer temp : tempNewAligns) {
+					if (temp != -1) {
+						newAligns.add(temp); // collected all the new alignments
+					}
+				}
+
+			} else {
+				newAligns.add(i);
+				oldAligns = new ArrayList<Integer>();
+			}
+
+			String newSent = this.getNewSentences(newAligns);
+			String oldSent = this.getOldSentences(oldAligns);
+			if (!newSent.equals(oldSent)) {
+				ArrayList<ArrayList<Integer>> alignPair = new ArrayList<ArrayList<Integer>>();
+				alignPair.add(oldAligns);
+				alignPair.add(newAligns);
+
+				allVals.add(alignPair);
+			}
+		}
+		// For those that has not be covered in the step above, should be
+		// deletes
+		for (int i = 1; i <= oldSentNum; i++) {
+			if (!usedOld.contains(i)) {
+				ArrayList<ArrayList<Integer>> alignPair = new ArrayList<ArrayList<Integer>>();
+				ArrayList<Integer> oldAligns = new ArrayList<Integer>();
+				oldAligns.add(i);
+				alignPair.add(oldAligns);
+				alignPair.add(new ArrayList<Integer>());
+
+				allVals.add(alignPair);
+			}
+		}
+
+		return allVals;
+	}
+
+	
 	/**
 	 * Materialize the predicted alignment
 	 * 

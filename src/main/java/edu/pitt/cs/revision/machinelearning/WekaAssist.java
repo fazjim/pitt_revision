@@ -18,6 +18,7 @@ import weka.attributeSelection.BestFirst;
 import weka.attributeSelection.CfsSubsetEval;
 import weka.attributeSelection.GainRatioAttributeEval;
 import weka.attributeSelection.GreedyStepwise;
+import weka.attributeSelection.InfoGainAttributeEval;
 import weka.attributeSelection.Ranker;
 import weka.classifiers.Classifier;
 import weka.classifiers.CostMatrix;
@@ -455,6 +456,7 @@ public class WekaAssist {
 		} else if(name.equals("DT")) {
 			classifier = new J48();
 		} else if(name.equals("SVM")) {
+			//classifier = new LibLINEAR();
 			classifier = new SMO();
 		}
 		
@@ -477,7 +479,7 @@ public class WekaAssist {
 		Evaluation eval = new Evaluation(trainset);
 		eval.evaluateModel(classifier, testset);
 		WekaAssist.printResult(eval);
-		detailedErrorAnalysis(eval, classifier, testset);
+		//detailedErrorAnalysis(eval, classifier, testset);
 		return eval;
 	}
 	
@@ -539,17 +541,19 @@ public class WekaAssist {
 																// weka.filters.supervised.attribute!
 		//CfsSubsetEval eval = new CfsSubsetEval();
 		GainRatioAttributeEval eval = new GainRatioAttributeEval();
+		//InfoGainAttributeEval eval = new InfoGainAttributeEval();
 		//GreedyStepwise search = new GreedyStepwise();
 		//search.setSearchBackwards(true);
 		//BestFirst search = new BestFirst();
 		Ranker search = new Ranker();
 		
-		search.setNumToSelect(100);
+		search.setNumToSelect(150);
 		filter.setEvaluator(eval);
 		filter.setSearch(search);
 		filter.setInputFormat(train); // initializing the filter once with
 										// training set
 		System.out.println("Selecting features...");
+		if(train==null) System.err.println("NULLLLLLLLLLLLLL");
 		Instances newTrain = Filter.useFilter(train, filter);
 		System.out.println("Training loaded");
 		Instances newTest = Filter.useFilter(test, filter);
@@ -565,13 +569,13 @@ public class WekaAssist {
 		AttributeSelection filter = new AttributeSelection(); // package
 																// weka.filters.supervised.attribute!
 		//CfsSubsetEval eval = new CfsSubsetEval();
-		GainRatioAttributeEval eval = new GainRatioAttributeEval();
+		InfoGainAttributeEval eval = new InfoGainAttributeEval();
 		//GreedyStepwise search = new GreedyStepwise();
 		//search.setSearchBackwards(true);
 		//BestFirst search = new BestFirst();
 		Ranker search = new Ranker();
 		
-		search.setNumToSelect(500);
+		search.setNumToSelect(20);
 		filter.setEvaluator(eval);
 		filter.setSearch(search);
 		filter.setInputFormat(train); // initializing the filter once with
@@ -677,6 +681,7 @@ public class WekaAssist {
 	 */
 	public static Classifier setTagFilter(Classifier classifier,
 			Instances dataset) {
+		if(dataset.attribute("ID")!=null) {
 		FilteredClassifier fc = new FilteredClassifier();
 		int index = dataset.attribute("ID").index();
 		Remove rm = new Remove();
@@ -687,6 +692,8 @@ public class WekaAssist {
 		fc.setClassifier(classifier);
 		fc.setFilter(rm);
 		return fc;
+		} 
+		return classifier;
 	}
 
 	public static void showFeatures() {
