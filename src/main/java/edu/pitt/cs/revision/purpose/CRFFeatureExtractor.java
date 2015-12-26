@@ -635,8 +635,11 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 			extractTextFeatures(hmu.scD1 + hmu.scD2);
 			extractTextFeatures2(hmu.scD1, hmu.scD2);
 		}
-		extractLocGroup(hmu, essay);
-		extractTextGroup(hmu, essay);
+		if(remove == -1) return featureVector;
+		if(remove == 10 || remove == 11) {
+			extractLocGroup(hmu, essay);
+			extractTextGroup(hmu, essay);
+		}
 		// extractLanguageGroup(doc, ru);
 		// extractMetaGroup(doc, ru);
 		// extractOtherGroup(doc, ru);
@@ -648,11 +651,12 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 			oldIndices.add(hmu.realOldIndex);
 		if (remove == 2 || remove == 10){
 			// extractLanguageGroup(doc, ru);
-			PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
-					featureVector, doc, newIndices,
-					oldIndices);
 			PDTBFeatureExtractor.getInstance().extractFeature(features,
 					featureVector, doc, newIndices, oldIndices);
+			//PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
+			//		featureVector, doc, newIndices,
+			//		oldIndices);
+			
 		}
 		if (remove == 3 || remove == 10)
 			// extractMetaGroup(doc, ru);

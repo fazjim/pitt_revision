@@ -13,7 +13,7 @@ import edu.pitt.lrdc.cs.revision.model.RevisionUnit;
 
 public class DataStatistics {
 	public static void stat(ArrayList<RevisionDocument> docs) {
-		for(RevisionDocument doc: docs) {
+		for (RevisionDocument doc : docs) {
 			ArrayList<RevisionDocument> tmp = new ArrayList<RevisionDocument>();
 			tmp.add(doc);
 			System.out.println(doc.getDocumentName());
@@ -28,7 +28,7 @@ public class DataStatistics {
 		statEditTypes(docs);
 		System.out
 				.println("=============Operations and Categories=============");
-		statAllTypes(docs);
+		statAllTypesMerge(docs);
 		System.out.println("=============Multi revisions=================");
 		statMultiRevisions(docs);
 	}
@@ -61,13 +61,13 @@ public class DataStatistics {
 			Hashtable<String, String> revisionDuplicates = new Hashtable<String, String>();
 			ArrayList<RevisionUnit> rus = doc.getRoot().getRevisionUnitAtLevel(
 					0);
-			//System.out.println(doc.getDocumentName());
+			// System.out.println(doc.getDocumentName());
 			for (RevisionUnit ru : rus) {
 				String pair = generateIndiceStr(ru);
-				//System.out.println(pair);
+				// System.out.println(pair);
 				if (!pair.equals("NEW:OLD")) {
 					if (revisionSet.containsKey(pair)) {
-						//System.out.println(pair);
+						// System.out.println(pair);
 						if (!revisionDuplicates.containsKey(pair)) {
 							revisionDuplicates.put(
 									pair,
@@ -88,7 +88,7 @@ public class DataStatistics {
 								.getRevision_purpose()));
 					}
 				} else {
-					//System.out.println(ru.getRevision_index());
+					// System.out.println(ru.getRevision_index());
 				}
 			}
 			total += revisionDuplicates.size();
@@ -147,6 +147,107 @@ public class DataStatistics {
 		}
 	}
 
+	public static void statAllTypesMerge(ArrayList<RevisionDocument> docs) {
+		Hashtable<String, Integer> revisionAllTypes = new Hashtable<String, Integer>();
+		Hashtable<String, Integer> tagTable = new Hashtable<String, Integer>();
+		Hashtable<String, String> opTable = new Hashtable<String, String>();
+		for (RevisionDocument doc : docs) {
+			ArrayList<RevisionUnit> rus = doc.getRoot().getRevisionUnitAtLevel(
+					0);
+			for (RevisionUnit ru : rus) {
+				String key = doc.getDocumentName() + ru.getUniqueID();
+				if (tagTable.containsKey(key)) {
+					int revP = tagTable.get(key);
+					int revC = ru.getRevision_purpose();
+					if (revP > 5 && revC <= 5) {
+						String tag = RevisionPurpose.getPurposeName(revC);
+						String cat = tag + "-"
+								+ RevisionOp.getOpName(ru.getRevision_op());
+						tagTable.put(key, revC);
+						opTable.put(key, cat);
+					} else if (revP <= 5 && revC <= 5) {
+						if (revC == RevisionPurpose.CLAIMS_IDEAS) {
+							String tag = RevisionPurpose.getPurposeName(revC);
+							String cat = tag + "-"
+									+ RevisionOp.getOpName(ru.getRevision_op());
+							tagTable.put(key, revC);
+							opTable.put(key, cat);
+						} else if (revC == RevisionPurpose.CD_WARRANT_REASONING_BACKING) {
+							if (revP != RevisionPurpose.CLAIMS_IDEAS) {
+								String tag = RevisionPurpose
+										.getPurposeName(revC);
+								String cat = tag
+										+ "-"
+										+ RevisionOp.getOpName(ru
+												.getRevision_op());
+								tagTable.put(key, revC);
+								opTable.put(key, cat);
+							}
+						} else if (revC == RevisionPurpose.EVIDENCE) {
+							if (revP != RevisionPurpose.CLAIMS_IDEAS
+									&& revP != RevisionPurpose.CD_WARRANT_REASONING_BACKING) {
+								String tag = RevisionPurpose
+										.getPurposeName(revC);
+								String cat = tag
+										+ "-"
+										+ RevisionOp.getOpName(ru
+												.getRevision_op());
+								tagTable.put(key, revC);
+								opTable.put(key, cat);
+							}
+						} else if (revC == RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT) {
+							//do nothing
+						}
+					} else {
+						// do nothing
+					}
+				} else {
+					tagTable.put(key, ru.getRevision_purpose());
+					int revC = ru.getRevision_purpose();
+					String tag = "Surface";
+					if (revC == RevisionPurpose.CLAIMS_IDEAS) {
+						tag = RevisionPurpose
+								.getPurposeName(RevisionPurpose.CLAIMS_IDEAS);
+					} else if (revC == RevisionPurpose.CD_WARRANT_REASONING_BACKING
+							|| revC == RevisionPurpose.CD_REBUTTAL_RESERVATION) {
+						tag = RevisionPurpose
+								.getPurposeName(RevisionPurpose.CD_WARRANT_REASONING_BACKING);
+					} else if (revC == RevisionPurpose.EVIDENCE) {
+						tag = RevisionPurpose
+								.getPurposeName(RevisionPurpose.EVIDENCE);
+					} else if (revC == RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT) {
+						tag = RevisionPurpose
+								.getPurposeName(RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT);
+					} else {
+						tag = RevisionPurpose
+								.getPurposeName(RevisionPurpose.SURFACE);
+					}
+
+					String cat = tag + "-"
+							+ RevisionOp.getOpName(ru.getRevision_op());
+					opTable.put(key, cat);
+				}
+			}
+		}
+
+		Iterator<String> opIt = opTable.keySet().iterator();
+		while(opIt.hasNext()) {
+			String key = opIt.next();
+			String cat = opTable.get(key);
+			if(revisionAllTypes.containsKey(cat)) {
+				revisionAllTypes.put(cat, revisionAllTypes.get(cat)+1);
+			} else {
+				revisionAllTypes.put(cat, 1);
+			}
+		}
+		
+		Iterator<String> it = revisionAllTypes.keySet().iterator();
+		while (it.hasNext()) {
+			String cat = it.next();
+			System.out.println(cat + ":" + revisionAllTypes.get(cat));
+		}
+	}
+
 	public static void statEditOps(ArrayList<RevisionDocument> docs) {
 		int totalADD = 0;
 		int totalDel = 0;
@@ -173,19 +274,20 @@ public class DataStatistics {
 
 	public static void main(String[] args) throws Exception {
 		DataStatistics ds = new DataStatistics();
-		/*RevisionDocumentReader rd = new RevisionDocumentReader();
-		// ArrayList<RevisionDocument> docs =
-		// rd.readDocs("C:\\Not Backed Up\\data\\Braverman_sentence_alignment\\Braverman_sentence_alignment\\annotation_revision_full\\class4");
-		//String class3 = "D:\\annotationTool\\annotated\\class3";
-		String class3 = "C:\\Not Backed Up\\data\\annotated\\revisedClass3";
-		String class4 = "C:\\Not Backed Up\\data\\annotated\\revisedClass4";
-		//String class2 = "D:\\annotationTool\\annotated\\class2";
-		ArrayList<RevisionDocument> docs = rd.readDocs(class3);
-		ArrayList<RevisionDocument> docs2 = rd.readDocs(class4);
-		//ArrayList<RevisionDocument> docs3 = rd.readDocs(class2);
-		docs.addAll(docs2);
-		//docs.addAll(docs3);*/
-		String path = "C:\\Not Backed Up\\data\\newSample";
+		/*
+		 * RevisionDocumentReader rd = new RevisionDocumentReader(); //
+		 * ArrayList<RevisionDocument> docs = // rd.readDocs(
+		 * "C:\\Not Backed Up\\data\\Braverman_sentence_alignment\\Braverman_sentence_alignment\\annotation_revision_full\\class4"
+		 * ); //String class3 = "D:\\annotationTool\\annotated\\class3"; String
+		 * class3 = "C:\\Not Backed Up\\data\\annotated\\revisedClass3"; String
+		 * class4 = "C:\\Not Backed Up\\data\\annotated\\revisedClass4";
+		 * //String class2 = "D:\\annotationTool\\annotated\\class2";
+		 * ArrayList<RevisionDocument> docs = rd.readDocs(class3);
+		 * ArrayList<RevisionDocument> docs2 = rd.readDocs(class4);
+		 * //ArrayList<RevisionDocument> docs3 = rd.readDocs(class2);
+		 * docs.addAll(docs2); //docs.addAll(docs3);
+		 */
+		String path = "C:\\Not Backed Up\\data\\naaclData\\C2";
 		ds.stat(RevisionDocumentReader.readDocs(path));
 	}
 }

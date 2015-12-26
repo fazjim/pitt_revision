@@ -1,5 +1,8 @@
 package edu.pitt.lrdc.cs.revision.evaluate;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -63,6 +66,31 @@ public class EvaluateTool {
 			System.out.println("Kappa:"+getAverageKappa(attr,matrice));
 			System.out.println("Overall Kappa:"+getOverallKappa(attr,matrice));
 		}
+	}
+	
+	public static void printEvaluation(ArrayList<ConfusionMatrix> matrice, String tool, String experiment, String rootPath) throws IOException {
+		BufferedWriter writer = new BufferedWriter(new FileWriter(rootPath+"/"+tool+"_"+experiment+".txt"));
+		writer.write(getOverallConfusionMatrixStr(matrice)+"\n");
+		writer.write("\nOVERALL Performance\n");
+		writer.write("Avg Prec:\t" + getAvgPrec(matrice)+"\n");
+		writer.write("Avg Recall:\t" + getAvgRecall(matrice)+"\n");
+		writer.write("Avg FMeasure:\t"+getAvgFMeasure(matrice)+"\n");
+		writer.write("Kappa:\t "+getAverageKappa(matrice)+"\n");
+		writer.write("Overall Kappa:\t"+getOverallKappa(matrice)+"\n");
+		writer.write("Accuracy:\t"+getAverageAccuracy(matrice)+"\n");
+		writer.write("Overall Accuracy:\t"+getOverallAccuracy(matrice)+"\n");
+		writer.close();
+		/*System.out.println("Each category\t");
+		ArrayList<String> attrs = matrice.get(0).getAttrs();
+		for(String attr: attrs) {
+			System.out.println(attr);
+			System.out.println("PRECISION:"+getAvgPrec(attr,matrice));
+			System.out.println("RECALL:"+getAvgRecall(attr,matrice));
+			System.out.println("F Measure:"+getAvgFMeasure(attr,matrice));
+			System.out.println("UnWeighted F:"+getAvgUnweightedFMeasure(attr,matrice));
+			System.out.println("Kappa:"+getAverageKappa(attr,matrice));
+			System.out.println("Overall Kappa:"+getOverallKappa(attr,matrice));
+		}*/
 	}
 	
 	public static double getAvgUnweightedFMeasure(String name, ArrayList<ConfusionMatrix> matrice) {

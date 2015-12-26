@@ -96,8 +96,8 @@ public class EvaluateMain {
 			// Open this for jumbo classification
 			// resultPath = "/Users/faz23/Desktop/34/annotated/allResults2";
 			crossValidateClassifyJumbo2(allData, folder, true, resultPath);
-			// trainTestClassifyJumbo2(testFolder, trainFolder, true,
-			// resultPath);
+			 //trainTestClassifyJumbo2(testFolder, trainFolder, true,
+			 //resultPath);
 		}
 	}
 
@@ -240,7 +240,7 @@ public class EvaluateMain {
 		double[][] confusionMatrixSVM = new double[5][5];
 
 		for (String experiment : experiments) {
-			if (!experiment.equals("Majority") && !experiment.equals("Unigram")) {
+			if (!experiment.equals("Majority")) {
 				ArrayList<ConfusionMatrix> cms = new ArrayList<ConfusionMatrix>();
 				ArrayList<ConfusionMatrix> cmsPara = new ArrayList<ConfusionMatrix>();
 				cmsTable.put(experiment, cms);
@@ -266,8 +266,7 @@ public class EvaluateMain {
 							classifier);
 					resultRow.addExperiment(experiment);
 
-					if (experiment.equals("All features-OLD")
-							|| experiment.equals("All features")) {
+					if (experiment.equals("All features-OLD")) {
 						double[][] cm = eval.confusionMatrix();
 						for (int ii = 0; ii < cm.length; ii++) {
 							for (int jj = 0; jj < cm.length; jj++) {
@@ -368,9 +367,10 @@ public class EvaluateMain {
 			System.out
 					.println("+++++++++Experiment:" + experiment + "++++++++");
 			System.out.println("Essay");
-			EvaluateTool.printEvaluation(cmsTable.get(experiment));
+			//EvaluateTool.printEvaluation(cmsTable.get(experiment));
+			EvaluateTool.printEvaluation(cmsTable.get(experiment), "Essay", experiment, resultPath);
 			System.out.println("Paragraph");
-			EvaluateTool.printEvaluation(cmsParaTable.get(experiment));
+			EvaluateTool.printEvaluation(cmsParaTable.get(experiment), "Paragraph", experiment, resultPath);
 		}
 		ResultInfoWriter.persist(resultsDT, null, "DT-Groups", resultPath);
 		ResultInfoWriter.persist(resultsRF, null, "RF-Groups", resultPath);
@@ -414,8 +414,7 @@ public class EvaluateMain {
 		options.add(-1);
 		experiments.add("All features-OLD");
 		options.add(11);
-		// experiments.add("All features");
-		// options.add(10);
+		
 		// experiments.add("Language features");
 		// options.add(4);
 
@@ -423,7 +422,8 @@ public class EvaluateMain {
 		// experiments.add("Textual+unigram"); options.add(1);
 		 experiments.add("PDTB+OLD"); options.add(2);
 		// experiments.add("Location+unigram"); options.add(0);
-
+		 experiments.add("All features");
+		 options.add(10);
 		// allAddRow(writers, experiments);
 		// allMakeTable(writers);
 
@@ -431,7 +431,7 @@ public class EvaluateMain {
 		Hashtable<String, ArrayList<ConfusionMatrix>> cmsParaTable = new Hashtable<String, ArrayList<ConfusionMatrix>>();
 
 		for (String experiment : experiments) {
-			if (!experiment.equals("Majority") && !experiment.equals("Unigram")) {
+			if (!experiment.equals("Majority")) {
 				ArrayList<ConfusionMatrix> cms = new ArrayList<ConfusionMatrix>();
 				ArrayList<ConfusionMatrix> cmsPara = new ArrayList<ConfusionMatrix>();
 				cmsTable.put(experiment, cms);
@@ -465,8 +465,7 @@ public class EvaluateMain {
 						testDocs, usingNgram, options.get(k), classifier);
 				resultRow.addExperiment(experiment);
 
-				if (experiment.equals("All features-OLD")
-						|| experiment.equals("All features")) {
+				if (experiment.equals("All features-OLD")) {
 					double[][] cm = eval.confusionMatrix();
 					for (int ii = 0; ii < cm.length; ii++) {
 						for (int jj = 0; jj < cm.length; jj++) {
@@ -566,11 +565,11 @@ public class EvaluateMain {
 			System.out
 					.println("+++++++++Experiment:" + experiment + "++++++++");
 			System.out.println("Essay");
-			EvaluateTool.printEvaluation(cmsTable.get(experiment));
+			//EvaluateTool.printEvaluation(cmsTable.get(experiment));
+			EvaluateTool.printEvaluation(cmsTable.get(experiment), "Essay", experiment, resultPath);
 			System.out.println("Paragraph");
-			EvaluateTool.printEvaluation(cmsParaTable.get(experiment));
+			EvaluateTool.printEvaluation(cmsParaTable.get(experiment), "Paragraph", experiment, resultPath);
 		}
-
 		ResultInfoWriter.persist(resultsDT, null, "DT-Groups", resultPath);
 		ResultInfoWriter.persist(resultsRF, null, "RF-Groups", resultPath);
 		ResultInfoWriter.persist(resultsSVM, null, "SVM-Groups", resultPath);

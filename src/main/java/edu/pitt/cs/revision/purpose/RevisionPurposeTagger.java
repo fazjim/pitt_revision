@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Hashtable;
 import java.util.List;
 
@@ -205,7 +206,7 @@ public class RevisionPurposeTagger {
 				categories = CategoryFactory
 						.buildCategories(CategoryFactory.CONTENTSURFACE_MODE);
 		}
-		fe.buildFeatures(usingNgram, categories,remove);
+		fe.buildFeaturesCRF(usingNgram, categories,remove);
 		
 		Instances trainData = wa.buildInstances(fe.features, usingNgram);
 		Instances testData = wa.buildInstances(fe.features, usingNgram);
@@ -617,6 +618,117 @@ public class RevisionPurposeTagger {
 		// oos.writeObject(crf);
 	}
 
+	public String getCategory(RevisionUnit ru) {
+		int purpose = ru.getRevision_purpose();
+		if (purpose == RevisionPurpose.CLAIMS_IDEAS) {
+			return RevisionPurpose.getPurposeName(purpose);
+		} else if (purpose == RevisionPurpose.CD_WARRANT_REASONING_BACKING) {
+			return RevisionPurpose.getPurposeName(purpose);
+		} else if (purpose == RevisionPurpose.EVIDENCE) {
+			return RevisionPurpose.getPurposeName(RevisionPurpose.EVIDENCE);
+		} else if (purpose == RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT) {
+			return RevisionPurpose
+					.getPurposeName(RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT);
+		} else if (purpose == RevisionPurpose.CD_REBUTTAL_RESERVATION) {
+			return "";
+		} else {
+			return RevisionPurpose.getPurposeName(RevisionPurpose.SURFACE);
+		}
+	}
+	
+	public void writeRevision(BufferedWriter writer, RevisionUnit ru,
+			RevisionDocument doc, String realCat, String predictedCat)
+			throws IOException {
+		ArrayList<Integer> oldIndices = ru.getOldSentenceIndex();
+		ArrayList<Integer> newIndices = ru.getNewSentenceIndex();
+		Collections.sort(oldIndices);
+		Collections.sort(newIndices);
+		int oldIndex = -1;
+		if (oldIndices.size() != 0 && oldIndices.get(0) > oldIndex)
+			oldIndex = oldIndices.get(0);
+		int newIndex = -1;
+		if (newIndices.size() != 0 && newIndices.get(0) > newIndex)
+			newIndex = newIndices.get(0);
+
+		writer.write(realCat + "\t");
+		writer.write(predictedCat + "\t");
+		writer.write(doc.getDocumentName() + "\t");
+		writer.write(RevisionOp.getOpName(ru.getRevision_op()) + "\t");
+
+		int oldParaNo = -1;
+		int newParaNo = -1;
+		if (oldIndex != -1)
+			oldParaNo = doc.getParaNoOfOldSentence(oldIndex);
+		if (newIndex != -1)
+			newParaNo = doc.getParaNoOfNewSentence(newIndex);
+		writer.write(oldParaNo + "\t");
+		writer.write(oldIndex + "\t");
+		if (oldParaNo != -1) {
+			writer.write(doc.getFirstOfOldParagraph(oldParaNo) + "\t");
+		} else {
+			writer.write("-1" + "\t");
+		}
+		writer.write(newParaNo + "\t");
+		writer.write(newIndex + "\t");
+		if (newParaNo != -1) {
+			writer.write(doc.getFirstOfNewParagraph(newParaNo) + "\t");
+		} else {
+			writer.write("-1" + "\t");
+		}
+		String oldSent = " ";
+		if (oldIndex != -1)
+			oldSent = doc.getOldSentence(oldIndex);
+		String newSent = " ";
+		if (newIndex != -1)
+			newSent = doc.getNewSentence(newIndex);
+		writer.write(oldSent + "\t");
+		writer.write(newSent + "\t\n");
+	}
+	
+	public void outputResult(BufferedWriter writer,
+			ArrayList<RevisionDocument> predictedDocs) throws IOException {
+		for (RevisionDocument doc : predictedDocs) {
+			Hashtable<String, String> tags = new Hashtable<String, String>();
+			ArrayList<RevisionUnit> realRevisions = doc.getRoot()
+					.getRevisionUnitAtLevel(0);
+			ArrayList<RevisionUnit> predictedRevisions = doc.getPredictedRoot()
+					.getRevisionUnitAtLevel(0);
+			for (RevisionUnit ru : predictedRevisions) {
+				String tag = ru.getUniqueID();
+				String category = getCategory(ru);
+				tags.put(tag, category);
+			}
+			for (RevisionUnit ru : realRevisions) {
+				String tag = ru.getUniqueID();
+				String realCategory = getCategory(ru);
+				if (tags.containsKey(tag)) {
+					String category = tags.get(tag);
+					if (!category.equals(realCategory)) {
+						writeRevision(writer, ru, doc, realCategory, category);
+					}
+				} 
+			}
+		}
+	}
+	
+	public void printErrors(ArrayList<RevisionDocument> docs, String output) throws IOException {
+		BufferedWriter writer = new BufferedWriter(new FileWriter(output));
+		writer.write("REAL" + "\t");
+		writer.write("PREDICTED" + "\t");
+		writer.write("DOCNAME" + "\t");
+		writer.write("REVOP" + "\t");
+		writer.write("OLDPARANO" + "\t");
+		writer.write("OLDINDEX" + "\t");
+		writer.write("PARAOLDFIRST" + "\t");
+		writer.write("NEWPARANO" + "\t");
+		writer.write("NEWINDEX" + "\t");
+		writer.write("PARANEWFIRST" + "\t");
+		writer.write("OLDSENT" + "\t");
+		writer.write("NEWSENT" + "\t\n");
+		outputResult(writer, docs);
+		writer.close();
+	}
+	
 	public static void main(String[] args) throws Exception {
 		RevisionPurposeTagger tagger = new RevisionPurposeTagger();
 		// String trainPathAll = "C:\\Not Backed Up\\data\\trainDataCRFVersion";
@@ -665,6 +777,8 @@ public class RevisionPurposeTagger {
 			 * RevisionDocumentWriter.writeToDoc(doc, doc.getDocumentName());; }
 			 */
 			cms.add(PurposeEvaluator.getConfusionMatrixOneSurface(docs));
+			String output = "C:\\Not Backed Up\\allResults\\Paragraph.txt";
+			tagger.printErrors(docs, output);
 			EvaluateTool.printEvaluation(cms);
 		} else {
 			ArrayList<ConfusionMatrix> cms = new ArrayList<ConfusionMatrix>();
@@ -699,6 +813,8 @@ public class RevisionPurposeTagger {
 				cms.add(PurposeEvaluator.getConfusionMatrixOneSurface(testDocs));
 			}
 			// PurposeEvaluator.evaluatePurposeCorrelation2(docs);
+			String output = "C:\\Not Backed Up\\allResults\\ParagraphCRF.txt";
+			tagger.printErrors(docs, output);
 			EvaluateTool.printEvaluation(cms);
 		}
 

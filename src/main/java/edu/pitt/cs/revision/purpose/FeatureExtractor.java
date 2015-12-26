@@ -1660,14 +1660,38 @@ public class FeatureExtractor {
 			insertText(); // Text always start from the first
 		if (remove == -1)
 			return;
-		if (remove == 0 || remove == 10 || remove == 11 || remove == 3
-				|| remove == 2)
+		if (remove == 0 || remove == 10 || remove == 11 || remove == 2||remove == 3) 
 			insertLocGroup();
-		if (remove == 1 || remove == 10 || remove == 11 || remove == 3
-				|| remove == 2)
+		if (remove == 1 || remove == 10 || remove == 11 || remove == 2||remove == 3)
 			insertTextGroup();
 		if (remove == 2 || remove == 10) {
-			PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
+			//PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
+			PDTBFeatureExtractor.getInstance().insertFeature(features);
+		}
+		if (remove == 3 || remove == 10) {
+			// insertMetaGroup();
+			SentenceEmbeddingFeatureExtractor.getInstance().insertCohesion(
+					features);
+			SentenceEmbeddingFeatureExtractor.getInstance().insertFeature(
+			features);
+		}
+	}
+		
+	public void buildFeaturesCRF(boolean usingNgram, ArrayList<String> categories,
+			int remove) throws IOException {
+		features = new FeatureName();
+		insertCategory(categories);
+		System.out.println("=======================REMOVE IS:" + remove);
+		if (usingNgram)
+			insertText(); // Text always start from the first
+		if (remove == -1)
+			return;
+		if (remove == 0 || remove == 10 || remove == 11)
+			insertLocGroup();
+		if (remove == 1 || remove == 10 || remove == 11)
+			insertTextGroup();
+		if (remove == 2 || remove == 10) {
+			//PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
 			PDTBFeatureExtractor.getInstance().insertFeature(features);
 		}
 		if (remove == 3 || remove == 10) {
@@ -1713,12 +1737,12 @@ public class FeatureExtractor {
 			extractTextGroup(doc, ru);
 		if (remove == 2 || remove == 10) {
 			// extractLanguageGroup(doc, ru);
-			PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
-					featureVector, doc, ru.getNewSentenceIndex(),
-					ru.getOldSentenceIndex());
 			PDTBFeatureExtractor.getInstance().extractFeature(features,
 					featureVector, doc, ru.getNewSentenceIndex(),
 					ru.getOldSentenceIndex());
+			//PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
+			//		featureVector, doc, ru.getNewSentenceIndex(),
+			//		ru.getOldSentenceIndex());
 		}
 		if (remove == 3 || remove == 10)
 			// extractMetaGroup(doc, ru);

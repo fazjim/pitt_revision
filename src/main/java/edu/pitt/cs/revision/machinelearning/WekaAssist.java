@@ -547,7 +547,7 @@ public class WekaAssist {
 		//BestFirst search = new BestFirst();
 		Ranker search = new Ranker();
 		
-		search.setNumToSelect(150);
+		search.setNumToSelect(300);
 		filter.setEvaluator(eval);
 		filter.setSearch(search);
 		filter.setInputFormat(train); // initializing the filter once with
