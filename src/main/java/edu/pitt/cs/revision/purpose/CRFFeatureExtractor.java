@@ -2,6 +2,7 @@ package edu.pitt.cs.revision.purpose;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Hashtable;
 
@@ -651,8 +652,8 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 			oldIndices.add(hmu.realOldIndex);
 		if (remove == 2 || remove == 10){
 			// extractLanguageGroup(doc, ru);
-			PDTBFeatureExtractor.getInstance().extractFeature(features,
-					featureVector, doc, newIndices, oldIndices);
+			//PDTBFeatureExtractor.getInstance().extractFeature(features,
+			//		featureVector, doc, newIndices, oldIndices);
 			//PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
 			//		featureVector, doc, newIndices,
 			//		oldIndices);
@@ -667,7 +668,9 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 					features, featureVector, doc, newIndices,
 					oldIndices);
 		
-
+		if(remove == 4||remove == 10||remove == 2) {
+			extractFeaturesPriorPost(hmu,essay,doc,1);
+		}
 		return featureVector;
 	}
 
@@ -711,4 +714,332 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 		}
 		return features;
 	}
+	
+	
+	public void extractTextGroupPriorPost(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc, int windowSize) {
+		// extractOpFeaturesPriorPost(windowSize, doc, newIndexes, oldIndexes);
+		extractLENFeaturePriorPost(hmu, essay, doc, windowSize);
+		extractDaTextualFeaturePriorPost(hmu,essay, doc, windowSize);
+		// extractNERFeature(doc, ru);
+		// extractOverlapFeature(doc, ru);
+	}
+
+	
+	public void extractFeaturesPriorPost(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc,
+			 int windowSize) {
+		extractLocFeaturePriorPost(hmu, essay, doc, windowSize);
+		extractTextGroupPriorPost(hmu,essay, doc, windowSize);
+	}
+	
+	
+	public void extractLocFeaturePriorPost(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc, int windowSize) {
+		// ru.getNewParagraphNo();
+		ArrayList<Integer> sentenceIndices = new ArrayList<Integer>();
+		ArrayList<Integer> oldSentIndices = new ArrayList<Integer>();
+		sentenceIndices.add(hmu.newIndex);
+		oldSentIndices.add(hmu.oldIndex);
+		if (sentenceIndices != null) {
+			Collections.sort(sentenceIndices);
+		}
+		if (oldSentIndices != null) {
+			Collections.sort(oldSentIndices);
+		}
+		for (int i = 1; i <= windowSize; i++) {
+			String tag = "_PRIOR_" + i;
+			String tag2 = "_POST_" + i;
+			String[] tags = { tag, tag2 };
+			for (String tmp : tags) {
+				if (sentenceIndices.size() != 0) {
+					if (tmp.equals(tag)) {
+						int LOC_ISFIRSTPAR = features
+								.getIndex("LOC_ISFIRSTPAR_NEW" + tmp);
+						int LOC_ISFIRSTSEN = features
+								.getIndex("LOC_ISFIRSTSEN_NEW" + tmp);
+						int first = sentenceIndices.get(0) - i;
+						if (first > 0) {
+							int paragraphNo = doc.getParaNoOfNewSentence(first);
+							int start = doc.getFirstOfNewParagraph(paragraphNo);
+							if (paragraphNo == 1) {
+								featureVector[LOC_ISFIRSTPAR] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISFIRSTPAR] = Boolean
+										.toString(false);
+							}
+							if (first == start) {
+								featureVector[LOC_ISFIRSTSEN] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISFIRSTSEN] = Boolean
+										.toString(false);
+							}
+						} else {
+							featureVector[LOC_ISFIRSTPAR] = Boolean
+									.toString(false);
+							featureVector[LOC_ISFIRSTSEN] = Boolean
+									.toString(false);
+						}
+					} else if (tmp.equals(tag2)) {
+						int LOC_ISLASTPARA = features
+								.getIndex("LOC_ISLASTPARA_NEW" + tmp);
+						int LOC_ISLASTSEN = features
+								.getIndex("LOC_ISLASTSEN_NEW" + tmp);
+						int last = sentenceIndices
+								.get(sentenceIndices.size() - 1);
+						last = last + i;
+						if (last <= doc.getNewDraftSentences().size()) {
+							int lastParaNo = doc.getNewParagraphNum();
+							int paragraphNo = doc.getParaNoOfNewSentence(last);
+							int end = doc.getLastOfNewParagraph(paragraphNo);
+							if (paragraphNo == lastParaNo) {
+								featureVector[LOC_ISLASTPARA] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISLASTPARA] = Boolean
+										.toString(false);
+							}
+							if (last == end) {
+								featureVector[LOC_ISLASTSEN] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISLASTSEN] = Boolean
+										.toString(false);
+							}
+						} else {
+							featureVector[LOC_ISLASTPARA] = Boolean
+									.toString(false);
+							featureVector[LOC_ISLASTSEN] = Boolean
+									.toString(false);
+						}
+
+					} else {
+						// should not happen
+					}
+				} else {
+					if (tmp.equals(tag)) {
+						int LOC_ISFIRSTPAR = features
+								.getIndex("LOC_ISFIRSTPAR_NEW" + tmp);
+						int LOC_ISFIRSTSEN = features
+								.getIndex("LOC_ISFIRSTSEN_NEW" + tmp);
+						featureVector[LOC_ISFIRSTPAR] = Boolean.toString(false);
+						featureVector[LOC_ISFIRSTSEN] = Boolean.toString(false);
+					} else if (tmp.equals(tag2)) {
+						int LOC_ISLASTPARA = features
+								.getIndex("LOC_ISLASTPARA_NEW" + tmp);
+						int LOC_ISLASTSEN = features
+								.getIndex("LOC_ISLASTSEN_NEW" + tmp);
+						featureVector[LOC_ISLASTPARA] = Boolean.toString(false);
+						featureVector[LOC_ISLASTSEN] = Boolean.toString(false);
+					}
+				}
+
+				if (oldSentIndices.size() != 0) {
+					if (tmp.equals(tag)) {
+						int LOC_ISFIRSTPAR = features
+								.getIndex("LOC_ISFIRSTPAR_OLD" + tmp);
+						int LOC_ISFIRSTSEN = features
+								.getIndex("LOC_ISFIRSTSEN_OLD" + tmp);
+						int first = oldSentIndices.get(0) - i;
+						if (first > 0) {
+							int paragraphNo = doc.getParaNoOfOldSentence(first);
+							int start = doc.getFirstOfOldParagraph(paragraphNo);
+							if (paragraphNo == 1) {
+								featureVector[LOC_ISFIRSTPAR] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISFIRSTPAR] = Boolean
+										.toString(false);
+							}
+							if (first == start) {
+								featureVector[LOC_ISFIRSTSEN] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISFIRSTSEN] = Boolean
+										.toString(false);
+							}
+						} else {
+							featureVector[LOC_ISFIRSTPAR] = Boolean
+									.toString(false);
+							featureVector[LOC_ISFIRSTSEN] = Boolean
+									.toString(false);
+						}
+					} else if (tmp.equals(tag2)) {
+						int LOC_ISLASTPARA = features
+								.getIndex("LOC_ISLASTPARA_OLD" + tmp);
+						int LOC_ISLASTSEN = features
+								.getIndex("LOC_ISLASTSEN_OLD" + tmp);
+						int last = oldSentIndices
+								.get(oldSentIndices.size() - 1);
+						last = last + i;
+						if (last <= doc.getOldDraftSentences().size()) {
+							int lastParaNo = doc.getOldParagraphNum();
+							int paragraphNo = doc.getParaNoOfOldSentence(last);
+							int end = doc.getLastOfOldParagraph(paragraphNo);
+							if (paragraphNo == lastParaNo) {
+								featureVector[LOC_ISLASTPARA] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISLASTPARA] = Boolean
+										.toString(false);
+							}
+							if (last == end) {
+								featureVector[LOC_ISLASTSEN] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISLASTSEN] = Boolean
+										.toString(false);
+							}
+						} else {
+							featureVector[LOC_ISLASTPARA] = Boolean
+									.toString(false);
+							featureVector[LOC_ISLASTSEN] = Boolean
+									.toString(false);
+						}
+
+					} else {
+						// should not happen
+					}
+				} else {
+					if (tmp.equals(tag)) {
+						int LOC_ISFIRSTPAR = features
+								.getIndex("LOC_ISFIRSTPAR_OLD" + tmp);
+						int LOC_ISFIRSTSEN = features
+								.getIndex("LOC_ISFIRSTSEN_OLD" + tmp);
+						featureVector[LOC_ISFIRSTPAR] = Boolean.toString(false);
+						featureVector[LOC_ISFIRSTSEN] = Boolean.toString(false);
+					} else if (tmp.equals(tag2)) {
+						int LOC_ISLASTPARA = features
+								.getIndex("LOC_ISLASTPARA_OLD" + tmp);
+						int LOC_ISLASTSEN = features
+								.getIndex("LOC_ISLASTSEN_OLD" + tmp);
+						featureVector[LOC_ISLASTPARA] = Boolean.toString(false);
+						featureVector[LOC_ISLASTSEN] = Boolean.toString(false);
+					}
+				}
+			}
+		}
+	}
+	
+	public void extractLENFeaturePriorPost(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc, int windowSize) {
+		ArrayList<Integer> newIndexes = new ArrayList<Integer>();
+		ArrayList<Integer> oldIndexes = new ArrayList<Integer>();
+		newIndexes.add(hmu.newIndex);
+		oldIndexes.add(hmu.oldIndex);
+		String tag = "_PRIOR_";
+		String tag2 = "_POST_";
+		String[] tags = { tag, tag2 };
+		for (String tmp : tags) {
+			for (int i = 1; i <= windowSize; i++) {
+				if (tmp.equals(tag)) {
+					int priorOld = getBefore(oldIndexes, windowSize);
+					int priorNew = getBefore(newIndexes, windowSize);
+					ArrayList<Integer> tmpOld = new ArrayList<Integer>();
+					ArrayList<Integer> tmpNew = new ArrayList<Integer>();
+					if (priorOld != -1
+							&& priorOld <= doc.getOldDraftSentences().size()) {
+						tmpOld.add(priorOld);
+					}
+					if (priorNew != -1
+							&& priorNew <= doc.getNewDraftSentences().size()) {
+						tmpNew.add(priorNew);
+					}
+					String oldSent = extractOldSentence(doc, tmpOld);
+					String newSent = extractNewSentence(doc, tmpNew);
+					int LEN_SEN = features.getIndex("LEN_SEN_OLD" + tmp + i);
+					featureVector[LEN_SEN] = oldSent.length() * 1.0;
+					int LEN_SEN_NEW = features
+							.getIndex("LEN_SEN_NEW" + tmp + i);
+					featureVector[LEN_SEN_NEW] = newSent.length() * 1.0;
+					int LEN_SEN_DIFF = features.getIndex("LEN_SEN_DIFF" + tmp
+							+ i);
+					featureVector[LEN_SEN_DIFF] = 1.0 * (newSent.length() - oldSent
+							.length());
+				} else if (tmp.equals(tag2)) {
+					int postOld = getAfter(oldIndexes, windowSize);
+					int postNew = getAfter(newIndexes, windowSize);
+					ArrayList<Integer> tmpOld = new ArrayList<Integer>();
+					ArrayList<Integer> tmpNew = new ArrayList<Integer>();
+					if (postOld != -1
+							&& postOld <= doc.getOldDraftSentences().size()) {
+						tmpOld.add(postOld);
+					}
+					if (postNew != -1
+							&& postNew <= doc.getNewDraftSentences().size()) {
+						tmpNew.add(postNew);
+					}
+					String oldSent = extractOldSentence(doc, tmpOld);
+					String newSent = extractNewSentence(doc, tmpNew);
+					int LEN_SEN = features.getIndex("LEN_SEN_OLD" + tmp + i);
+					featureVector[LEN_SEN] = oldSent.length() * 1.0;
+					int LEN_SEN_NEW = features
+							.getIndex("LEN_SEN_NEW" + tmp + i);
+					featureVector[LEN_SEN_NEW] = newSent.length() * 1.0;
+					int LEN_SEN_DIFF = features.getIndex("LEN_SEN_DIFF" + tmp
+							+ i);
+					featureVector[LEN_SEN_DIFF] = 1.0 * (newSent.length() - oldSent
+							.length());
+				}
+			}
+		}
+	}
+
+	public void extractDaTextualFeaturePriorPost(HeatMapUnit hmu,
+			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc, int windowSize) {
+		// Notice the cosine here is not normalized
+		String tag = "_PRIOR_";
+		String tag2 = "_POST_";
+		ArrayList<Integer> newIndexes = new ArrayList<Integer>();
+		ArrayList<Integer> oldIndexes = new ArrayList<Integer>();
+		newIndexes.add(hmu.newIndex);
+		oldIndexes.add(hmu.oldIndex);
+		String[] tags = { tag, tag2 };
+		for (String tmp : tags) {
+			for (int i = 1; i <= windowSize; i++) {
+				if (tmp.equals(tag)) {
+					int priorOld = getBefore(oldIndexes, windowSize);
+					int priorNew = getBefore(newIndexes, windowSize);
+					ArrayList<Integer> tmpOld = new ArrayList<Integer>();
+					ArrayList<Integer> tmpNew = new ArrayList<Integer>();
+
+					if (priorOld != -1
+							&& priorOld <= doc.getOldDraftSentences().size()) {
+						tmpOld.add(priorOld);
+					}
+					if (priorNew != -1
+							&& priorNew <= doc.getNewDraftSentences().size()) {
+						tmpNew.add(priorNew);
+					}
+					String oldSent = extractOldSentence(doc, tmpOld);
+					String newSent = extractNewSentence(doc, tmpNew);
+
+					double cosineSim = OtherAssist.getCosine(oldSent, newSent);
+					int COSINE_SIM = features.getIndex("COSINE_SIM" + tmp + i);
+					featureVector[COSINE_SIM] = cosineSim * 1.0;
+				} else if (tmp.equals(tag2)) {
+					int postOld = getAfter(oldIndexes, windowSize);
+					int postNew = getAfter(newIndexes, windowSize);
+					ArrayList<Integer> tmpOld = new ArrayList<Integer>();
+					ArrayList<Integer> tmpNew = new ArrayList<Integer>();
+					if (postOld != -1
+							&& postOld <= doc.getOldDraftSentences().size()) {
+						tmpOld.add(postOld);
+					}
+					if (postNew != -1
+							&& postNew <= doc.getNewDraftSentences().size()) {
+						tmpNew.add(postNew);
+					}
+					String oldSent = extractOldSentence(doc, tmpOld);
+					String newSent = extractNewSentence(doc, tmpNew);
+					double cosineSim = OtherAssist.getCosine(oldSent, newSent);
+					int COSINE_SIM = features.getIndex("COSINE_SIM" + tmp + i);
+					featureVector[COSINE_SIM] = cosineSim * 1.0;
+				}
+			}
+		}
+	}
+
 }

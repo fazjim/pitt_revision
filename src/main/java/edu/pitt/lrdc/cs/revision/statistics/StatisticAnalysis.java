@@ -108,10 +108,10 @@ public class StatisticAnalysis {
 	}
 
 	public static void main(String[] args) throws Exception {
-		String path = "C:\\Not Backed Up\\data\\trainData";
+		String path = "C:\\Not Backed Up\\data\\naaclData\\C2";
 		//String path = "C:\\Not Backed Up\\data\\allNewData\\Fan\\kappa3\\jiaoyang";
-		printAllInfoCompleteUnique(RevisionDocumentReader.readDocs(path));
-		//countIES(path);
+		//printAllInfoCompleteUnique(RevisionDocumentReader.readDocs(path));
+		countIES(path);
 		// ArrayList<RevisionDocument> trainDocs = reader
 		// .readDocs("D:\\annotationTool\\annotated\\revisedClass3");
 		/*
@@ -318,8 +318,13 @@ public class StatisticAnalysis {
 			System.out.print(doc.getDocumentName() + "\t");
 			String realName = new File(doc.getDocumentName()).getName();
 			// realName = realName.replaceAll("Annotation_","");
+			if(realName.contains(" ")) {
 			realName = realName.substring(realName.indexOf("_") + 1,
 					realName.indexOf(" ")).trim();
+			} else {
+				realName = realName.substring(realName.indexOf("_") + 1,
+						realName.indexOf(".txt")).trim();
+			}
 			double[] distribution = new double[9];
 			double[] distribution2 = new double[3];
 			int total = 0;
@@ -329,7 +334,7 @@ public class StatisticAnalysis {
 			// Hashtable<String,Integer> surfaceRevMap = new Hashtable<String,
 			// Integer>();
 			for (RevisionUnit ru : rus) {
-				if (ru.getRevision_purpose() > RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT) {
+				if (ru.getRevision_purpose()!=RevisionPurpose.PRECISION && ru.getRevision_purpose() > RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT) {
 					distribution[ru.getRevision_purpose() - 1] += 1;
 					distribution2[ru.getRevision_op() - 1] += 1;
 					total += 1;
@@ -358,6 +363,7 @@ public class StatisticAnalysis {
 				int purpose = revPurposesMap.get(name);
 				String[] splits = name.split(":");
 				int op = Integer.parseInt(splits[0]);
+				if(purpose == RevisionPurpose.PRECISION) purpose = RevisionPurpose.WORDUSAGE_CLARITY;
 				distribution[purpose - 1] += 1;
 				distribution2[op - 1] += 1;
 				total += 1;

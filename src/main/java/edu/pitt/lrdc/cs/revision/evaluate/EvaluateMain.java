@@ -40,6 +40,7 @@ public class EvaluateMain {
 
 	public static void main(String[] args) throws Exception {
 		int option = CLASSIFY; // modify later to allow human input
+		//int option = SURFACECLASSIFY;
 		int evaluateMethod = 4;
 		// String trainPath = "D:/annotationTool/annotated/class3";
 		// String trainPath = "/Users/faz23/Desktop/34/annotated/allData";
@@ -62,9 +63,9 @@ public class EvaluateMain {
 		// RevisionDocumentReader.readDocs(anotherPath);
 
 		ArrayList<RevisionDocument> allData = new ArrayList<RevisionDocument>();
-		// allData.addAll(trainFolder);
+		 allData.addAll(testFolder);
 		// allData.addAll(testFolder);
-		allData.addAll(trainFolder);
+		//allData.addAll(trainFolder);
 		String resultPath = "dummy";
 		if (option == ALIGN) {
 			evaluateMethod = 2;// modify later to allow human input
@@ -95,9 +96,10 @@ public class EvaluateMain {
 			// highLevel);
 			// Open this for jumbo classification
 			// resultPath = "/Users/faz23/Desktop/34/annotated/allResults2";
-			crossValidateClassifyJumbo2(allData, folder, true, resultPath);
-			 //trainTestClassifyJumbo2(testFolder, trainFolder, true,
-			 //resultPath);
+			crossValidateClassifyJumbo(allData, folder, true, resultPath);
+			//crossValidateClassifyJumbo2(allData, folder, true, resultPath);
+			// trainTestClassifyJumbo2(trainFolder, testFolder, true,
+			// resultPath);
 		}
 	}
 
@@ -633,15 +635,15 @@ public class EvaluateMain {
 		experiments.add("Unigram");
 		options.add(-1);
 		experiments.add("All features");
-		options.add(10);
+		options.add(11);
 		// experiments.add("Language features");
 		// options.add(4);
 		experiments.add("Embedding features");
 		options.add(3);
 		experiments.add("Textual+unigram");
 		options.add(1);
-		experiments.add("PDTB+unigram");
-		options.add(2);
+		//experiments.add("PDTB+unigram");
+		//options.add(2);
 		experiments.add("Location+unigram");
 		options.add(0);
 		allAddRow(writers, experiments);
@@ -670,7 +672,7 @@ public class EvaluateMain {
 					Evaluation eval = rpc.classifyADRevisionPurpose(trainDocs,
 							testDocs, usingNgram, i, options.get(k));
 					resultRow.addExperiment(experiment);
-					resultRow.getResult(experiment).fromEvaluation(eval, 5);
+					resultRow.getResult(experiment).fromEvaluation(eval, 2);
 				}
 				results.add(resultRow);
 			}
@@ -771,11 +773,20 @@ public class EvaluateMain {
 			System.out
 					.println("*****************All features*******************");
 			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
-					usingNgram, 4);
+					usingNgram, 10);
 			experiment = "All features";
 			resultRow.addExperiment(experiment);
 			resultRow.getResult(experiment).fromEvaluation(eval, 2);
-			results.add(resultRow);
+			//results.add(resultRow);
+			
+			System.out
+			.println("*****************All features*******************");
+			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,
+			usingNgram, 11);
+			experiment = "All features (NEW)";
+			resultRow.addExperiment(experiment);
+			resultRow.getResult(experiment).fromEvaluation(eval, 2);
+			//results.add(resultRow);
 
 			System.out.println("*****************Majority*******************");
 			eval = rpc.classifyADRevisionPurpose(trainDocs, testDocs,

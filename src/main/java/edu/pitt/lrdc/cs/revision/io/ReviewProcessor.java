@@ -1,7 +1,9 @@
 package edu.pitt.lrdc.cs.revision.io;
 
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -9,8 +11,10 @@ import java.util.Hashtable;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jsoup.Jsoup;
 
 import java.util.Iterator;
+
 import edu.pitt.lrdc.cs.revision.model.ReviewDocument;
 import edu.pitt.lrdc.cs.revision.model.ReviewRevision;
 
@@ -49,6 +53,8 @@ public class ReviewProcessor {
 		ArrayList<ReviewRevision> reviews = revDoc.getReviews();
 
 		FileOutputStream fileOut = new FileOutputStream(path);
+		String txtPath = path + ".txt";
+		BufferedWriter writer = new BufferedWriter(new FileWriter(txtPath));
 		ArrayList<String> cols = new ArrayList<String>();
 		cols.add("Review No");
 		cols.add("Review Content");
@@ -76,11 +82,13 @@ public class ReviewProcessor {
 			row0.createCell(3).setCellValue(rev.getDocName());
 			row0.createCell(4).setCellValue(rev.getOldIndiceStr());
 			row0.createCell(5).setCellValue(rev.getNewIndiceStr());
+			writer.write(rev.getReviewStr()+"\n\n");
 		}
 
 		xwb.write(fileOut);
 		fileOut.flush();
 		fileOut.close();
+		writer.close();
 	}
 
 	public static Hashtable<String, Double[]> getValues(
@@ -121,6 +129,11 @@ public class ReviewProcessor {
 				"C:\\Not Backed UP\\data\\expert-grades-ies.xlsx");
 	}
 
+	
+	public static String html2text(String html) {
+	    return Jsoup.parse(html).text();
+	}
+	
 	// Only read in the implemented reviews
 	public static void processReviews(String path, String outputPath,
 			String valueXLSX) throws IOException {
@@ -135,7 +148,7 @@ public class ReviewProcessor {
 				XSSFRow row = sheet0.getRow(i);
 				String reviewNoStr = row.getCell(0).getRawValue();
 				String authorStr = row.getCell(1).getStringCellValue();
-				String reviewStr = row.getCell(5).getStringCellValue();
+				String reviewStr = html2text(row.getCell(5).getStringCellValue());
 				String compareStr = row.getCell(6).getStringCellValue();
 
 				ReviewDocument document;

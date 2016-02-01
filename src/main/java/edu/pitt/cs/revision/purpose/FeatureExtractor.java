@@ -3,6 +3,7 @@ package edu.pitt.cs.revision.purpose;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -67,7 +68,7 @@ public class FeatureExtractor {
 		String sentence = "";
 		if (oldIndexes != null) {
 			for (Integer oldIndex : oldIndexes) {
-				if (oldIndex != -1) {
+				if (oldIndex > 0) {
 					sentence += doc.getOldSentence(oldIndex);
 				}
 			}
@@ -92,7 +93,7 @@ public class FeatureExtractor {
 		String sentence = "";
 		if (newIndexes != null) {
 			for (Integer newIndex : newIndexes) {
-				if (newIndex != -1) {
+				if (newIndex > 0) {
 					sentence += doc.getNewSentence(newIndex);
 				}
 			}
@@ -308,6 +309,221 @@ public class FeatureExtractor {
 		features.insertFeature("LOC_WHOLE_DIFF", Double.TYPE);
 	}
 
+	public void insertLocationFeaturePriorPost(int windowSize) {
+		for (int i = 1; i <= windowSize; i++) {
+			String tag = "_PRIOR_" + i;
+			String tag2 = "_POST_" + i;
+			String[] tags = { tag, tag2 };
+			for (String tmp : tags) {
+				if (tmp.equals(tag)) {
+					features.insertFeature("LOC_ISFIRSTPAR_OLD" + tmp,
+							Boolean.TYPE);
+					features.insertFeature("LOC_ISFIRSTSEN_OLD" + tmp,
+							Boolean.TYPE);
+					features.insertFeature("LOC_ISFIRSTPAR_NEW" + tmp,
+							Boolean.TYPE);
+					features.insertFeature("LOC_ISFIRSTSEN_NEW" + tmp,
+							Boolean.TYPE);
+				} else if (tmp.equals(tag2)) {
+					features.insertFeature("LOC_ISLASTPARA_OLD" + tmp,
+							Boolean.TYPE);
+					features.insertFeature("LOC_ISLASTSEN_OLD" + tmp,
+							Boolean.TYPE);
+					features.insertFeature("LOC_ISLASTPARA_NEW" + tmp,
+							Boolean.TYPE);
+					features.insertFeature("LOC_ISLASTSEN_NEW" + tmp,
+							Boolean.TYPE);
+				}
+			}
+		}
+	}
+
+	public void extractLocFeaturePriorPost(RevisionDocument doc,
+			ArrayList<Integer> sentenceIndices,
+			ArrayList<Integer> oldSentIndices, int windowSize) {
+		// ru.getNewParagraphNo();
+		if (sentenceIndices != null) {
+			Collections.sort(sentenceIndices);
+		}
+		if (oldSentIndices != null) {
+			Collections.sort(oldSentIndices);
+		}
+		for (int i = 1; i <= windowSize; i++) {
+			String tag = "_PRIOR_" + i;
+			String tag2 = "_POST_" + i;
+			String[] tags = { tag, tag2 };
+			for (String tmp : tags) {
+				if (sentenceIndices.size() != 0) {
+					if (tmp.equals(tag)) {
+						int LOC_ISFIRSTPAR = features
+								.getIndex("LOC_ISFIRSTPAR_NEW" + tmp);
+						int LOC_ISFIRSTSEN = features
+								.getIndex("LOC_ISFIRSTSEN_NEW" + tmp);
+						int first = sentenceIndices.get(0) - i;
+						if (first > 0) {
+							int paragraphNo = doc.getParaNoOfNewSentence(first);
+							int start = doc.getFirstOfNewParagraph(paragraphNo);
+							if (paragraphNo == 1) {
+								featureVector[LOC_ISFIRSTPAR] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISFIRSTPAR] = Boolean
+										.toString(false);
+							}
+							if (first == start) {
+								featureVector[LOC_ISFIRSTSEN] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISFIRSTSEN] = Boolean
+										.toString(false);
+							}
+						} else {
+							featureVector[LOC_ISFIRSTPAR] = Boolean
+									.toString(false);
+							featureVector[LOC_ISFIRSTSEN] = Boolean
+									.toString(false);
+						}
+					} else if (tmp.equals(tag2)) {
+						int LOC_ISLASTPARA = features
+								.getIndex("LOC_ISLASTPARA_NEW" + tmp);
+						int LOC_ISLASTSEN = features
+								.getIndex("LOC_ISLASTSEN_NEW" + tmp);
+						int last = sentenceIndices
+								.get(sentenceIndices.size() - 1);
+						last = last + i;
+						if (last <= doc.getNewDraftSentences().size()) {
+							int lastParaNo = doc.getNewParagraphNum();
+							int paragraphNo = doc.getParaNoOfNewSentence(last);
+							int end = doc.getLastOfNewParagraph(paragraphNo);
+							if (paragraphNo == lastParaNo) {
+								featureVector[LOC_ISLASTPARA] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISLASTPARA] = Boolean
+										.toString(false);
+							}
+							if (last == end) {
+								featureVector[LOC_ISLASTSEN] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISLASTSEN] = Boolean
+										.toString(false);
+							}
+						} else {
+							featureVector[LOC_ISLASTPARA] = Boolean
+									.toString(false);
+							featureVector[LOC_ISLASTSEN] = Boolean
+									.toString(false);
+						}
+
+					} else {
+						// should not happen
+					}
+				} else {
+					if (tmp.equals(tag)) {
+						int LOC_ISFIRSTPAR = features
+								.getIndex("LOC_ISFIRSTPAR_NEW" + tmp);
+						int LOC_ISFIRSTSEN = features
+								.getIndex("LOC_ISFIRSTSEN_NEW" + tmp);
+						featureVector[LOC_ISFIRSTPAR] = Boolean.toString(false);
+						featureVector[LOC_ISFIRSTSEN] = Boolean.toString(false);
+					} else if (tmp.equals(tag2)) {
+						int LOC_ISLASTPARA = features
+								.getIndex("LOC_ISLASTPARA_NEW" + tmp);
+						int LOC_ISLASTSEN = features
+								.getIndex("LOC_ISLASTSEN_NEW" + tmp);
+						featureVector[LOC_ISLASTPARA] = Boolean.toString(false);
+						featureVector[LOC_ISLASTSEN] = Boolean.toString(false);
+					}
+				}
+
+				if (oldSentIndices.size() != 0) {
+					if (tmp.equals(tag)) {
+						int LOC_ISFIRSTPAR = features
+								.getIndex("LOC_ISFIRSTPAR_OLD" + tmp);
+						int LOC_ISFIRSTSEN = features
+								.getIndex("LOC_ISFIRSTSEN_OLD" + tmp);
+						int first = oldSentIndices.get(0) - i;
+						if (first > 0) {
+							int paragraphNo = doc.getParaNoOfOldSentence(first);
+							int start = doc.getFirstOfOldParagraph(paragraphNo);
+							if (paragraphNo == 1) {
+								featureVector[LOC_ISFIRSTPAR] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISFIRSTPAR] = Boolean
+										.toString(false);
+							}
+							if (first == start) {
+								featureVector[LOC_ISFIRSTSEN] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISFIRSTSEN] = Boolean
+										.toString(false);
+							}
+						} else {
+							featureVector[LOC_ISFIRSTPAR] = Boolean
+									.toString(false);
+							featureVector[LOC_ISFIRSTSEN] = Boolean
+									.toString(false);
+						}
+					} else if (tmp.equals(tag2)) {
+						int LOC_ISLASTPARA = features
+								.getIndex("LOC_ISLASTPARA_OLD" + tmp);
+						int LOC_ISLASTSEN = features
+								.getIndex("LOC_ISLASTSEN_OLD" + tmp);
+						int last = oldSentIndices
+								.get(oldSentIndices.size() - 1);
+						last = last + i;
+						if (last <= doc.getOldDraftSentences().size()) {
+							int lastParaNo = doc.getOldParagraphNum();
+							int paragraphNo = doc.getParaNoOfOldSentence(last);
+							int end = doc.getLastOfOldParagraph(paragraphNo);
+							if (paragraphNo == lastParaNo) {
+								featureVector[LOC_ISLASTPARA] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISLASTPARA] = Boolean
+										.toString(false);
+							}
+							if (last == end) {
+								featureVector[LOC_ISLASTSEN] = Boolean
+										.toString(true);
+							} else {
+								featureVector[LOC_ISLASTSEN] = Boolean
+										.toString(false);
+							}
+						} else {
+							featureVector[LOC_ISLASTPARA] = Boolean
+									.toString(false);
+							featureVector[LOC_ISLASTSEN] = Boolean
+									.toString(false);
+						}
+
+					} else {
+						// should not happen
+					}
+				} else {
+					if (tmp.equals(tag)) {
+						int LOC_ISFIRSTPAR = features
+								.getIndex("LOC_ISFIRSTPAR_OLD" + tmp);
+						int LOC_ISFIRSTSEN = features
+								.getIndex("LOC_ISFIRSTSEN_OLD" + tmp);
+						featureVector[LOC_ISFIRSTPAR] = Boolean.toString(false);
+						featureVector[LOC_ISFIRSTSEN] = Boolean.toString(false);
+					} else if (tmp.equals(tag2)) {
+						int LOC_ISLASTPARA = features
+								.getIndex("LOC_ISLASTPARA_OLD" + tmp);
+						int LOC_ISLASTSEN = features
+								.getIndex("LOC_ISLASTSEN_OLD" + tmp);
+						featureVector[LOC_ISLASTPARA] = Boolean.toString(false);
+						featureVector[LOC_ISLASTSEN] = Boolean.toString(false);
+					}
+				}
+			}
+		}
+	}
+
 	public void extractLocFeature(RevisionDocument doc,
 			ArrayList<Integer> sentenceIndices,
 			ArrayList<Integer> oldSentIndices) {
@@ -443,6 +659,11 @@ public class FeatureExtractor {
 		features.insertFeature("HAS_LOC_NEW", Boolean.TYPE);
 		features.insertFeature("DIFF_NER", Double.TYPE);
 		features.insertFeature("DIFF_LOC", Double.TYPE);
+	}
+
+	public void insertPriorPostFeatures(int windowSize) {
+		insertLocationFeaturePriorPost(windowSize);
+		insertTextGroupPriorPost(windowSize);
 	}
 
 	public void extractNERFeature(RevisionDocument doc,
@@ -1296,6 +1517,61 @@ public class FeatureExtractor {
 		// insertOverlapFeature();
 	}
 
+	public void insertTextGroupPriorPost(int windowSize) {
+		// insertOpPriorPost(windowSize);
+		insertLenFeaturePriorPost(windowSize);
+		insertDaTextualFeaturePriorPost(windowSize);
+	}
+
+	public void insertDaTextualFeaturePriorPost(int windowSize) {
+		String tag = "_PRIOR_";
+		String tag2 = "_POST_";
+		String[] tags = { tag, tag2 };
+		for (String tmp : tags) {
+			for (int i = 1; i <= windowSize; i++) {
+				features.insertFeature("COSINE_SIM" + tmp + i, Double.TYPE);
+			}
+		}
+	}
+
+	public void insertOpPriorPost(int windowSize) {
+		String tag = "_PRIOR_";
+		String tag2 = "_POST_";
+		String[] tags = { tag, tag2 };
+		for (String tmp : tags) {
+			for (int i = 1; i <= windowSize; i++) {
+				features.insertFeature("REVISION_OP" + tmp + i, Double.class);
+			}
+		}
+	}
+
+	public void insertLenFeaturePriorPost(int windowSize) {
+		String tag = "_PRIOR_";
+		String tag2 = "_POST_";
+		String[] tags = { tag, tag2 };
+		for (String tmp : tags) {
+			for (int i = 1; i <= windowSize; i++) {
+				features.insertFeature("LEN_SEN_OLD" + tmp + i, Double.TYPE);
+				features.insertFeature("LEN_SEN_NEW" + tmp + i, Double.TYPE);
+				features.insertFeature("LEN_SEN_DIFF" + tmp + i, Double.TYPE);
+			}
+		}
+	}
+
+	public int getBefore(ArrayList<Integer> indices, int windowSize) {
+		if (indices == null || indices.size() == 0)
+			return -1;
+		Collections.sort(indices);
+		return indices.get(0) - 1;
+	}
+
+	public int getAfter(ArrayList<Integer> indices, int windowSize) {
+		if (indices == null || indices.size() == 0)
+			return -1;
+		Collections.sort(indices);
+		return indices.get(indices.size() - 1) + 1;
+	}
+
 	public void extractTextGroup(RevisionDocument doc, RevisionUnit ru) {
 		extractClaimKeywords(doc, ru);
 		extractEvidenceKeywords(doc, ru);
@@ -1307,6 +1583,130 @@ public class FeatureExtractor {
 		extractDaTextualFeature(doc, ru);
 		// extractNERFeature(doc, ru);
 		// extractOverlapFeature(doc, ru);
+	}
+
+	public void extractTextGroupPriorPost(int windowSize, RevisionDocument doc,
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes) {
+		// extractOpFeaturesPriorPost(windowSize, doc, newIndexes, oldIndexes);
+		extractLENFeaturePriorPost(windowSize, doc, newIndexes, oldIndexes);
+		extractDaTextualFeaturePriorPost(windowSize, doc, newIndexes,
+				oldIndexes);
+		// extractNERFeature(doc, ru);
+		// extractOverlapFeature(doc, ru);
+	}
+
+	public void extractLENFeaturePriorPost(int windowSize,
+			RevisionDocument doc, ArrayList<Integer> newIndexes,
+			ArrayList<Integer> oldIndexes) {
+
+		String tag = "_PRIOR_";
+		String tag2 = "_POST_";
+		String[] tags = { tag, tag2 };
+		for (String tmp : tags) {
+			for (int i = 1; i <= windowSize; i++) {
+				if (tmp.equals(tag)) {
+					int priorOld = getBefore(oldIndexes, windowSize);
+					int priorNew = getBefore(newIndexes, windowSize);
+					ArrayList<Integer> tmpOld = new ArrayList<Integer>();
+					ArrayList<Integer> tmpNew = new ArrayList<Integer>();
+					if (priorOld != -1
+							&& priorOld <= doc.getOldDraftSentences().size()) {
+						tmpOld.add(priorOld);
+					}
+					if (priorNew != -1
+							&& priorNew <= doc.getNewDraftSentences().size()) {
+						tmpNew.add(priorNew);
+					}
+					String oldSent = extractOldSentence(doc, tmpOld);
+					String newSent = extractNewSentence(doc, tmpNew);
+					int LEN_SEN = features.getIndex("LEN_SEN_OLD" + tmp + i);
+					featureVector[LEN_SEN] = oldSent.length() * 1.0;
+					int LEN_SEN_NEW = features
+							.getIndex("LEN_SEN_NEW" + tmp + i);
+					featureVector[LEN_SEN_NEW] = newSent.length() * 1.0;
+					int LEN_SEN_DIFF = features.getIndex("LEN_SEN_DIFF" + tmp
+							+ i);
+					featureVector[LEN_SEN_DIFF] = 1.0 * (newSent.length() - oldSent
+							.length());
+				} else if (tmp.equals(tag2)) {
+					int postOld = getAfter(oldIndexes, windowSize);
+					int postNew = getAfter(newIndexes, windowSize);
+					ArrayList<Integer> tmpOld = new ArrayList<Integer>();
+					ArrayList<Integer> tmpNew = new ArrayList<Integer>();
+					if (postOld != -1
+							&& postOld <= doc.getOldDraftSentences().size()) {
+						tmpOld.add(postOld);
+					}
+					if (postNew != -1
+							&& postNew <= doc.getNewDraftSentences().size()) {
+						tmpNew.add(postNew);
+					}
+					String oldSent = extractOldSentence(doc, tmpOld);
+					String newSent = extractNewSentence(doc, tmpNew);
+					int LEN_SEN = features.getIndex("LEN_SEN_OLD" + tmp + i);
+					featureVector[LEN_SEN] = oldSent.length() * 1.0;
+					int LEN_SEN_NEW = features
+							.getIndex("LEN_SEN_NEW" + tmp + i);
+					featureVector[LEN_SEN_NEW] = newSent.length() * 1.0;
+					int LEN_SEN_DIFF = features.getIndex("LEN_SEN_DIFF" + tmp
+							+ i);
+					featureVector[LEN_SEN_DIFF] = 1.0 * (newSent.length() - oldSent
+							.length());
+				}
+			}
+		}
+	}
+
+	public void extractDaTextualFeaturePriorPost(int windowSize,
+			RevisionDocument doc, ArrayList<Integer> newIndexes,
+			ArrayList<Integer> oldIndexes) {
+		// Notice the cosine here is not normalized
+		String tag = "_PRIOR_";
+		String tag2 = "_POST_";
+		String[] tags = { tag, tag2 };
+		for (String tmp : tags) {
+			for (int i = 1; i <= windowSize; i++) {
+				if (tmp.equals(tag)) {
+					int priorOld = getBefore(oldIndexes, windowSize);
+					int priorNew = getBefore(newIndexes, windowSize);
+					ArrayList<Integer> tmpOld = new ArrayList<Integer>();
+					ArrayList<Integer> tmpNew = new ArrayList<Integer>();
+
+					if (priorOld != -1
+							&& priorOld <= doc.getOldDraftSentences().size()) {
+						tmpOld.add(priorOld);
+					}
+					if (priorNew != -1
+							&& priorNew <= doc.getNewDraftSentences().size()) {
+						tmpNew.add(priorNew);
+					}
+					String oldSent = extractOldSentence(doc, tmpOld);
+					String newSent = extractNewSentence(doc, tmpNew);
+
+					double cosineSim = OtherAssist.getCosine(oldSent, newSent);
+					int COSINE_SIM = features.getIndex("COSINE_SIM" + tmp + i);
+					featureVector[COSINE_SIM] = cosineSim * 1.0;
+				} else if (tmp.equals(tag2)) {
+					int postOld = getAfter(oldIndexes, windowSize);
+					int postNew = getAfter(newIndexes, windowSize);
+					ArrayList<Integer> tmpOld = new ArrayList<Integer>();
+					ArrayList<Integer> tmpNew = new ArrayList<Integer>();
+					if (postOld != -1
+							&& postOld <= doc.getOldDraftSentences().size()) {
+						tmpOld.add(postOld);
+					}
+					if (postNew != -1
+							&& postNew <= doc.getNewDraftSentences().size()) {
+						tmpNew.add(postNew);
+					}
+					String oldSent = extractOldSentence(doc, tmpOld);
+					String newSent = extractNewSentence(doc, tmpNew);
+					double cosineSim = OtherAssist.getCosine(oldSent, newSent);
+					int COSINE_SIM = features.getIndex("COSINE_SIM" + tmp + i);
+					featureVector[COSINE_SIM] = cosineSim * 1.0;
+				}
+			}
+		}
 	}
 
 	public void extractTextGroup(RevisionDocument doc,
@@ -1495,7 +1895,7 @@ public class FeatureExtractor {
 
 	}
 
-	boolean isOnline = false;
+	boolean isOnline = true;
 
 	public void setOnline(boolean isOnline) {
 		this.isOnline = isOnline;
@@ -1527,6 +1927,21 @@ public class FeatureExtractor {
 		}
 	}
 
+	public void extractFeaturesPriorPost(RevisionDocument doc, RevisionUnit ru,
+			int windowSize) {
+		extractLocFeaturePriorPost(doc, ru.getNewSentenceIndex(),
+				ru.getOldSentenceIndex(), windowSize);
+		extractTextGroupPriorPost(windowSize, doc, ru.getNewSentenceIndex(),
+				ru.getOldSentenceIndex());
+	}
+
+	public void extractFeaturesPriorPost(RevisionDocument doc,
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes,
+			int windowSize) {
+		extractLocFeaturePriorPost(doc, newIndexes, oldIndexes, windowSize);
+		extractTextGroupPriorPost(windowSize, doc, newIndexes, oldIndexes);
+	}
+
 	// extract features
 	public Object[] extractFeatures(RevisionDocument doc, RevisionUnit ru,
 			boolean usingNgram) throws IOException {
@@ -1553,7 +1968,6 @@ public class FeatureExtractor {
 		return featureVector;
 	}
 
-	
 	public Object[] extractFeatures(RevisionDocument doc,
 			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes,
 			boolean usingNgram) throws IOException {
@@ -1571,17 +1985,17 @@ public class FeatureExtractor {
 		// PDTBFeatureExtractor.getInstance().extractFeature(features,
 		// featureVector, doc, newIndexes, oldIndexes);
 		if (!isOnline) {
-			
+
 			SentenceEmbeddingFeatureExtractor.getInstance().extractCohesion(
 					features, featureVector, doc, newIndexes, oldIndexes);
-			
+
 			extractLanguageGroup(doc, newIndexes, oldIndexes);
 			// extractOtherGroup(doc, ru);
 			PDTBFeatureExtractor.getInstance().extractFeature(features,
 					featureVector, doc, newIndexes, oldIndexes);
 			PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
 					featureVector, doc, newIndexes, oldIndexes);
-			
+
 		}
 		return featureVector;
 		// String sentence = extractSentence(doc, ru);
@@ -1601,7 +2015,7 @@ public class FeatureExtractor {
 		// extractComplexPOSFeatures(sentence);
 		// extractKeywordOverlap(sentence, extractTopKeywords(doc));
 	}
-	
+
 	public Object[] extractFeatures(RevisionDocument doc,
 			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes,
 			boolean usingNgram, int option) throws IOException {
@@ -1619,18 +2033,22 @@ public class FeatureExtractor {
 		// PDTBFeatureExtractor.getInstance().extractFeature(features,
 		// featureVector, doc, newIndexes, oldIndexes);
 		if (!isOnline) {
-			if(option == 3) {
-			SentenceEmbeddingFeatureExtractor.getInstance().extractCohesion(
-					features, featureVector, doc, newIndexes, oldIndexes);
+			if (option == 3 || option == 10) {
+				SentenceEmbeddingFeatureExtractor.getInstance()
+						.extractCohesion(features, featureVector, doc,
+								newIndexes, oldIndexes);
 			}
 			extractLanguageGroup(doc, newIndexes, oldIndexes);
 			// extractOtherGroup(doc, ru);
-			if(option == 2) {
-			PDTBFeatureExtractor.getInstance().extractFeature(features,
-					featureVector, doc, newIndexes, oldIndexes);
-			PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
-					featureVector, doc, newIndexes, oldIndexes);
+			if (option == 2 || option == 10) {
+				PDTBFeatureExtractor.getInstance().extractFeature(features,
+						featureVector, doc, newIndexes, oldIndexes);
+				PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(
+						features, featureVector, doc, newIndexes, oldIndexes);
 			}
+		}
+		if (option == 4 || option == 10 || option == 11 || option == 2 || option == 3) {
+			extractFeaturesPriorPost(doc, newIndexes, oldIndexes, 1);
 		}
 		return featureVector;
 		// String sentence = extractSentence(doc, ru);
@@ -1660,25 +2078,30 @@ public class FeatureExtractor {
 			insertText(); // Text always start from the first
 		if (remove == -1)
 			return;
-		if (remove == 0 || remove == 10 || remove == 11 || remove == 2||remove == 3) 
+		if (remove == 0 || remove == 10 || remove == 11 || remove == 2
+				|| remove == 3)
 			insertLocGroup();
-		if (remove == 1 || remove == 10 || remove == 11 || remove == 2||remove == 3)
+		if (remove == 1 || remove == 10 || remove == 11 || remove == 2
+				|| remove == 3)
 			insertTextGroup();
 		if (remove == 2 || remove == 10) {
-			//PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
-			PDTBFeatureExtractor.getInstance().insertFeature(features);
+			// PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
+			//PDTBFeatureExtractor.getInstance().insertFeature(features);
 		}
 		if (remove == 3 || remove == 10) {
 			// insertMetaGroup();
 			SentenceEmbeddingFeatureExtractor.getInstance().insertCohesion(
 					features);
 			SentenceEmbeddingFeatureExtractor.getInstance().insertFeature(
-			features);
+					features);
+		}
+		if (remove == 4 || remove == 10 || remove == 2 ) {
+			insertPriorPostFeatures(1);
 		}
 	}
-		
-	public void buildFeaturesCRF(boolean usingNgram, ArrayList<String> categories,
-			int remove) throws IOException {
+
+	public void buildFeaturesCRF(boolean usingNgram,
+			ArrayList<String> categories, int remove) throws IOException {
 		features = new FeatureName();
 		insertCategory(categories);
 		System.out.println("=======================REMOVE IS:" + remove);
@@ -1691,8 +2114,8 @@ public class FeatureExtractor {
 		if (remove == 1 || remove == 10 || remove == 11)
 			insertTextGroup();
 		if (remove == 2 || remove == 10) {
-			//PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
-			PDTBFeatureExtractor.getInstance().insertFeature(features);
+			// PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
+			//PDTBFeatureExtractor.getInstance().insertFeature(features);
 		}
 		if (remove == 3 || remove == 10) {
 			// insertMetaGroup();
@@ -1701,9 +2124,10 @@ public class FeatureExtractor {
 			SentenceEmbeddingFeatureExtractor.getInstance().insertCohesion(
 					features);
 		}
-		if (remove == 4 || remove == 10 || remove == 11 || remove == 3
-				|| remove == 2)
-			insertLanguageGroup();
+		if (remove == 4 || remove == 10 || remove == 2) {
+			insertPriorPostFeatures(1);
+		}
+		// insertLanguageGroup();
 		// insertOtherGroup();
 		// insertLocationFeature();
 		// insertNERFeature();
@@ -1737,12 +2161,12 @@ public class FeatureExtractor {
 			extractTextGroup(doc, ru);
 		if (remove == 2 || remove == 10) {
 			// extractLanguageGroup(doc, ru);
-			PDTBFeatureExtractor.getInstance().extractFeature(features,
-					featureVector, doc, ru.getNewSentenceIndex(),
-					ru.getOldSentenceIndex());
-			//PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
+			//PDTBFeatureExtractor.getInstance().extractFeature(features,
 			//		featureVector, doc, ru.getNewSentenceIndex(),
 			//		ru.getOldSentenceIndex());
+			// PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
+			// featureVector, doc, ru.getNewSentenceIndex(),
+			// ru.getOldSentenceIndex());
 		}
 		if (remove == 3 || remove == 10)
 			// extractMetaGroup(doc, ru);
@@ -1753,9 +2177,12 @@ public class FeatureExtractor {
 					features, featureVector, doc, ru.getNewSentenceIndex(),
 					ru.getOldSentenceIndex());
 		// extractOtherGroup(doc, ru);
-		if (remove == 4 || remove == 10 || remove == 11 || remove == 3
-				|| remove == 2)
-			extractLanguageGroup(doc, ru);
+		if (remove == 4 || remove == 10 
+				|| remove == 2) {
+			// extractLanguageGroup(doc, ru);
+			extractFeaturesPriorPost(doc, ru.getNewSentenceIndex(),
+					ru.getOldSentenceIndex(), 1);
+		}
 		return featureVector;
 		// String sentence = extractSentence(doc, ru);
 		// if (usingNgram)

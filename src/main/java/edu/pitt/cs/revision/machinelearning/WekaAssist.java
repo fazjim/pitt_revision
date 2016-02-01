@@ -115,32 +115,38 @@ public class WekaAssist {
 		double[] vals = new double[insts.numAttributes()];
 		int startIndex = 0;
 		vals[0] = insts.attribute(0).indexOfValue(cat);
-
-		for (int i = startIndex; i < features.length; i++) {
-			if (featureTable.getType(i).equals(String.class)) {
-				vals[i + 1] = insts.attribute(i + 1).addStringValue(
-						(String) features[i]);
-			} else if (featureTable.getType(i).equals(Boolean.TYPE)) {
-				String name = featureTable.getFeatureName(i);
-				// System.out.println(features[i]);
-				vals[i + 1] = 1.0 * insts.attribute(name).indexOfValue(
-						(String) features[i]);
-			} else if (featureTable.getType(i).equals(ArrayList.class)) {
-				String name = featureTable.getFeatureName(i);
-				vals[i + 1] = 1.0 * insts.attribute(name).indexOfValue(
-						(String) features[i]);
-			} else {
-				// System.out.println(featureTable.getFeatureName(i));
-				// System.out.println(featureTable.getType(i).toString());
-				if(features[i]!=null)
-				vals[i + 1] = (Double) features[i];
+		int recorder = 0;
+		try {
+			for (int i = startIndex; i < features.length; i++) {
+				recorder = i;
+				if (featureTable.getType(i).equals(String.class)) {
+					vals[i + 1] = insts.attribute(i + 1).addStringValue(
+							(String) features[i]);
+				} else if (featureTable.getType(i).equals(Boolean.TYPE)) {
+					String name = featureTable.getFeatureName(i);
+					// System.out.println(features[i]);
+					vals[i + 1] = 1.0 * insts.attribute(name).indexOfValue(
+							(String) features[i]);
+				} else if (featureTable.getType(i).equals(ArrayList.class)) {
+					String name = featureTable.getFeatureName(i);
+					vals[i + 1] = 1.0 * insts.attribute(name).indexOfValue(
+							(String) features[i]);
+				} else {
+					// System.out.println(featureTable.getFeatureName(i));
+					// System.out.println(featureTable.getType(i).toString());
+					if (features[i] != null)
+						vals[i + 1] = (Double) features[i];
+				}
 			}
+			vals[vals.length - 1] = insts.attribute(vals.length - 1)
+					.addStringValue(ID);
+
+			Instance instance = new DenseInstance(1.0, vals);
+			insts.add(instance);
+		} catch (Exception exp) {
+			System.err.println("Having problem with: " + featureTable.getFeatureName(recorder));
+			throw exp;
 		}
-		vals[vals.length - 1] = insts.attribute(vals.length - 1)
-				.addStringValue(ID);
-	
-		Instance instance = new DenseInstance(1.0, vals);
-		insts.add(instance);
 	}
 
 	public void addInstance(Instances insts, Object[] features,
@@ -187,8 +193,8 @@ public class WekaAssist {
 	public Instances[] addNgram(Instances train, Instances test)
 			throws Exception {
 		StringVectorWrapper ngramWrapper = new StringVectorWrapper();
-		System.err.println("Train is null:"+(train==null));
-		System.err.println("Test is null:"+(test==null));
+		System.err.println("Train is null:" + (train == null));
+		System.err.println("Test is null:" + (test == null));
 		InstancesPair p = ngramWrapper.applyStringVectorFilter(train, "Text",
 				"TEXTDIFF", test);
 		Instances[] ins = new Instances[2];
@@ -392,7 +398,7 @@ public class WekaAssist {
 		 * // new IBk(), // new IBk(3), // new IBk(5), // new NaiveBayes(), //
 		 * new J48(), new SMO(), // newVote(), // new R1() };
 		 */
-		//Classifier classifier = new RandomForest();
+		// Classifier classifier = new RandomForest();
 		Classifier classifier = new SMO();
 		classifier = setTagFilter(classifier, trainSet);
 		if (autoBalance) {
@@ -430,15 +436,14 @@ public class WekaAssist {
 	public static Evaluation majorityTrainTest(Instances trainset,
 			Instances testset) throws Exception {
 		Classifier classifier = new ZeroR();
-		/*CostSensitiveClassifier csc = new CostSensitiveClassifier();
-		csc.setClassifier(classifier);
-		double w = getWeight(trainset);
-		System.out.println("Weight:" + w);
-		CostMatrix newCostMatrix = new CostMatrix(2);
-		newCostMatrix.setCell(0, 1, w);
-		newCostMatrix.setCell(1, 0, 1.0);
-		csc.setCostMatrix(newCostMatrix);
-		classifier = csc;*/
+		/*
+		 * CostSensitiveClassifier csc = new CostSensitiveClassifier();
+		 * csc.setClassifier(classifier); double w = getWeight(trainset);
+		 * System.out.println("Weight:" + w); CostMatrix newCostMatrix = new
+		 * CostMatrix(2); newCostMatrix.setCell(0, 1, w);
+		 * newCostMatrix.setCell(1, 0, 1.0); csc.setCostMatrix(newCostMatrix);
+		 * classifier = csc;
+		 */
 		// -----end of balancing------------//
 		classifier = setTagFilter(classifier, trainset);
 		classifier.buildClassifier(trainset);
@@ -451,15 +456,15 @@ public class WekaAssist {
 	public static Evaluation crossTrainTest(Instances trainset,
 			Instances testset, String name) throws Exception {
 		Classifier classifier = null;
-		if(name.equals("RF")) {
+		if (name.equals("RF")) {
 			classifier = new RandomForest();
-		} else if(name.equals("DT")) {
+		} else if (name.equals("DT")) {
 			classifier = new J48();
-		} else if(name.equals("SVM")) {
-			//classifier = new LibLINEAR();
+		} else if (name.equals("SVM")) {
+			// classifier = new LibLINEAR();
 			classifier = new SMO();
 		}
-		
+
 		boolean sample = false;
 		if (sample == true) {
 			CostSensitiveClassifier csc = new CostSensitiveClassifier();
@@ -479,10 +484,10 @@ public class WekaAssist {
 		Evaluation eval = new Evaluation(trainset);
 		eval.evaluateModel(classifier, testset);
 		WekaAssist.printResult(eval);
-		//detailedErrorAnalysis(eval, classifier, testset);
+		// detailedErrorAnalysis(eval, classifier, testset);
 		return eval;
 	}
-	
+
 	public static Evaluation crossTrainTest(Instances trainset,
 			Instances testset) throws Exception {
 		Classifier classifier = new RandomForest();
@@ -539,42 +544,44 @@ public class WekaAssist {
 			throws Exception {
 		AttributeSelection filter = new AttributeSelection(); // package
 																// weka.filters.supervised.attribute!
-		//CfsSubsetEval eval = new CfsSubsetEval();
+		// CfsSubsetEval eval = new CfsSubsetEval();
 		GainRatioAttributeEval eval = new GainRatioAttributeEval();
-		//InfoGainAttributeEval eval = new InfoGainAttributeEval();
-		//GreedyStepwise search = new GreedyStepwise();
-		//search.setSearchBackwards(true);
-		//BestFirst search = new BestFirst();
+		// InfoGainAttributeEval eval = new InfoGainAttributeEval();
+		// GreedyStepwise search = new GreedyStepwise();
+		// search.setSearchBackwards(true);
+		// BestFirst search = new BestFirst();
 		Ranker search = new Ranker();
-		
+
 		search.setNumToSelect(300);
 		filter.setEvaluator(eval);
 		filter.setSearch(search);
 		filter.setInputFormat(train); // initializing the filter once with
 										// training set
 		System.out.println("Selecting features...");
-		if(train==null) System.err.println("NULLLLLLLLLLLLLL");
+		if (train == null)
+			System.err.println("NULLLLLLLLLLLLLL");
 		Instances newTrain = Filter.useFilter(train, filter);
 		System.out.println("Training loaded");
 		Instances newTest = Filter.useFilter(test, filter);
 		Instances[] newData = new Instances[2];
 		newData[0] = newTrain;
 		newData[1] = newTest;
-		System.out.println("Dataset features filtered from "+train.numAttributes()+"features to "+ newTrain.numAttributes());
+		System.out.println("Dataset features filtered from "
+				+ train.numAttributes() + "features to "
+				+ newTrain.numAttributes());
 		return newData;
 	}
-	
-	public static Instances selectFeatures(Instances train)
-			throws Exception {
+
+	public static Instances selectFeatures(Instances train) throws Exception {
 		AttributeSelection filter = new AttributeSelection(); // package
 																// weka.filters.supervised.attribute!
-		//CfsSubsetEval eval = new CfsSubsetEval();
+		// CfsSubsetEval eval = new CfsSubsetEval();
 		InfoGainAttributeEval eval = new InfoGainAttributeEval();
-		//GreedyStepwise search = new GreedyStepwise();
-		//search.setSearchBackwards(true);
-		//BestFirst search = new BestFirst();
+		// GreedyStepwise search = new GreedyStepwise();
+		// search.setSearchBackwards(true);
+		// BestFirst search = new BestFirst();
 		Ranker search = new Ranker();
-		
+
 		search.setNumToSelect(20);
 		filter.setEvaluator(eval);
 		filter.setSearch(search);
@@ -584,7 +591,7 @@ public class WekaAssist {
 		Instances newTrain = Filter.useFilter(train, filter);
 		return newTrain;
 	}
-	
+
 	public static Instances removeID(Instances inst) throws Exception {
 		Remove rm = new Remove();
 		int index = inst.attribute("ID").index();
@@ -622,7 +629,7 @@ public class WekaAssist {
 			csc.setCostMatrix(newCostMatrix);
 			classifier = csc;
 			// -----end of balancing------------//
-			//classifier = setTagFilter(classifier, trainset);
+			// classifier = setTagFilter(classifier, trainset);
 			trainset = removeID(trainset);
 			testset = removeID(testset);
 			classifier.buildClassifier(trainset);
@@ -646,8 +653,6 @@ public class WekaAssist {
 
 		trainTest(trainset, testset, test);
 	}
-
-	
 
 	public static Instances performPCA(Instances dataset, int k)
 			throws Exception {
@@ -681,18 +686,18 @@ public class WekaAssist {
 	 */
 	public static Classifier setTagFilter(Classifier classifier,
 			Instances dataset) {
-		if(dataset.attribute("ID")!=null) {
-		FilteredClassifier fc = new FilteredClassifier();
-		int index = dataset.attribute("ID").index();
-		Remove rm = new Remove();
-		int[] indices = new int[1];
-		indices[0] = index;
-		rm.setAttributeIndicesArray(indices);
-		// rm.setAttributeIndices(Integer.toString(index));
-		fc.setClassifier(classifier);
-		fc.setFilter(rm);
-		return fc;
-		} 
+		if (dataset.attribute("ID") != null) {
+			FilteredClassifier fc = new FilteredClassifier();
+			int index = dataset.attribute("ID").index();
+			Remove rm = new Remove();
+			int[] indices = new int[1];
+			indices[0] = index;
+			rm.setAttributeIndicesArray(indices);
+			// rm.setAttributeIndices(Integer.toString(index));
+			fc.setClassifier(classifier);
+			fc.setFilter(rm);
+			return fc;
+		}
 		return classifier;
 	}
 

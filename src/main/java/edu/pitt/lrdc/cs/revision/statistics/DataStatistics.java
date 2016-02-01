@@ -13,7 +13,11 @@ import edu.pitt.lrdc.cs.revision.model.RevisionUnit;
 
 public class DataStatistics {
 	public static void stat(ArrayList<RevisionDocument> docs) {
+		double oldAverageSent = 0;
+		double newAverageSent = 0;
 		for (RevisionDocument doc : docs) {
+			oldAverageSent += doc.getOldDraftSentences().size();
+			newAverageSent += doc.getNewDraftSentences().size();
 			ArrayList<RevisionDocument> tmp = new ArrayList<RevisionDocument>();
 			tmp.add(doc);
 			System.out.println(doc.getDocumentName());
@@ -27,10 +31,16 @@ public class DataStatistics {
 		System.out.println("=============All Categories==============");
 		statEditTypes(docs);
 		System.out
+		.println("=============Operations and Categories=============");
+		statAllTypes(docs);
+		System.out
 				.println("=============Operations and Categories=============");
 		statAllTypesMerge(docs);
 		System.out.println("=============Multi revisions=================");
 		statMultiRevisions(docs);
+		
+		System.out.println("OLD:"+oldAverageSent/docs.size());
+		System.out.println("NEW:"+newAverageSent/docs.size());
 	}
 
 	public static String generateIndiceStr(RevisionUnit ru) {
