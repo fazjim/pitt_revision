@@ -22,4 +22,8 @@ public class ReviewTarget {
 	public void setEnd(int end) {
 		this.end = end;
 	}
+	
+	public String toString() {
+		return content;
+	}
 }

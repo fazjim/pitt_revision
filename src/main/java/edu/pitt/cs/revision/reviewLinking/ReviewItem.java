@@ -9,6 +9,15 @@ public class ReviewItem {
 	private String content;
 	private List<ReviewTarget> targets;
 	private List<ReviewSolution> solutions;
+	private String type;
+	
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
 
 	public ReviewItem () {
 		targets = new ArrayList<ReviewTarget>();
@@ -53,5 +62,24 @@ public class ReviewItem {
 
 	public void setSolutions(List<ReviewSolution> solutions) {
 		this.solutions = solutions;
+	}
+	
+	public void addTarget(ReviewTarget target) {
+		this.targets.add(target);
+	}
+	
+	public void addSolution(ReviewSolution solution) {
+		this.solutions.add(solution);
+	}
+	
+	public String toString() {
+		String str = "Review Content:"+this.content+"\n";
+		for(ReviewTarget target: targets) {
+			str += "Review Target:"+target.toString()+"\n";
+		}
+		for(ReviewSolution solution: solutions) {
+			str+= "Review Solution:"+solution.toString()+"\n";
+		}
+		return str;
 	}
 }
