@@ -10,6 +10,10 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.PriorityQueue;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
 import edu.pitt.cs.revision.batch.BatchFeatureReader;
 import edu.pitt.cs.revision.batch.BatchFeatureWriter;
 import edu.pitt.cs.revision.batch.InfoStore;
@@ -2047,7 +2051,8 @@ public class FeatureExtractor {
 						features, featureVector, doc, newIndexes, oldIndexes);
 			}
 		}
-		if (option == 4 || option == 10 || option == 11 || option == 2 || option == 3) {
+		if (option == 4 || option == 10 || option == 11 || option == 2
+				|| option == 3) {
 			extractFeaturesPriorPost(doc, newIndexes, oldIndexes, 1);
 		}
 		return featureVector;
@@ -2070,7 +2075,8 @@ public class FeatureExtractor {
 	}
 
 	public void buildFeatures(boolean usingNgram, ArrayList<String> categories,
-			int remove) throws IOException {
+			int remove) throws IOException, ParserConfigurationException,
+			SAXException {
 		features = new FeatureName();
 		insertCategory(categories);
 		System.out.println("=======================REMOVE IS:" + remove);
@@ -2086,7 +2092,7 @@ public class FeatureExtractor {
 			insertTextGroup();
 		if (remove == 2 || remove == 10) {
 			// PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
-			//PDTBFeatureExtractor.getInstance().insertFeature(features);
+			// PDTBFeatureExtractor.getInstance().insertFeature(features);
 		}
 		if (remove == 3 || remove == 10) {
 			// insertMetaGroup();
@@ -2095,13 +2101,19 @@ public class FeatureExtractor {
 			SentenceEmbeddingFeatureExtractor.getInstance().insertFeature(
 					features);
 		}
-		if (remove == 4 || remove == 10 || remove == 2 ) {
+		if (remove == 4 || remove == 10 || remove == 2) {
 			insertPriorPostFeatures(1);
+		}
+		if (remove == 5 || remove == 10) {
+			// PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
+			// PDTBFeatureExtractor.getInstance().insertFeature(features);
+			ArgumentZoningFeatureExtractor.getInstance()
+					.insertFeature(features);
 		}
 	}
 
 	public void buildFeaturesCRF(boolean usingNgram,
-			ArrayList<String> categories, int remove) throws IOException {
+			ArrayList<String> categories, int remove) throws IOException, ParserConfigurationException, SAXException {
 		features = new FeatureName();
 		insertCategory(categories);
 		System.out.println("=======================REMOVE IS:" + remove);
@@ -2115,7 +2127,12 @@ public class FeatureExtractor {
 			insertTextGroup();
 		if (remove == 2 || remove == 10) {
 			// PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
-			//PDTBFeatureExtractor.getInstance().insertFeature(features);
+			// PDTBFeatureExtractor.getInstance().insertFeature(features);
+		}
+		if (remove == 5 || remove == 10) {
+			// PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
+			// PDTBFeatureExtractor.getInstance().insertFeature(features);
+			ArgumentZoningFeatureExtractor.getInstance().insertFeature(features);
 		}
 		if (remove == 3 || remove == 10) {
 			// insertMetaGroup();
@@ -2144,7 +2161,7 @@ public class FeatureExtractor {
 
 	// extract features
 	public Object[] extractFeatures(RevisionDocument doc, RevisionUnit ru,
-			boolean usingNgram, int remove) throws IOException {
+			boolean usingNgram, int remove) throws IOException, ParserConfigurationException, SAXException {
 		featureVector = new Object[features.getSize()];
 		if (usingNgram) {
 			String sentence = extractSentence(doc, ru);
@@ -2161,9 +2178,9 @@ public class FeatureExtractor {
 			extractTextGroup(doc, ru);
 		if (remove == 2 || remove == 10) {
 			// extractLanguageGroup(doc, ru);
-			//PDTBFeatureExtractor.getInstance().extractFeature(features,
-			//		featureVector, doc, ru.getNewSentenceIndex(),
-			//		ru.getOldSentenceIndex());
+			// PDTBFeatureExtractor.getInstance().extractFeature(features,
+			// featureVector, doc, ru.getNewSentenceIndex(),
+			// ru.getOldSentenceIndex());
 			// PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
 			// featureVector, doc, ru.getNewSentenceIndex(),
 			// ru.getOldSentenceIndex());
@@ -2177,11 +2194,22 @@ public class FeatureExtractor {
 					features, featureVector, doc, ru.getNewSentenceIndex(),
 					ru.getOldSentenceIndex());
 		// extractOtherGroup(doc, ru);
-		if (remove == 4 || remove == 10 
-				|| remove == 2) {
+		if (remove == 4 || remove == 10 || remove == 2) {
 			// extractLanguageGroup(doc, ru);
 			extractFeaturesPriorPost(doc, ru.getNewSentenceIndex(),
 					ru.getOldSentenceIndex(), 1);
+		}
+		if (remove == 5 || remove == 10) {
+			// extractLanguageGroup(doc, ru);
+			// PDTBFeatureExtractor.getInstance().extractFeature(features,
+			// featureVector, doc, ru.getNewSentenceIndex(),
+			// ru.getOldSentenceIndex());
+			// PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
+			// featureVector, doc, ru.getNewSentenceIndex(),
+			// ru.getOldSentenceIndex());
+			ArgumentZoningFeatureExtractor.getInstance().extractFeature(
+					features, featureVector, doc, ru.getNewSentenceIndex(),
+					ru.getOldSentenceIndex());
 		}
 		return featureVector;
 		// String sentence = extractSentence(doc, ru);

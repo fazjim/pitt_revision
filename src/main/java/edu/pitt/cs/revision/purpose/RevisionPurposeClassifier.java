@@ -8,6 +8,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
 import scala.collection.mutable.HashSet;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
@@ -405,7 +409,7 @@ public class RevisionPurposeClassifier {
 
 	
 	public Instances createInstancesSOLO5Class(ArrayList<RevisionDocument> docs,
-			boolean usingNgram,int option) throws IOException {
+			boolean usingNgram,int option) throws IOException, ParserConfigurationException, SAXException {
 		FeatureExtractor fe = new FeatureExtractor();
 		fe.setOnline(true);
 		// fe.openBatchMode(batchPath);

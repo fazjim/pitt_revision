@@ -6,6 +6,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Hashtable;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
 import edu.pitt.cs.revision.batch.BatchFeatureWriter;
 import edu.pitt.cs.revision.batch.SentenceInfo;
 import edu.pitt.cs.revision.machinelearning.FeatureName;
@@ -36,8 +40,6 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 
 	private EssayInfo essayInfo = new EssayInfo();
 
-	
-	
 	public EssayInfo getEssayInfo(ArrayList<ArrayList<HeatMapUnit>> essay) {
 		if (essayInfo.parsed == false) {
 			int pD1Num = 1;
@@ -604,7 +606,7 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 		}
 		extractLocGroup(hmu, essay);
 		extractTextGroup(hmu, essay);
-		//extractLanguageGroup(hmu, essay);
+		// extractLanguageGroup(hmu, essay);
 		// extractMetaGroup(doc, ru);
 		// extractOtherGroup(doc, ru);
 		ArrayList<Integer> newIndices = new ArrayList<Integer>();
@@ -618,8 +620,8 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 		 * features, featureVector, doc, newIndices, oldIndices);
 		 */
 		if (!isOnline) {
-			//SentenceEmbeddingFeatureExtractor.getInstance().extractCohesion(
-			//		features, featureVector, doc, newIndices, oldIndices);
+			// SentenceEmbeddingFeatureExtractor.getInstance().extractCohesion(
+			// features, featureVector, doc, newIndices, oldIndices);
 			PDTBFeatureExtractor.getInstance().extractFeature(features,
 					featureVector, doc, newIndices, oldIndices);
 			PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
@@ -630,14 +632,15 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 
 	public Object[] extractFeatures(HeatMapUnit hmu,
 			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc,
-			boolean usingNgram, int remove) throws IOException {
+			boolean usingNgram, int remove) throws IOException, ParserConfigurationException, SAXException {
 		featureVector = new Object[features.getSize()];
 		if (usingNgram) {
 			extractTextFeatures(hmu.scD1 + hmu.scD2);
 			extractTextFeatures2(hmu.scD1, hmu.scD2);
 		}
-		if(remove == -1) return featureVector;
-		if(remove == 10 || remove == 11) {
+		if (remove == -1)
+			return featureVector;
+		if (remove == 10 || remove == 11) {
 			extractLocGroup(hmu, essay);
 			extractTextGroup(hmu, essay);
 		}
@@ -650,14 +653,14 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 			newIndices.add(hmu.realNewIndex);
 		if (hmu.realOldIndex != -1)
 			oldIndices.add(hmu.realOldIndex);
-		if (remove == 2 || remove == 10){
+		if (remove == 2 || remove == 10) {
 			// extractLanguageGroup(doc, ru);
-			//PDTBFeatureExtractor.getInstance().extractFeature(features,
-			//		featureVector, doc, newIndices, oldIndices);
-			//PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
-			//		featureVector, doc, newIndices,
-			//		oldIndices);
-			
+			// PDTBFeatureExtractor.getInstance().extractFeature(features,
+			// featureVector, doc, newIndices, oldIndices);
+			// PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
+			// featureVector, doc, newIndices,
+			// oldIndices);
+
 		}
 		if (remove == 3 || remove == 10)
 			// extractMetaGroup(doc, ru);
@@ -665,11 +668,20 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 			// features, featureVector, doc, ru.getNewSentenceIndex(),
 			// ru.getOldSentenceIndex());
 			SentenceEmbeddingFeatureExtractor.getInstance().extractCohesion(
-					features, featureVector, doc, newIndices,
-					oldIndices);
-		
-		if(remove == 4||remove == 10||remove == 2) {
-			extractFeaturesPriorPost(hmu,essay,doc,1);
+					features, featureVector, doc, newIndices, oldIndices);
+
+		if (remove == 4 || remove == 10 || remove == 2) {
+			extractFeaturesPriorPost(hmu, essay, doc, 1);
+		}
+		if (remove == 5 || remove == 10) {
+			// extractLanguageGroup(doc, ru);
+			// PDTBFeatureExtractor.getInstance().extractFeature(features,
+			// featureVector, doc, newIndices, oldIndices);
+			// PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
+			// featureVector, doc, newIndices,
+			// oldIndices);
+			ArgumentZoningFeatureExtractor.getInstance().extractFeature(
+					features, featureVector, doc, newIndices, oldIndices);
 		}
 		return featureVector;
 	}
@@ -700,42 +712,42 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 		}
 		return features;
 	}
-	
+
 	public ArrayList<Object[]> extractFeatures(
 			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc,
-			boolean usingNgram,int remove) throws IOException {
+			boolean usingNgram, int remove) throws IOException, ParserConfigurationException, SAXException {
 		essayInfo = new EssayInfo();
 		essayInfo.parsed = false;
 		ArrayList<Object[]> features = new ArrayList<Object[]>();
 		for (ArrayList<HeatMapUnit> paragraph : essay) {
 			for (HeatMapUnit hmu : paragraph) {
-				features.add(extractFeatures(hmu, essay, doc, usingNgram,remove));
+				features.add(extractFeatures(hmu, essay, doc, usingNgram,
+						remove));
 			}
 		}
 		return features;
 	}
-	
-	
+
 	public void extractTextGroupPriorPost(HeatMapUnit hmu,
-			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc, int windowSize) {
+			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc,
+			int windowSize) {
 		// extractOpFeaturesPriorPost(windowSize, doc, newIndexes, oldIndexes);
 		extractLENFeaturePriorPost(hmu, essay, doc, windowSize);
-		extractDaTextualFeaturePriorPost(hmu,essay, doc, windowSize);
+		extractDaTextualFeaturePriorPost(hmu, essay, doc, windowSize);
 		// extractNERFeature(doc, ru);
 		// extractOverlapFeature(doc, ru);
 	}
 
-	
 	public void extractFeaturesPriorPost(HeatMapUnit hmu,
 			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc,
-			 int windowSize) {
+			int windowSize) {
 		extractLocFeaturePriorPost(hmu, essay, doc, windowSize);
-		extractTextGroupPriorPost(hmu,essay, doc, windowSize);
+		extractTextGroupPriorPost(hmu, essay, doc, windowSize);
 	}
-	
-	
+
 	public void extractLocFeaturePriorPost(HeatMapUnit hmu,
-			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc, int windowSize) {
+			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc,
+			int windowSize) {
 		// ru.getNewParagraphNo();
 		ArrayList<Integer> sentenceIndices = new ArrayList<Integer>();
 		ArrayList<Integer> oldSentIndices = new ArrayList<Integer>();
@@ -922,9 +934,10 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 			}
 		}
 	}
-	
+
 	public void extractLENFeaturePriorPost(HeatMapUnit hmu,
-			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc, int windowSize) {
+			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc,
+			int windowSize) {
 		ArrayList<Integer> newIndexes = new ArrayList<Integer>();
 		ArrayList<Integer> oldIndexes = new ArrayList<Integer>();
 		newIndexes.add(hmu.newIndex);
@@ -988,7 +1001,8 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 	}
 
 	public void extractDaTextualFeaturePriorPost(HeatMapUnit hmu,
-			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc, int windowSize) {
+			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc,
+			int windowSize) {
 		// Notice the cosine here is not normalized
 		String tag = "_PRIOR_";
 		String tag2 = "_POST_";

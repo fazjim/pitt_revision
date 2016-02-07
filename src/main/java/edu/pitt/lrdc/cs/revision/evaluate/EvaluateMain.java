@@ -96,8 +96,8 @@ public class EvaluateMain {
 			// highLevel);
 			// Open this for jumbo classification
 			// resultPath = "/Users/faz23/Desktop/34/annotated/allResults2";
-			crossValidateClassifyJumbo(allData, folder, true, resultPath);
-			//crossValidateClassifyJumbo2(allData, folder, true, resultPath);
+			//crossValidateClassifyJumbo(allData, folder, true, resultPath);
+			crossValidateClassifyJumbo2(allData, folder, true, resultPath);
 			// trainTestClassifyJumbo2(trainFolder, testFolder, true,
 			// resultPath);
 		}
@@ -225,6 +225,8 @@ public class EvaluateMain {
 		options.add(3);
 		// experiments.add("Textual+unigram"); options.add(1);
 		
+		experiments.add("Argument Zoning features");
+		options.add(5);
 		
 		experiments.add("All features");
 		options.add(10);
