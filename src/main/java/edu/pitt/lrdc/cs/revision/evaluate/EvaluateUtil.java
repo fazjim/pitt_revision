@@ -58,6 +58,7 @@ public class EvaluateUtil {
 		}
 	}
 
+	
 	private Hashtable<String, Integer> getLabeledInformation(
 			ArrayList<RevisionUnit> units, int revisionPurpose) {
 		Hashtable<String, Integer> labelIndex = new Hashtable<String, Integer>();

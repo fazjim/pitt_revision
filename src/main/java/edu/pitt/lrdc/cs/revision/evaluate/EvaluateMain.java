@@ -63,7 +63,7 @@ public class EvaluateMain {
 		// RevisionDocumentReader.readDocs(anotherPath);
 
 		ArrayList<RevisionDocument> allData = new ArrayList<RevisionDocument>();
-		 allData.addAll(testFolder);
+		 allData.addAll(trainFolder);
 		// allData.addAll(testFolder);
 		//allData.addAll(trainFolder);
 		String resultPath = "dummy";
@@ -257,8 +257,8 @@ public class EvaluateMain {
 			ArrayList<RevisionDocument> testDocs = crossCuts.get(j).get(1);
 
 			RevisionPurposeClassifier rpc = new RevisionPurposeClassifier();
-			String[] classifiers = { "DT", "SVM", "RF" };
-			// String[] classifiers = { "SVM" };
+			//String[] classifiers = { "DT", "SVM", "RF" };
+		    String[] classifiers = { "SVM" };
 			for (String classifier : classifiers) {
 				resultRow = new ResultInfoRow();
 				for (int k = 0; k < experiments.size(); k++) { // Try a group of
@@ -317,7 +317,7 @@ public class EvaluateMain {
 								unit.setAbandoned();
 							}
 						}
-
+						/*
 						RevisionPurposeTagger.getInstance()
 								.setTagLevelParagraph(true);
 						Instances[] instancesPara = RevisionPurposeTagger
@@ -349,7 +349,7 @@ public class EvaluateMain {
 							for (RevisionUnit unit : predictedUnits) {
 								unit.setAbandoned();
 							}
-						}
+						}*/
 
 					}
 
@@ -373,11 +373,11 @@ public class EvaluateMain {
 			System.out.println("Essay");
 			//EvaluateTool.printEvaluation(cmsTable.get(experiment));
 			EvaluateTool.printEvaluation(cmsTable.get(experiment), "Essay", experiment, resultPath);
-			System.out.println("Paragraph");
-			EvaluateTool.printEvaluation(cmsParaTable.get(experiment), "Paragraph", experiment, resultPath);
+			//System.out.println("Paragraph");
+			//EvaluateTool.printEvaluation(cmsParaTable.get(experiment), "Paragraph", experiment, resultPath);
 		}
-		ResultInfoWriter.persist(resultsDT, null, "DT-Groups", resultPath);
-		ResultInfoWriter.persist(resultsRF, null, "RF-Groups", resultPath);
+		//ResultInfoWriter.persist(resultsDT, null, "DT-Groups", resultPath);
+		//ResultInfoWriter.persist(resultsRF, null, "RF-Groups", resultPath);
 		ResultInfoWriter.persist(resultsSVM, null, "SVM-Groups", resultPath);
 
 		// Generate a result for surface vs. text-based

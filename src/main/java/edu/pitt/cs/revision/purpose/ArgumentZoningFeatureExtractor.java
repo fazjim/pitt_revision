@@ -21,18 +21,20 @@ import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
 public class ArgumentZoningFeatureExtractor {
 	private static ArgumentZoningFeatureExtractor instance = null;
 
-	private String aim = "AIM";
-	private String basis = "BAS";
-	private String background = "BKG";
-	private String contrast = "CTR";
-	private String other = "OTH";
-	private String own = "OWN";
-	private String text = "TXT";
-	private String empty = "EMPTY";
+	private String aim = "aim";
+	private String basis = "bas";
+	private String background = "bkg";
+	private String contrast = "ctr";
+	private String other = "oth";
+	private String own = "own";
+	private String text = "txt";
+	private String empty = "empty";
+	private String undefined = "undefined";
+	
 	private String[] tags = { aim, basis, background, contrast, other, own,
-			text };
+			text,undefined };
 
-	private static String path = "C:\\Users\\zhangfan\\Downloads\\dlitmanRaz";
+	private static String path = "C:\\Not Backed Up\\discourse_parse_results\\dlitmanRazData";
 
 	private Hashtable<String, Hashtable<String, String>> argIndicesD1;
 	private Hashtable<String, Hashtable<String, String>> argIndicesD2;
@@ -108,6 +110,7 @@ public class ArgumentZoningFeatureExtractor {
 
 	private void readFiles(String inputPath)
 			throws ParserConfigurationException, SAXException, IOException {
+		if(inputPath == null) inputPath = this.path;
 		File f = new File(inputPath);
 		Stack<File> fileStack = new Stack<File>();
 		fileStack.push(f);
@@ -171,11 +174,11 @@ public class ArgumentZoningFeatureExtractor {
 		int oldFIndex = features.getIndex("OLD_ARGUMENT");
 		int newFIndex = features.getIndex("NEW_ARGUMENT");
 
-		if (oldIndexes != null) {
+		if (oldIndexes != null && oldIndexes.size()!=0) {
 			int oldIndex = oldIndexes.get(0);
 			if (oldIndex != -1) {
 				String oldSent = doc.getOldSentence(oldIndex);
-				if (arg1Table.containsKey(oldSent)) {
+				if (arg1Table!=null && arg1Table.containsKey(oldSent)) {
 					String tag = arg1Table.get(oldSent);
 					featureVector[oldFIndex] = tag;
 				} else {
@@ -188,11 +191,11 @@ public class ArgumentZoningFeatureExtractor {
 			featureVector[oldFIndex] = empty;
 		}
 
-		if (newIndexes != null) {
+		if (newIndexes != null && newIndexes.size()!=0) {
 			int newIndex = newIndexes.get(0);
 			if (newIndex != -1) {
 				String newSent = doc.getNewSentence(newIndex);
-				if (arg2Table.containsKey(newSent)) {
+				if (arg2Table!=null && arg2Table.containsKey(newSent)) {
 					String tag = arg2Table.get(newSent);
 					featureVector[newFIndex] = tag;
 				} else {
