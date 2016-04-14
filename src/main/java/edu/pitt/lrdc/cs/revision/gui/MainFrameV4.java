@@ -246,11 +246,14 @@ public class MainFrameV4 extends JFrame {
 		}
 		File s = response.getEntity(File.class);
 		// File ff = new File(username + ".xlsx");
+		System.out.println("Downloaded");
 		File ff = new File("Annotation_" + username + ".txt" + ".xlsx");
+		//if(ff.exists()) System.out.println(ff.delete());
 		s.renameTo(ff);
 		FileWriter fr = new FileWriter(s);
 		fr.flush();
 		fr.close();
+		
 		// load(ff.getAbsolutePath());
 		MainFrameV4.this.load(ff.getAbsolutePath());
 		currentPath = ff.getAbsolutePath();

@@ -14,20 +14,23 @@ import java.util.Iterator;
 
 import edu.pitt.cs.revision.purpose.pdtb.PipeAttribute;
 import edu.pitt.cs.revision.machinelearning.FeatureName;
+import edu.pitt.cs.revision.purpose.pdtb.ManualParseResultFile;
+import edu.pitt.cs.revision.purpose.pdtb.ManualParseResultReader;
+import edu.pitt.cs.revision.purpose.pdtb.ModificationRemover;
 import edu.pitt.cs.revision.purpose.pdtb.ParseResultFile;
 import edu.pitt.cs.revision.purpose.pdtb.ParseResultReader;
 import edu.pitt.cs.revision.purpose.pdtb.PipeUnit;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
 
-public class PDTBFeatureExtractor {
-	private static PDTBFeatureExtractor instance;
+public class PDTBFeatureExtractorV2 {
+	private static PDTBFeatureExtractorV2 instance;
 	private Hashtable<String, Hashtable<Integer, Integer>> pdtbArg1Results_OLD;
 	private Hashtable<String, Hashtable<Integer, Integer>> pdtbArg2Results_OLD;
 	private Hashtable<String, Hashtable<Integer, Integer>> pdtbArg1Results_NEW;
 	private Hashtable<String, Hashtable<Integer, Integer>> pdtbArg2Results_NEW;
-	private Hashtable<String, ParseResultFile> resultMap_OLD;
-	private Hashtable<String, ParseResultFile> resultMap_NEW;
-	private String path = "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus";
+	private Hashtable<String, ManualParseResultFile> resultMap_OLD;
+	private Hashtable<String, ManualParseResultFile> resultMap_NEW;
+	private String path = "C:\\Not Backed Up\\discourse_parse_results\\manual2";
 	private Hashtable<String, String> oldTextTable;
 	private Hashtable<String, String> newTextTable;
 
@@ -49,6 +52,20 @@ public class PDTBFeatureExtractor {
 	public static int IND_expansionType_EXP = 8;
 	public static int IND_expansionType_IMP = 9;
 
+	public int getRealArgNo(Hashtable<String, Integer> lineMap,
+			String searchStr) {
+		Iterator<String> it = lineMap.keySet().iterator();
+		while (it.hasNext()) {
+			String line = it.next();
+			// Arg1 matches the search line
+			if (line.equals(searchStr) || line.contains(searchStr)
+					|| searchStr.contains(line)) {
+				return lineMap.get(line);
+			}
+		}
+		return -1;
+	}
+	
 	public int getRealArgNo(Hashtable<String, Integer> lineMap,
 			String searchStr, int argNo, String txt, String argSpan) {
 		ArrayList<Integer> argOptions = new ArrayList<Integer>();
@@ -89,7 +106,7 @@ public class PDTBFeatureExtractor {
 				}
 			}
 		}
-		if (argOptions.size() == 0){
+		if (argOptions.size() == 0) {
 			System.err.println("Searched:" + searchStr);
 		}
 
@@ -114,6 +131,73 @@ public class PDTBFeatureExtractor {
 		}
 		return realArgNo;
 	}
+	
+	public int getRealArgNo2(Hashtable<String, Integer> lineMap,
+			String searchStr, int argNo, String txt, String argSpan) {
+		ArrayList<Integer> argOptions = new ArrayList<Integer>();
+		Iterator<String> it = lineMap.keySet().iterator();
+		while (it.hasNext()) {
+			String line = it.next();
+			// Arg1 matches the search line
+			if (line.equals(searchStr) || line.contains(searchStr)
+					|| searchStr.contains(line)) {
+				argOptions.add(lineMap.get(line));
+			}
+		}
+
+		if (argOptions.size() == 0) {
+			if (argSpan != null && argSpan.length() != 0) {
+				/*
+				 * ArrayList<String> text = getTextFromSpan(txt, argSpan); if
+				 * (text != null && text.size() > 0) { String firstText =
+				 * text.get(0); it = lineMap.keySet().iterator(); while
+				 * (it.hasNext()) { String line = it.next(); // Arg1 matches the
+				 * search line if (line.equals(firstText) ||
+				 * line.contains(firstText) || firstText.contains(line)) {
+				 * argOptions.add(lineMap.get(line)); } } }
+				 */
+				String text = getTextFromSpanLonger(txt, argSpan);
+				if (text != null) {
+					String compressed = compressStr(text);
+					it = lineMap.keySet().iterator();
+					while (it.hasNext()) {
+						String line = it.next();
+						// Arg1 matches the search line
+						if (line.equals(compressed)
+								|| line.contains(compressed)
+								|| compressed.contains(line)) {
+							argOptions.add(lineMap.get(line));
+						}
+					}
+				}
+			}
+		}
+		if (argOptions.size() == 0) {
+			System.err.println("Searched:" + searchStr);
+		}
+
+		int realArgNo = -1;
+		// Assume that there are few coincidence, and if multiple options exist,
+		// select the closest one to pdtb index
+		if (argOptions.size() == 0) {
+			realArgNo = -1;
+		} else if (argOptions.size() == 1) {
+			realArgNo = argOptions.get(0);
+		} else {
+			int minIndex = 0;
+			int minGap = Math.abs(argOptions.get(minIndex) - argNo);
+			for (int i = 1; i < argOptions.size(); i++) {
+				int gap = Math.abs(argOptions.get(i) - argNo);
+				if (gap < minGap) {
+					minGap = gap;
+					minIndex = i;
+				}
+			}
+			realArgNo = argOptions.get(minIndex);
+		}
+		return realArgNo;
+	}
+
 
 	public ArrayList<String> getTextFromSpan(String txt, String argSpan) {
 		String[] spanList = argSpan.split(";");
@@ -160,7 +244,7 @@ public class PDTBFeatureExtractor {
 	 * @param pdtbArg2
 	 */
 	public void readInfo(RevisionDocument doc,
-			Hashtable<String, ParseResultFile> resultMap,
+			Hashtable<String, ManualParseResultFile> resultMap,
 			ArrayList<String> sentences, Hashtable<Integer, Integer> pdtbArg1,
 			Hashtable<Integer, Integer> pdtbArg2,
 			Hashtable<String, String> txtTable) {
@@ -175,13 +259,18 @@ public class PDTBFeatureExtractor {
 			lineMap.put(compressStr(sentences.get(i)), i + 1);
 		}
 
-		ParseResultFile file = resultMap.get(name);
+		ManualParseResultFile file = resultMap.get(name);
+		if(file==null) {
+			System.err.println(name);
+		}
 		List<PipeUnit> pipes = file.getPipes();
 		for (PipeUnit pipe : pipes) {
-			int relationType = PipeAttribute.RELATION_TYPE;
+			/*int relationType = PipeAttribute.RELATION_TYPE;
 			int semClassType = PipeAttribute.FIRST_SEMCLASS_CONN;
 			String relation = pipe.getAttr(relationType);
-			String semClass = pipe.getAttr(semClassType);
+			String semClass = pipe.getAttr(semClassType);*/
+			String relation = pipe.getElementType();
+			String semClass = pipe.getManualRelationType();
 
 			// Get the argument type
 			int argType = -1;
@@ -219,7 +308,7 @@ public class PDTBFeatureExtractor {
 
 			int arg1SpanListIND = PipeAttribute.ARG1_SPANLIST;
 			int arg2SpanListIND = PipeAttribute.ARG2_SPANLIST;
-
+/*
 			String arg1Val = pipe.getAttr(arg1IndexIND);
 			String arg1RawText = pipe.getAttr(arg1RawTextIND);
 			String arg2Val = pipe.getAttr(arg2IndexIND);
@@ -227,35 +316,41 @@ public class PDTBFeatureExtractor {
 
 			String arg1Span = pipe.getAttr(arg1SpanListIND);
 			String arg2Span = pipe.getAttr(arg2SpanListIND);
-			/*
-			 * System.out.println(arg1Val); System.out.println(arg1RawText);
-			 * System.out.println(arg2Val); System.out.println(arg2RawText);
-			 */
 
 			int arg1LineNo = Integer.parseInt(arg1Val);
-			int arg2LineNo = Integer.parseInt(arg2Val);
+			int arg2LineNo = Integer.parseInt(arg2Val);*/
 
 			// Get the real line number for arg1 and arg2
 			int realLineArg1No = -1;
 			int realLineArg2No = -1;
 
-			if (!pdtb_line_map.containsKey(arg1LineNo)) {
+			String arg1RawText = pipe.getRange1Txt();
+			String arg2RawText = pipe.getRange2Txt();
+			/*if (!pdtb_line_map.containsKey(arg1LineNo)) {
 				String searchStrArg1 = compressStr(arg1RawText);
 				realLineArg1No = getRealArgNo(lineMap, searchStrArg1,
 						arg1LineNo, text, arg1Span);
 				pdtb_line_map.put(arg1LineNo, realLineArg1No);
 			}
-			realLineArg1No = pdtb_line_map.get(arg1LineNo);
+			realLineArg1No = pdtb_line_map.get(arg1LineNo);*/
+			
+			String searchStrArg1 = compressStr(arg1RawText);
+			String searchStrArg2 = compressStr(arg2RawText);
+			
+			realLineArg1No = getRealArgNo(lineMap, searchStrArg1);
+			realLineArg2No = getRealArgNo(lineMap, searchStrArg2);
 			if (realLineArg1No != -1)
 				pdtbArg1.put(realLineArg1No, argType);
 
+			/*
 			if (!pdtb_line_map.containsKey(arg2LineNo)) {
 				String searchStrArg2 = compressStr(arg2RawText);
 				realLineArg2No = getRealArgNo(lineMap, searchStrArg2,
 						arg2LineNo, text, arg2Span);
 				pdtb_line_map.put(arg2LineNo, realLineArg2No);
 			}
-			realLineArg2No = pdtb_line_map.get(arg2LineNo);
+			
+			realLineArg2No = pdtb_line_map.get(arg2LineNo);*/
 			if (realLineArg2No != -1)
 				pdtbArg2.put(realLineArg2No, argType);
 		}
@@ -292,14 +387,17 @@ public class PDTBFeatureExtractor {
 	 * @return
 	 */
 	public String compressStr(String str) {
-		StringBuffer newStr = new StringBuffer();
+		/*StringBuffer newStr = new StringBuffer();
 		for (int i = 0; i < str.length(); i++) {
 			char tmp = str.charAt(i);
 			if (Character.isLetterOrDigit(tmp)) {
 				newStr.append(tmp);
 			}
 		}
-		return newStr.toString();
+		return newStr.toString();*/
+		str = str.replaceAll("[^a-zA-Z]", "");
+		str = str.replaceAll(" ", "");
+		return str;
 	}
 
 	public void readAll(String root) throws IOException {
@@ -348,7 +446,6 @@ public class PDTBFeatureExtractor {
 			fName = fName.substring(0, fName.indexOf("-"));
 		}
 		fName = fName.replaceAll("_", " ");
-		fName = fName.replaceAll(" ", "");
 		return fName.trim();
 	}
 
@@ -362,6 +459,7 @@ public class PDTBFeatureExtractor {
 		}
 		fName = fName.replaceAll("_", " ");
 		fName = fName.replaceAll(" ", "");
+		fName = fName.toLowerCase();
 		return fName.trim();
 	}
 
@@ -394,13 +492,17 @@ public class PDTBFeatureExtractor {
 		}
 		fName = fName.replaceAll("_", " ");
 		fName = fName.replaceAll(" ", "");
+		fName = fName.toLowerCase();
 		return fName.trim();
 	}
 
-	private PDTBFeatureExtractor() throws IOException {
-		List<ParseResultFile> results = ParseResultReader.readFiles(path);
-		resultMap_OLD = new Hashtable<String, ParseResultFile>();
-		resultMap_NEW = new Hashtable<String, ParseResultFile>();
+	private PDTBFeatureExtractorV2() throws IOException {
+		// List<ManualParseResultFile> results =
+		// ManualParseResultReader.readFiles(path);
+		List<ManualParseResultFile> results = ManualParseResultReader.readFiles(path);
+		String refPath = "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus\\Braverman\\Braverman_raw_txt";
+		resultMap_OLD = new Hashtable<String, ManualParseResultFile>();
+		resultMap_NEW = new Hashtable<String, ManualParseResultFile>();
 		pdtbArg1Results_OLD = new Hashtable<String, Hashtable<Integer, Integer>>();
 		pdtbArg2Results_OLD = new Hashtable<String, Hashtable<Integer, Integer>>();
 		pdtbArg1Results_NEW = new Hashtable<String, Hashtable<Integer, Integer>>();
@@ -408,29 +510,34 @@ public class PDTBFeatureExtractor {
 		oldTextTable = new Hashtable<String, String>();
 		newTextTable = new Hashtable<String, String>();
 		readAll(path);
-		for (ParseResultFile result : results) {
+		for (ManualParseResultFile result : results) {
 			if (result.isPDTB1()) {
+				ModificationRemover.feedTxtInfo(result, refPath);
 				String fileName = result.getFileName();
 				if (fileName.contains("draft1")) {
 					fileName = getRealNamePipe(fileName);
+					System.out.println("PIPE NAME:"+fileName);
 					Hashtable<Integer, Integer> types = new Hashtable<Integer, Integer>();
 					pdtbArg1Results_OLD.put(fileName, types);
-					pdtbArg2Results_OLD.put(fileName, types);
+					Hashtable<Integer, Integer> types2 = new Hashtable<Integer, Integer>();
+					pdtbArg2Results_OLD.put(fileName, types2);
 					resultMap_OLD.put(fileName, result);
 				} else if (fileName.contains("draft2")) {
 					fileName = getRealNamePipe(fileName);
+					System.out.println("PIPE NAME:"+fileName);
 					Hashtable<Integer, Integer> types = new Hashtable<Integer, Integer>();
 					pdtbArg1Results_NEW.put(fileName, types);
-					pdtbArg2Results_NEW.put(fileName, types);
+					Hashtable<Integer, Integer> types2 = new Hashtable<Integer, Integer>();
+					pdtbArg2Results_NEW.put(fileName, types2);
 					resultMap_NEW.put(fileName, result);
 				}
 			}
 		}
 	}
 
-	public static PDTBFeatureExtractor getInstance() throws IOException {
+	public static PDTBFeatureExtractorV2 getInstance() throws IOException {
 		if (instance == null) {
-			instance = new PDTBFeatureExtractor();
+			instance = new PDTBFeatureExtractorV2();
 		}
 		return instance;
 	}
@@ -468,27 +575,160 @@ public class PDTBFeatureExtractor {
 		String newArg1 = Integer.toString(0);
 
 		if (oldIndexes != null && oldIndexes.size() > 0) {
-			if (pdtbArg2_OLD.containsKey(oldIndexes.get(0)))
-				oldArg2 = Integer.toString(pdtbArg2_OLD.get(oldIndexes.get(0)));
-			if (pdtbArg1_OLD.containsKey(oldIndexes.size() - 1))
-				oldArg1 = Integer.toString(pdtbArg1_OLD.get(oldIndexes
-						.get(oldIndexes.size() - 1)));
+			int oldStart = oldIndexes.get(0);
+			if (pdtbArg2_OLD.containsKey(oldStart))
+				oldArg2 = Integer.toString(pdtbArg2_OLD.get(oldStart));
+			int oldEnd = oldIndexes.get(oldIndexes.size()-1);
+			if (pdtbArg1_OLD.containsKey(oldEnd))
+				oldArg1 = Integer.toString(pdtbArg1_OLD.get(oldEnd));
 		}
 
 		if (newIndexes != null && newIndexes.size() > 0) {
-			if (pdtbArg2_NEW.containsKey(newIndexes.get(0)))
-				newArg2 = Integer.toString(pdtbArg2_NEW.get(newIndexes.get(0)));
-			if (pdtbArg1_NEW.containsKey(newIndexes.get(newIndexes.size() - 1)))
-				newArg1 = Integer.toString(pdtbArg1_NEW.get(newIndexes
-						.get(newIndexes.size() - 1)));
+			int newStart = newIndexes.get(0);
+			if (pdtbArg2_NEW.containsKey(newStart))
+				newArg2 = Integer.toString(pdtbArg2_NEW.get(newStart));
+			int newEnd = newIndexes.get(newIndexes.size()-1);
+			if (pdtbArg1_NEW.containsKey(newEnd))
+				newArg1 = Integer.toString(pdtbArg1_NEW.get(newEnd));
 		}
+
 		int fIndex = features.getIndex("OLD_PDTB_ARG2_ARG1");
 		featureVector[fIndex] = oldArg2 + "_" + oldArg1;
 		fIndex = features.getIndex("NEW_PDTB_ARG2_ARG1");
 		featureVector[fIndex] = newArg2 + "_" + newArg1;
+		
+		if(oldArg2.equals("0")&&oldArg1.equals("0")&&newArg2.equals("0")&&newArg1.equals("0")) {
+			System.err.println(doc.getDocumentName()+"Extracted:"+name);
+			for(Integer oldIndex: oldIndexes) System.err.print(oldIndex+",");
+			System.err.println();
+			System.err.println(doc.getOldSentences(oldIndexes));
+			for(Integer newIndex: newIndexes) System.err.print(newIndex+",");
+			System.err.println();
+			System.err.println(doc.getNewSentences(newIndexes));
+		}
 	}
 
 	public void insertFeature(FeatureName features) {
+		features.insertFeature("OLD_PDTB_IsExpansion", Boolean.TYPE);
+		//features.insertFeature("OLD_PDTB_IsTemporal", Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsContingency", Boolean.TYPE);
+		//features.insertFeature("OLD_PDTB_IsComparison", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsExpansion", Boolean.TYPE);
+		//features.insertFeature("NEW_PDTB_IsTemporal", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsContingency", Boolean.TYPE);
+		//features.insertFeature("NEW_PDTB_IsComparison", Boolean.TYPE);
+	}
+	
+	public void extractFeature(FeatureName features, Object[] featureVector,
+			RevisionDocument doc, ArrayList<Integer> newIndexes,
+			ArrayList<Integer> oldIndexes) {
+		String name = getRealNameRevision(doc.getDocumentName());
+		// System.out.println(name);
+		if (pdtbArg1Results_OLD.get(name).size() == 0
+				&& pdtbArg2Results_OLD.get(name).size() == 0
+				&& pdtbArg1Results_NEW.get(name).size() == 0
+				&& pdtbArg2Results_NEW.get(name).size() == 0) {
+			readInfo(doc);
+		}
+		
+		if(oldIndexes.size()==0&& newIndexes.size()==0) {
+		//	System.out.println("UNEXPECTED CASES IN :"+ doc.getDocumentName());
+		}
+
+		HashSet<Integer> arg1Type_OLD = new HashSet<Integer>();
+		HashSet<Integer> arg2Type_OLD = new HashSet<Integer>();
+		HashSet<Integer> arg1Type_NEW = new HashSet<Integer>();
+		HashSet<Integer> arg2Type_NEW = new HashSet<Integer>();
+
+		Hashtable<Integer, Integer> pdtbArg1_OLD = pdtbArg1Results_OLD
+				.get(name);
+		Hashtable<Integer, Integer> pdtbArg2_OLD = pdtbArg2Results_OLD
+				.get(name);
+		Hashtable<Integer, Integer> pdtbArg1_NEW = pdtbArg1Results_NEW
+				.get(name);
+		Hashtable<Integer, Integer> pdtbArg2_NEW = pdtbArg2Results_NEW
+				.get(name);
+
+		for (Integer oldIndex : oldIndexes) {
+			arg1Type_OLD.add(pdtbArg1_OLD.get(oldIndex));
+			arg2Type_OLD.add(pdtbArg2_OLD.get(oldIndex));
+		}
+		for (Integer newIndex : newIndexes) {
+			arg1Type_NEW.add(pdtbArg1_NEW.get(newIndex));
+			arg2Type_NEW.add(pdtbArg2_NEW.get(newIndex));
+		}
+
+	
+			String fName = "OLD_PDTB_IsExpansion";
+			int fIndex = features.getIndex(fName);
+			if (arg1Type_OLD.contains(IND_expansionType_EXP)||arg1Type_OLD.contains(IND_expansionType_IMP)) {
+				featureVector[fIndex] = Boolean.toString(true);
+			} else {
+				featureVector[fIndex] = Boolean.toString(false);
+			}
+			/*
+			fName = "OLD_PDTB_IsTemporal";
+			fIndex = features.getIndex(fName);
+			if (arg1Type_OLD.contains(IND_temporalType_EXP)||arg1Type_OLD.contains(IND_temporalType_IMP)) {
+				featureVector[fIndex] = Boolean.toString(true);
+			} else {
+				featureVector[fIndex] = Boolean.toString(false);
+			}*/
+			
+			fName = "OLD_PDTB_IsContingency";
+			fIndex = features.getIndex(fName);
+			if (arg1Type_OLD.contains(IND_contingencyType_EXP)||arg1Type_OLD.contains(IND_contingencyType_IMP)) {
+				featureVector[fIndex] = Boolean.toString(true);
+			} else {
+				featureVector[fIndex] = Boolean.toString(false);
+			}
+			
+			/*
+			fName = "OLD_PDTB_IsComparison";
+			fIndex = features.getIndex(fName);
+			if (arg1Type_OLD.contains(IND_comparisonType_EXP)||arg1Type_OLD.contains(IND_comparisonType_IMP)) {
+				featureVector[fIndex] = Boolean.toString(true);
+			} else {
+				featureVector[fIndex] = Boolean.toString(false);
+			}
+			*/
+			
+			fName = "NEW_PDTB_IsExpansion";
+			fIndex = features.getIndex(fName);
+			if (arg1Type_NEW.contains(IND_expansionType_EXP)||arg1Type_NEW.contains(IND_expansionType_IMP)) {
+				featureVector[fIndex] = Boolean.toString(true);
+			} else {
+				featureVector[fIndex] = Boolean.toString(false);
+			}
+			
+			/*
+			fName = "NEW_PDTB_IsTemporal";
+			fIndex = features.getIndex(fName);
+			if (arg1Type_NEW.contains(IND_temporalType_EXP)||arg1Type_NEW.contains(IND_temporalType_IMP)) {
+				featureVector[fIndex] = Boolean.toString(true);
+			} else {
+				featureVector[fIndex] = Boolean.toString(false);
+			}*/
+			
+			fName = "NEW_PDTB_IsContingency";
+			fIndex = features.getIndex(fName);
+			if (arg1Type_NEW.contains(IND_contingencyType_EXP)||arg1Type_NEW.contains(IND_contingencyType_IMP)) {
+				featureVector[fIndex] = Boolean.toString(true);
+			} else {
+				featureVector[fIndex] = Boolean.toString(false);
+			}
+			
+			/*
+			fName = "NEW_PDTB_IsComparison";
+			fIndex = features.getIndex(fName);
+			if (arg1Type_NEW.contains(IND_comparisonType_EXP)||arg1Type_NEW.contains(IND_comparisonType_IMP)) {
+				featureVector[fIndex] = Boolean.toString(true);
+			} else {
+				featureVector[fIndex] = Boolean.toString(false);
+			}*/
+	}
+	
+	public void insertFeatureAll(FeatureName features) {
 		// First test that this does not work
 		for (int i = 1; i <= 9; i++) {
 			features.insertFeature("OLD_PDTB_ARG1_" + i, Boolean.TYPE);
@@ -512,7 +752,7 @@ public class PDTBFeatureExtractor {
 			Object[] featureVector, RevisionDocument doc,
 			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes) {
 		String name = getRealNameRevision(doc.getDocumentName());
-		//System.out.println(name);
+		System.out.println("FILE NAME:"+name);
 		if (pdtbArg1Results_OLD.get(name).size() == 0
 				&& pdtbArg2Results_OLD.get(name).size() == 0
 				&& pdtbArg1Results_NEW.get(name).size() == 0
@@ -523,11 +763,11 @@ public class PDTBFeatureExtractor {
 				oldIndexes, name);
 	}
 
-	public void extractFeature(FeatureName features, Object[] featureVector,
+	public void extractFeatureAll(FeatureName features, Object[] featureVector,
 			RevisionDocument doc, ArrayList<Integer> newIndexes,
 			ArrayList<Integer> oldIndexes) {
 		String name = getRealNameRevision(doc.getDocumentName());
-		//System.out.println(name);
+		// System.out.println(name);
 		if (pdtbArg1Results_OLD.get(name).size() == 0
 				&& pdtbArg2Results_OLD.get(name).size() == 0
 				&& pdtbArg1Results_NEW.get(name).size() == 0

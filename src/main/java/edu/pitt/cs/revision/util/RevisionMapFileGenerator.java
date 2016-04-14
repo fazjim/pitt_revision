@@ -370,6 +370,11 @@ public class RevisionMapFileGenerator {
 			if (!isOldEnded && (newIndices == null || newIndices.size() == 0 || isNewEnded)) {
 				moveOld = true;
 				HeatMapUnit hmu = new HeatMapUnit();
+				if(oldIndices!=null&& oldIndices.size()>0)
+					hmu.realOldIndex = oldIndices.get(0);
+				else 
+					hmu.realOldIndex = -1;
+				hmu.realNewIndex = -1;
 				hmu.oldIndex = cursorOld;
 				hmu.newIndex = -1;
 				hmu.sD1 = oldParaIndices.get(cursorOld);
@@ -408,6 +413,11 @@ public class RevisionMapFileGenerator {
 			if (!isNewEnded && (oldIndices == null || oldIndices.size() == 0 || isOldEnded)) {
 				moveNew = true;
 				HeatMapUnit hmu = new HeatMapUnit();
+				hmu.realOldIndex = -1;
+				if(newIndices!=null&&newIndices.size()>0)
+				hmu.realNewIndex = newIndices.get(0);
+				else 
+					hmu.realNewIndex = -1;
 				hmu.oldIndex = -1;
 				hmu.newIndex = cursorNew;
 				hmu.sD1 = -1;
@@ -445,6 +455,14 @@ public class RevisionMapFileGenerator {
 			}
 			if (moveOld == false && moveNew == false) {
 				HeatMapUnit hmu = new HeatMapUnit();
+				if(oldIndices!=null&&oldIndices.size()>0) 
+					hmu.realOldIndex = oldIndices.get(0);
+				else
+					hmu.realOldIndex = -1;
+				if(newIndices!=null&&newIndices.size()>0)
+					hmu.realNewIndex = newIndices.get(0);
+				else 
+						hmu.realNewIndex = -1;
 				hmu.oldIndex = cursorOld;
 				hmu.newIndex = cursorNew;
 				hmu.sD1 = oldParaIndices.get(cursorOld);
@@ -564,6 +582,9 @@ public class RevisionMapFileGenerator {
 					if (oldIndices.size() == 1 && newIndices.size() > 1) {
 						String rPurposeStr = "";
 						String revisionPurpose = "";
+						// If the list are consecutive, then continue
+						// building units, if not, then ignore
+						Collections.sort(newIndices);
 						if (oldIndices.get(0) == cursorOld) {
 							// The case of 1 to N　alignment
 							if (oldRevisions.containsKey(cursorOld)) {
@@ -589,16 +610,18 @@ public class RevisionMapFileGenerator {
 							} else {
 								hmu.rPurpose = "";
 							}
+							hmu.realOldIndex = oldIndices.get(0);
+							hmu.realNewIndex = newIndices.get(0);
 							unitList.add(hmu);
 
-							// If the list are consecutive, then continue
-							// building units, if not, then ignore
-							Collections.sort(newIndices);
+							
 							for (Integer newIndex : newIndices) {
 								if (newIndex != -1 && newIndex!=cursorNew) {
 									if (newIndex - cursorNew == 1) {
 										cursorNew = newIndex;
 										HeatMapUnit hmuNext = new HeatMapUnit();
+										hmuNext.realOldIndex = oldIndices.get(0);
+										hmuNext.realNewIndex = newIndex;
 										hmuNext.oldIndex = cursorOld;
 										hmuNext.newIndex = cursorNew;
 										hmuNext.sD1 = oldParaIndices
@@ -690,6 +713,9 @@ public class RevisionMapFileGenerator {
 						String revisionPurpose = "";
 						if (newIndices.get(0) == cursorNew) {
 							// The case of N to 1 alignment
+							// If the list are consecutive, then continue
+							// building units, if not, then ignore
+							Collections.sort(oldIndices);
 							if (newRevisions.containsKey(cursorNew)) {
 								HashSet<Integer> rPurposesSet = newRevisions
 										.get(cursorNew);
@@ -712,16 +738,18 @@ public class RevisionMapFileGenerator {
 							} else {
 								hmu.rPurpose = "";
 							}
+							hmu.realOldIndex = oldIndices.get(0);
+							hmu.realNewIndex = newIndices.get(0);
 							unitList.add(hmu);
 
-							// If the list are consecutive, then continue
-							// building units, if not, then ignore
-							Collections.sort(oldIndices);
+							
 							for (Integer oldIndex : oldIndices) {
 								if (oldIndex != -1 && oldIndex!=cursorOld) {
 									if (oldIndex - cursorOld == 1) {
 										cursorOld = oldIndex;
 										HeatMapUnit hmuNext = new HeatMapUnit();
+										hmuNext.realOldIndex = oldIndex;
+										hmuNext.realNewIndex = newIndices.get(0);
 										hmuNext.oldIndex = cursorOld;
 										hmuNext.newIndex = cursorNew;
 										hmuNext.sD1 = oldParaIndices

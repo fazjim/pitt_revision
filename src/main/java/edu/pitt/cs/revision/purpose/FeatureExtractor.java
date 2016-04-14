@@ -2045,9 +2045,9 @@ public class FeatureExtractor {
 			extractLanguageGroup(doc, newIndexes, oldIndexes);
 			// extractOtherGroup(doc, ru);
 			if (option == 2 || option == 10) {
-				PDTBFeatureExtractor.getInstance().extractFeature(features,
+				PDTBFeatureExtractorV2.getInstance().extractFeature(features,
 						featureVector, doc, newIndexes, oldIndexes);
-				PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(
+				PDTBFeatureExtractorV2.getInstance().extractFeatureARG1ARG2(
 						features, featureVector, doc, newIndexes, oldIndexes);
 			}
 		}
@@ -2090,9 +2090,9 @@ public class FeatureExtractor {
 		if (remove == 1 || remove == 10 || remove == 11 || remove == 2
 				|| remove == 3)
 			insertTextGroup();
-		if (remove == 2 || remove == 10) {
-			// PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
-			// PDTBFeatureExtractor.getInstance().insertFeature(features);
+		if (remove == 2 || remove == 10 || remove == 22) {
+			//PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
+			PDTBFeatureExtractorV2.getInstance().insertFeature(features);
 		}
 		if (remove == 3 || remove == 10) {
 			// insertMetaGroup();
@@ -2102,7 +2102,7 @@ public class FeatureExtractor {
 					features);
 		}
 		if (remove == 4 || remove == 10 || remove == 2) {
-			insertPriorPostFeatures(1);
+			//insertPriorPostFeatures(1);
 		}
 		if (remove == 5 || remove == 10) {
 			// PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
@@ -2113,7 +2113,8 @@ public class FeatureExtractor {
 	}
 
 	public void buildFeaturesCRF(boolean usingNgram,
-			ArrayList<String> categories, int remove) throws IOException, ParserConfigurationException, SAXException {
+			ArrayList<String> categories, int remove) throws IOException,
+			ParserConfigurationException, SAXException {
 		features = new FeatureName();
 		insertCategory(categories);
 		System.out.println("=======================REMOVE IS:" + remove);
@@ -2121,18 +2122,21 @@ public class FeatureExtractor {
 			insertText(); // Text always start from the first
 		if (remove == -1)
 			return;
-		if (remove == 0 || remove == 10 || remove == 11)
+		if (remove == 0 || remove == 10 || remove == 11 || remove == 3
+				|| remove == 2 || remove == 5)
 			insertLocGroup();
-		if (remove == 1 || remove == 10 || remove == 11)
+		if (remove == 1 || remove == 10 || remove == 11 || remove == 3
+				|| remove == 2 || remove == 5)
 			insertTextGroup();
-		if (remove == 2 || remove == 10) {
-			// PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
-			// PDTBFeatureExtractor.getInstance().insertFeature(features);
+		if (remove == 2 || remove == 10 || remove == 22) {
+			//PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
+			PDTBFeatureExtractorV2.getInstance().insertFeature(features);
 		}
 		if (remove == 5 || remove == 10) {
 			// PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
 			// PDTBFeatureExtractor.getInstance().insertFeature(features);
-			ArgumentZoningFeatureExtractor.getInstance().insertFeature(features);
+			ArgumentZoningFeatureExtractor.getInstance()
+					.insertFeature(features);
 		}
 		if (remove == 3 || remove == 10) {
 			// insertMetaGroup();
@@ -2142,7 +2146,7 @@ public class FeatureExtractor {
 					features);
 		}
 		if (remove == 4 || remove == 10 || remove == 2) {
-			insertPriorPostFeatures(1);
+			//insertPriorPostFeatures(1);
 		}
 		// insertLanguageGroup();
 		// insertOtherGroup();
@@ -2161,7 +2165,9 @@ public class FeatureExtractor {
 
 	// extract features
 	public Object[] extractFeatures(RevisionDocument doc, RevisionUnit ru,
-			boolean usingNgram, int remove) throws IOException, ParserConfigurationException, SAXException {
+			boolean usingNgram, int remove) throws IOException,
+			ParserConfigurationException, SAXException {
+		
 		featureVector = new Object[features.getSize()];
 		if (usingNgram) {
 			String sentence = extractSentence(doc, ru);
@@ -2176,14 +2182,18 @@ public class FeatureExtractor {
 		if (remove == 1 || remove == 10 || remove == 11 || remove == 3
 				|| remove == 2)
 			extractTextGroup(doc, ru);
-		if (remove == 2 || remove == 10) {
+		if (remove == 2 || remove == 10 || remove == 22) {
 			// extractLanguageGroup(doc, ru);
-			// PDTBFeatureExtractor.getInstance().extractFeature(features,
-			// featureVector, doc, ru.getNewSentenceIndex(),
-			// ru.getOldSentenceIndex());
-			// PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
-			// featureVector, doc, ru.getNewSentenceIndex(),
-			// ru.getOldSentenceIndex());
+			ArrayList<Integer> newSents = ru.getNewSentenceIndex();
+			ArrayList<Integer> oldSents = ru.getOldSentenceIndex();
+			
+		
+			PDTBFeatureExtractorV2.getInstance().extractFeature(features,
+					featureVector, doc, newSents,
+					oldSents);
+			/*PDTBFeatureExtractorV2.getInstance().extractFeatureARG1ARG2(features,
+					featureVector, doc, ru.getNewSentenceIndex(),
+					ru.getOldSentenceIndex());*/
 		}
 		if (remove == 3 || remove == 10)
 			// extractMetaGroup(doc, ru);
@@ -2196,8 +2206,8 @@ public class FeatureExtractor {
 		// extractOtherGroup(doc, ru);
 		if (remove == 4 || remove == 10 || remove == 2) {
 			// extractLanguageGroup(doc, ru);
-			extractFeaturesPriorPost(doc, ru.getNewSentenceIndex(),
-					ru.getOldSentenceIndex(), 1);
+			//extractFeaturesPriorPost(doc, ru.getNewSentenceIndex(),
+			//		ru.getOldSentenceIndex(), 1);
 		}
 		if (remove == 5 || remove == 10) {
 			// extractLanguageGroup(doc, ru);

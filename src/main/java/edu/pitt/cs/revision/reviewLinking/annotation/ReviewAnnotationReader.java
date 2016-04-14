@@ -140,7 +140,6 @@ public class ReviewAnnotationReader {
 						item.setStart(startIndex);
 						item.setEnd(endIndex);
 						item.setContent(content);
-
 						NodeList features = eElement
 								.getElementsByTagName("Feature");
 						for (int fIndex = 0; fIndex < features.getLength(); fIndex++) {

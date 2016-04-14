@@ -640,7 +640,7 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 		}
 		if (remove == -1)
 			return featureVector;
-		if (remove == 10 || remove == 11) {
+		if (remove == 10 || remove == 11 || remove == 3 || remove == 2 || remove == 5) {
 			extractLocGroup(hmu, essay);
 			extractTextGroup(hmu, essay);
 		}
@@ -653,13 +653,13 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 			newIndices.add(hmu.realNewIndex);
 		if (hmu.realOldIndex != -1)
 			oldIndices.add(hmu.realOldIndex);
-		if (remove == 2 || remove == 10) {
+		if (remove == 2 || remove == 10 || remove == 22) {
 			// extractLanguageGroup(doc, ru);
-			// PDTBFeatureExtractor.getInstance().extractFeature(features,
-			// featureVector, doc, newIndices, oldIndices);
-			// PDTBFeatureExtractor.getInstance().extractFeatureARG1ARG2(features,
-			// featureVector, doc, newIndices,
-			// oldIndices);
+			 PDTBFeatureExtractorV2.getInstance().extractFeature(features,
+			 featureVector, doc, newIndices, oldIndices);
+			 /*PDTBFeatureExtractorV2.getInstance().extractFeatureARG1ARG2(features,
+			 featureVector, doc, newIndices,
+			 oldIndices);*/
 
 		}
 		if (remove == 3 || remove == 10)
@@ -671,7 +671,7 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 					features, featureVector, doc, newIndices, oldIndices);
 
 		if (remove == 4 || remove == 10 || remove == 2) {
-			extractFeaturesPriorPost(hmu, essay, doc, 1);
+			//extractFeaturesPriorPost(hmu, essay, doc, 1);
 		}
 		if (remove == 5 || remove == 10) {
 			// extractLanguageGroup(doc, ru);

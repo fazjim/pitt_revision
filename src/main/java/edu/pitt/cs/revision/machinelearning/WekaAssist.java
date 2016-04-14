@@ -25,8 +25,11 @@ import weka.classifiers.CostMatrix;
 import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.functions.SMO;
+import weka.classifiers.meta.AdaBoostM1;
+import weka.classifiers.meta.Bagging;
 import weka.classifiers.meta.CostSensitiveClassifier;
 import weka.classifiers.meta.FilteredClassifier;
+import weka.classifiers.meta.Stacking;
 import weka.classifiers.rules.ZeroR;
 import weka.classifiers.trees.J48;
 import weka.classifiers.trees.RandomForest;
@@ -463,6 +466,17 @@ public class WekaAssist {
 		} else if (name.equals("SVM")) {
 			// classifier = new LibLINEAR();
 			classifier = new SMO();
+		} else if(name.equals("Stacking")) {
+			Classifier[] classifiers = new Classifier[2];
+			classifiers[0] = new SMO();
+			classifiers[1] = new RandomForest();
+			//Bagging smoClassifier = new Bagging();
+			//Bagging rfClassifier = new Bagging();
+			//AdaBoostM1 booster = new AdaBoostM1();
+			Stacking stack = new Stacking();
+			stack.setClassifiers(classifiers);
+			stack.setMetaClassifier(new J48());
+			classifier = stack;
 		}
 
 		boolean sample = false;

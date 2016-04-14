@@ -1133,9 +1133,14 @@ public class RevisionPurposeClassifier {
 					 * fe.features, usingNgram, trainData,
 					 * transformPurposeBinary(ru, revPurpose), "dummy");
 					 */
+					if(ru.getOldSentenceIndex().size()==0&& ru.getNewSentenceIndex().size()==0) {
+						System.err.println(doc.getDocumentName()+"|"+RevisionPurpose.getPurposeName(ru.getRevision_purpose()));
+						continue;
+					}
 					String id = doc.getDocumentName() + "_" + ru.getUniqueID();
 					if (!ids.contains(id)) {
 						ids.add(id);
+					
 						Object[] features = fe.extractFeatures(doc, ru,
 								usingNgram, remove);
 						int p = ru.getRevision_purpose();

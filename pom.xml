@@ -59,8 +59,9 @@
 			<version>1.7.2</version>
 		</dependency>
 
-
-		<dependency>
+<!--  comment the following block when put this on the server, in compatible with the java version -->
+<!-- block starts -->
+		 <dependency>
 			<groupId>org.deeplearning4j</groupId>
 			<artifactId>deeplearning4j-ui</artifactId>
 			<version>${dl4j.version}</version>
@@ -69,7 +70,9 @@
 			<groupId>org.deeplearning4j</groupId>
 			<artifactId>deeplearning4j-nlp</artifactId>
 			<version>${dl4j.version}</version>
-		</dependency>
+		</dependency> 
+<!-- block ends -->
+
 		<dependency>
 			<groupId>org.nd4j</groupId>
 			<artifactId>nd4j-jblas</artifactId>

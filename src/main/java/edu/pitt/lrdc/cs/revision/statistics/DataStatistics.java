@@ -12,9 +12,26 @@ import edu.pitt.lrdc.cs.revision.model.RevisionPurpose;
 import edu.pitt.lrdc.cs.revision.model.RevisionUnit;
 
 public class DataStatistics {
+	public static double getStd(ArrayList<Double> values) {
+		double std = 0.0;
+		double avg = 0.0;
+		for(double val: values) {
+			avg += val;
+		}
+		avg = avg/values.size();
+		for(double val: values) {
+			std += (val-avg)*(val-avg);
+		}
+		std = std/values.size();
+		return Math.sqrt(std);
+	}
+	
 	public static void stat(ArrayList<RevisionDocument> docs) {
 		double oldAverageSent = 0;
 		double newAverageSent = 0;
+		ArrayList<Double> oldSentNums = new ArrayList<Double>();
+		ArrayList<Double> newSentNums = new ArrayList<Double>();
+		
 		for (RevisionDocument doc : docs) {
 			oldAverageSent += doc.getOldDraftSentences().size();
 			newAverageSent += doc.getNewDraftSentences().size();
@@ -25,6 +42,9 @@ public class DataStatistics {
 			statEditOps(tmp);
 			System.out.println("=========All cats==========");
 			statEditTypes(tmp);
+			
+			oldSentNums.add(doc.getOldDraftSentences().size()*1.0);
+			newSentNums.add(doc.getNewDraftSentences().size()*1.0);
 		}
 		System.out.println("=============All Operations==============");
 		statEditOps(docs);
@@ -41,6 +61,8 @@ public class DataStatistics {
 		
 		System.out.println("OLD:"+oldAverageSent/docs.size());
 		System.out.println("NEW:"+newAverageSent/docs.size());
+		System.out.println("OLD STD:"+getStd(oldSentNums));
+		System.out.println("NEW STD:"+getStd(newSentNums));
 	}
 
 	public static String generateIndiceStr(RevisionUnit ru) {
@@ -297,7 +319,8 @@ public class DataStatistics {
 		 * //ArrayList<RevisionDocument> docs3 = rd.readDocs(class2);
 		 * docs.addAll(docs2); //docs.addAll(docs3);
 		 */
-		String path = "C:\\Not Backed Up\\data\\naaclData\\C2";
+		String path = "C:\\Not Backed Up\\data\\naaclData\\C1";
+		path = "C:\\Not Backed Up\\data_phrase_science\\BarnettPhraseAlign";
 		ds.stat(RevisionDocumentReader.readDocs(path));
 	}
 }

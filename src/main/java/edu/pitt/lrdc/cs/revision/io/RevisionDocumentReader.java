@@ -1,6 +1,7 @@
 package edu.pitt.lrdc.cs.revision.io;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -318,7 +319,7 @@ public class RevisionDocumentReader {
 		RevisionDocument doc = new RevisionDocument();
 		RevisionUnit rootUnit = new RevisionUnit(true);
 
-		XSSFWorkbook xwb = new XSSFWorkbook(filePath);
+		XSSFWorkbook xwb = new XSSFWorkbook(new FileInputStream(filePath));
 		XSSFSheet sheet0 = xwb.getSheetAt(0); // original draft, contains the
 												// delete operations
 		XSSFSheet sheet1 = xwb.getSheetAt(1); // new draft, contain other
@@ -464,6 +465,7 @@ public class RevisionDocumentReader {
 					doc);
 		doc.setPromptContent(tmpPromptInfo);
 		doc.removeRedundant();
+		
 		return doc;
 	}
 

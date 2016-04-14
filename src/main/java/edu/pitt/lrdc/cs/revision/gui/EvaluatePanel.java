@@ -125,10 +125,10 @@ public class EvaluatePanel extends JPanel {
 	public void showResult(String text) {
 		messageBox.setText(text);
 	}
-	
+
 	public void showResult(String text, boolean append) {
-		if(append) {
-			messageBox.setText(messageBox.getText()+"\n" + text);
+		if (append) {
+			messageBox.setText(messageBox.getText() + "\n" + text);
 		} else {
 			messageBox.setText(text);
 		}
@@ -162,59 +162,67 @@ public class EvaluatePanel extends JPanel {
 			String message = "";
 			for (RevisionDocument doc : docs) {
 				RevisionDocument matchedGold = findMatchedDoc(doc, golds);
-				if(matchedGold!=null) {
-				int sentenceNewNum = doc.getNewSentencesArray().length;
-				int sentenceOldNum = doc.getOldSentencesArray().length;
-				allCnt += sentenceNewNum;
-				allCnt += sentenceOldNum;
-				for (int i = 1; i <= sentenceNewNum; i++) {
-					ArrayList<Integer> predictedAligned = doc.getOldFromNew(i);
-					ArrayList<Integer> goldAligned = matchedGold
-							.getOldFromNew(i);
-					if (goldAligned == null
-							|| goldAligned.size() == 0
-							|| (goldAligned.size() == 1 && goldAligned.get(0) == -1)) {
-						if (predictedAligned == null
-								|| predictedAligned.size() == 0
-								|| (predictedAligned.size() == 1 && predictedAligned
+				if (matchedGold != null) {
+					int sentenceNewNum = doc.getNewSentencesArray().length;
+					int sentenceOldNum = doc.getOldSentencesArray().length;
+					allCnt += sentenceNewNum;
+					allCnt += sentenceOldNum;
+					for (int i = 1; i <= sentenceNewNum; i++) {
+						ArrayList<Integer> predictedAligned = doc
+								.getOldFromNew(i);
+						ArrayList<Integer> goldAligned = matchedGold
+								.getOldFromNew(i);
+						if (goldAligned == null
+								|| goldAligned.size() == 0
+								|| (goldAligned.size() == 1 && goldAligned
 										.get(0) == -1)) {
-							correct++;
+							if (predictedAligned == null
+									|| predictedAligned.size() == 0
+									|| (predictedAligned.size() == 1 && predictedAligned
+											.get(0) == -1)) {
+								correct++;
+							} else {
+								message += doc.getDocumentName() + ",NEW:" + i
+										+ "\n";
+							}
 						} else {
-							message += doc.getDocumentName()+",NEW:"+i+"\n";
+							if (compareArr(goldAligned, predictedAligned)) {
+								correct++;
+							} else {
+								message += doc.getDocumentName() + ",NEW:" + i
+										+ "\n";
+							}
 						}
-					} else {
-						if (compareArr(goldAligned, predictedAligned)) {
-							correct++;
+					}
+					for (int i = 1; i <= sentenceOldNum; i++) {
+						ArrayList<Integer> predictedAligned = doc
+								.getNewFromOld(i);
+						ArrayList<Integer> goldAligned = matchedGold
+								.getNewFromOld(i);
+						if (goldAligned == null
+								|| goldAligned.size() == 0
+								|| (goldAligned.size() == 1 && goldAligned
+										.get(0) == -1)) {
+							if (predictedAligned == null
+									|| predictedAligned.size() == 0
+									|| (predictedAligned.size() == 1 && predictedAligned
+											.get(0) == -1)) {
+								correct++;
+							} else {
+								message += doc.getDocumentName() + ",OLD:" + i
+										+ "\n";
+							}
 						} else {
-							message += doc.getDocumentName() + ",NEW:"+i+"\n";
+							if (compareArr(goldAligned, predictedAligned)) {
+								correct++;
+							} else {
+								message += doc.getDocumentName() + ",OLD:" + i
+										+ "\n";
+							}
 						}
 					}
 				}
-				for (int i = 1; i <= sentenceOldNum; i++) {
-					ArrayList<Integer> predictedAligned = doc.getNewFromOld(i);
-					ArrayList<Integer> goldAligned = matchedGold
-							.getNewFromOld(i);
-					if (goldAligned == null
-							|| goldAligned.size() == 0
-							|| (goldAligned.size() == 1 && goldAligned.get(0) == -1)) {
-						if (predictedAligned == null
-								|| predictedAligned.size() == 0
-								|| (predictedAligned.size() == 1 && predictedAligned
-										.get(0) == -1)) {
-							correct++;
-						} else {
-							message += doc.getDocumentName()+",OLD:"+i+"\n";
-						}
-					} else {
-						if (compareArr(goldAligned, predictedAligned)) {
-							correct++;
-						} else {
-							message += doc.getDocumentName()+",OLD:"+i+"\n";
-						}
-					}
-				}
-				}
-				
+
 			}
 			double accuracy = (correct * 1.0) / allCnt;
 			showResult(message + "The accuracy is : " + accuracy);
@@ -292,6 +300,8 @@ public class EvaluatePanel extends JPanel {
 				int draft1Num = 0;
 				int draft2Num = 0;
 				int revNum = 0;
+				double draft1WordNum = 0;
+				double draft2WordNum = 0;
 				File f = new File(goldPath);
 				if (f.isFile()) {
 					RevisionDocument doc = RevisionDocumentReader
@@ -299,6 +309,12 @@ public class EvaluatePanel extends JPanel {
 					fileNum = 1;
 					draft1Num = doc.getOldDraftSentences().size();
 					draft2Num = doc.getNewDraftSentences().size();
+					for (int i = 0; i < draft1Num; i++) {
+						draft1WordNum += doc.getOldSentence(i + 1).split(" ").length;
+					}
+					for (int i = 0; i < draft2Num; i++) {
+						draft2WordNum += doc.getNewSentence(i + 1).split(" ").length;
+					}
 					revNum = doc.getRoot().getRevisionUnitAtLevel(0).size();
 				} else {
 					ArrayList<RevisionDocument> docs = RevisionDocumentReader
@@ -307,17 +323,28 @@ public class EvaluatePanel extends JPanel {
 					for (RevisionDocument doc : docs) {
 						draft1Num += doc.getOldDraftSentences().size();
 						draft2Num += doc.getNewDraftSentences().size();
-						revNum += doc.getRoot().getRevisionUnitAtLevel(0).size();
+						for (int i = 0; i < doc.getOldDraftSentences().size(); i++) {
+							draft1WordNum += doc.getOldSentence(i + 1).split(" ").length;
+						}
+						for (int i = 0; i < doc.getNewDraftSentences().size(); i++) {
+							draft2WordNum += doc.getNewSentence(i + 1).split(" ").length;
+						}
+						revNum += doc.getRoot().getRevisionUnitAtLevel(0)
+								.size();
 					}
 				}
 
 				txt += "# of Files: " + fileNum + "\n";
 				txt += "# of Draft 1 sentences:" + draft1Num + "\n";
 				txt += "# of Draft 2 sentences:" + draft2Num + "\n";
+				draft1WordNum = draft1WordNum /draft1Num;
+				draft2WordNum = draft2WordNum /draft2Num;
+				txt += "Avg word per sentence in Draft 1:" + draft1WordNum + "\n";
+				txt += "Avg word per sentence in Draft 2:" + draft2WordNum + "\n";
 				double avgD1 = draft1Num * 1.0 / fileNum;
 				double avgD2 = draft2Num * 1.0 / fileNum;
-				txt += "Avg D1: "+ avgD1 + ", Avg D2:"+avgD2+"\n";
-				txt += "# of revision:"+revNum;
+				txt += "Avg D1: " + avgD1 + ", Avg D2:" + avgD2 + "\n";
+				txt += "# of revision:" + revNum;
 			}
 
 			if (predictPath != null && predictPath.trim().length() != 0) {
@@ -341,7 +368,8 @@ public class EvaluatePanel extends JPanel {
 					for (RevisionDocument doc : docs) {
 						draft1Num += doc.getOldDraftSentences().size();
 						draft2Num += doc.getNewDraftSentences().size();
-						revNum += doc.getRoot().getRevisionUnitAtLevel(0).size();
+						revNum += doc.getRoot().getRevisionUnitAtLevel(0)
+								.size();
 					}
 				}
 
@@ -350,8 +378,8 @@ public class EvaluatePanel extends JPanel {
 				txt += "# of Draft 2 sentences:" + draft2Num + "\n";
 				double avgD1 = draft1Num * 1.0 / fileNum;
 				double avgD2 = draft2Num * 1.0 / fileNum;
-				txt += "Avg D1: "+ avgD1 + ", Avg D2:"+avgD2+"\n";
-				txt += "# of revision:"+revNum;
+				txt += "Avg D1: " + avgD1 + ", Avg D2:" + avgD2 + "\n";
+				txt += "# of revision:" + revNum;
 			}
 			showResult(txt);
 
@@ -375,7 +403,7 @@ public class EvaluatePanel extends JPanel {
 				newIndiceStr += newIndex + "-";
 			}
 			String fileName = new File(doc.getDocumentName()).getName();
-			String key = fileName + "-"+oldIndiceStr + "," + newIndiceStr;
+			String key = fileName + "-" + oldIndiceStr + "," + newIndiceStr;
 			int purpose = unit.getRevision_purpose();
 			if (purpose > RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT) {
 				map.put(key, 4);
@@ -414,12 +442,12 @@ public class EvaluatePanel extends JPanel {
 			if (rev2Map.containsKey(key)) {
 				int revP2 = rev2Map.get(key);
 				matrix[revP1][revP2] += 1;
-				
-				if(revP1!=revP2) {
-					showResult(key+"\n",true);
+
+				if (revP1 != revP2) {
+					showResult(key + "\n", true);
 				}
 			}
-			
+
 		}
 		return KappaCalc.kappaCalc(matrix);
 	}
@@ -428,11 +456,11 @@ public class EvaluatePanel extends JPanel {
 		Hashtable<String, Integer> rev1Map = new Hashtable<String, Integer>();
 		Hashtable<String, Integer> rev2Map = new Hashtable<String, Integer>();
 
-		for(RevisionDocument[] pair: docs) {
-			buildMap(pair[0],rev1Map);
-			buildMap(pair[1],rev2Map);
+		for (RevisionDocument[] pair : docs) {
+			buildMap(pair[0], rev1Map);
+			buildMap(pair[1], rev2Map);
 		}
-		
+
 		int[][] matrix = new int[5][5];
 		Iterator<String> it = rev1Map.keySet().iterator();
 		while (it.hasNext()) {
@@ -443,23 +471,30 @@ public class EvaluatePanel extends JPanel {
 				matrix[revP1][revP2] += 1;
 			}
 		}
-		
+
 		String matrixStr = "";
-		matrixStr += RevisionPurpose.getPurposeName(RevisionPurpose.CLAIMS_IDEAS)+"\t";
-		matrixStr += RevisionPurpose.getPurposeName(RevisionPurpose.CD_WARRANT_REASONING_BACKING)+"\t";
-		matrixStr += RevisionPurpose.getPurposeName(RevisionPurpose.EVIDENCE) + "\t";
-		matrixStr += RevisionPurpose.getPurposeName(RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT)+"\t";
-		matrixStr += RevisionPurpose.getPurposeName(RevisionPurpose.SURFACE)+"\n";
-		for(int i = 0;i<matrix.length;i++) {
-			for(int j = 0;j<matrix.length;j++) {
-				matrixStr += matrix[i][j]+"\t";
+		matrixStr += RevisionPurpose
+				.getPurposeName(RevisionPurpose.CLAIMS_IDEAS) + "\t";
+		matrixStr += RevisionPurpose
+				.getPurposeName(RevisionPurpose.CD_WARRANT_REASONING_BACKING)
+				+ "\t";
+		matrixStr += RevisionPurpose.getPurposeName(RevisionPurpose.EVIDENCE)
+				+ "\t";
+		matrixStr += RevisionPurpose
+				.getPurposeName(RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT)
+				+ "\t";
+		matrixStr += RevisionPurpose.getPurposeName(RevisionPurpose.SURFACE)
+				+ "\n";
+		for (int i = 0; i < matrix.length; i++) {
+			for (int j = 0; j < matrix.length; j++) {
+				matrixStr += matrix[i][j] + "\t";
 			}
 			matrixStr += "\n";
 		}
-		showResult(matrixStr,true);
+		showResult(matrixStr, true);
 		return KappaCalc.kappaCalc(matrix);
 	}
-	
+
 	public ArrayList<RevisionDocument[]> findMatchedFiles(File f1, File f2)
 			throws Exception {
 		ArrayList<RevisionDocument[]> list = new ArrayList<RevisionDocument[]>();
@@ -536,8 +571,9 @@ public class EvaluatePanel extends JPanel {
 						txt += "Kappa:" + "\t" + name + "\t"
 								+ calculateKappa(doc1, doc2) + "\n";
 					}
-					
-					txt+="Overall Kappa\tOverall"+ "\t" + calculateKappa(docs)+"\n";
+
+					txt += "Overall Kappa\tOverall" + "\t"
+							+ calculateKappa(docs) + "\n";
 				} else {
 					RevisionDocument doc1 = RevisionDocumentReader
 							.readDoc(goldPath);
@@ -547,17 +583,16 @@ public class EvaluatePanel extends JPanel {
 							+ calculateKappa(doc1, doc2) + "\n";
 				}
 			}
-			showResult(txt,true);
+			showResult(txt, true);
 		} catch (Exception exp) {
 			showResult(exp.getMessage());
 		}
 	}
 
-	
 	public void showClassification() {
-		
+
 	}
-	
+
 	public void evaluateAlignClassify() {
 
 	}

@@ -17,7 +17,8 @@ import edu.pitt.lrdc.cs.revision.model.RevisionUnit;
 
 public class StatisticAnalysis {
 	public static void countIES(String folderPath) throws Exception {
-		//String folderPath = "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang";
+		// String folderPath =
+		// "C:\\Not Backed Up\\data\\allNewData\\Fan\\All-jiaoyang";
 		ArrayList<RevisionDocument> trainDocs = RevisionDocumentReader
 				.readDocs(folderPath);
 		String scorePath = "C:\\Not Backed Up\\data\\expert-grades-ies.xlsx";
@@ -108,10 +109,11 @@ public class StatisticAnalysis {
 	}
 
 	public static void main(String[] args) throws Exception {
-		String path = "C:\\Not Backed Up\\data\\naaclData\\C2";
-		//String path = "C:\\Not Backed Up\\data\\allNewData\\Fan\\kappa3\\jiaoyang";
-		//printAllInfoCompleteUnique(RevisionDocumentReader.readDocs(path));
-		countIES(path);
+		String path = "C:\\Not Backed Up\\data\\naaclData\\C1";
+		// String path =
+		// "C:\\Not Backed Up\\data\\allNewData\\Fan\\kappa3\\jiaoyang";
+		// printAllInfoCompleteUnique(RevisionDocumentReader.readDocs(path));
+		// countIES(path);
 		// ArrayList<RevisionDocument> trainDocs = reader
 		// .readDocs("D:\\annotationTool\\annotated\\revisedClass3");
 		/*
@@ -120,8 +122,9 @@ public class StatisticAnalysis {
 		 * ArrayList<RevisionDocument> testDocs = reader
 		 * .readDocs("D:\\annotationTool\\annotated\\class4");
 		 */
-
-		// printAllInfo(testDocs);
+		ArrayList<RevisionDocument> testDocs = RevisionDocumentReader
+				.readDocs(path);
+		printAllInfoOp(testDocs);
 		// for(int i =
 		// RevisionPurpose.START;i<=RevisionPurpose.WORDUSAGE_CLARITY;i++) {
 		// printCatgories(testDocs,i);
@@ -284,8 +287,8 @@ public class StatisticAnalysis {
 							.print(distribution[(i - 1) * 3 + (j - 1)] + "\t");
 				}
 			}
-			System.out.print(doc.getOldDraftSentences().size()+"\t");
-			System.out.print(doc.getNewDraftSentences().size()+"\t");
+			System.out.print(doc.getOldDraftSentences().size() + "\t");
+			System.out.print(doc.getNewDraftSentences().size() + "\t");
 			System.out.println();
 			/*
 			 * for(int i = RevisionPurpose.START;i<=RevisionPurpose.END;i++) {
@@ -318,9 +321,9 @@ public class StatisticAnalysis {
 			System.out.print(doc.getDocumentName() + "\t");
 			String realName = new File(doc.getDocumentName()).getName();
 			// realName = realName.replaceAll("Annotation_","");
-			if(realName.contains(" ")) {
-			realName = realName.substring(realName.indexOf("_") + 1,
-					realName.indexOf(" ")).trim();
+			if (realName.contains(" ")) {
+				realName = realName.substring(realName.indexOf("_") + 1,
+						realName.indexOf(" ")).trim();
 			} else {
 				realName = realName.substring(realName.indexOf("_") + 1,
 						realName.indexOf(".txt")).trim();
@@ -334,7 +337,8 @@ public class StatisticAnalysis {
 			// Hashtable<String,Integer> surfaceRevMap = new Hashtable<String,
 			// Integer>();
 			for (RevisionUnit ru : rus) {
-				if (ru.getRevision_purpose()!=RevisionPurpose.PRECISION && ru.getRevision_purpose() > RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT) {
+				if (ru.getRevision_purpose() != RevisionPurpose.PRECISION
+						&& ru.getRevision_purpose() > RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT) {
 					distribution[ru.getRevision_purpose() - 1] += 1;
 					distribution2[ru.getRevision_op() - 1] += 1;
 					total += 1;
@@ -363,7 +367,8 @@ public class StatisticAnalysis {
 				int purpose = revPurposesMap.get(name);
 				String[] splits = name.split(":");
 				int op = Integer.parseInt(splits[0]);
-				if(purpose == RevisionPurpose.PRECISION) purpose = RevisionPurpose.WORDUSAGE_CLARITY;
+				if (purpose == RevisionPurpose.PRECISION)
+					purpose = RevisionPurpose.WORDUSAGE_CLARITY;
 				distribution[purpose - 1] += 1;
 				distribution2[op - 1] += 1;
 				total += 1;
@@ -402,6 +407,33 @@ public class StatisticAnalysis {
 		}
 	}
 
+	public static void printAllInfoOp(ArrayList<RevisionDocument> docs) {
+		System.out.print("Username\t");
+		for (int i = RevisionPurpose.START; i <= RevisionPurpose.END; i++) {
+			for (int j = RevisionOp.START; j <= RevisionOp.MODIFY; j++) {
+				System.out.print(RevisionPurpose.getPurposeName(i) + "_"
+						+ RevisionOp.getOpName(j) + "\t");
+			}
+		}
+		System.out.println();
+		for (RevisionDocument doc : docs) {
+			System.out.print(doc.getDocumentName() + "\t");
+			double[] distribution = new double[27];
+			ArrayList<RevisionUnit> rus = doc.getRoot().getRevisionUnitAtLevel(
+					0);
+			for (RevisionUnit ru : rus) {
+				distribution[(ru.getRevision_purpose() - 1) * 3
+						+ ru.getRevision_op() - 1] += 1;
+			}
+
+			for (double val : distribution) {
+				System.out.print(val + "\t");
+			}
+			System.out.println();
+		}
+
+	}
+
 	public static void printAllInfo(ArrayList<RevisionDocument> docs) {
 		System.out.print("Username\t");
 		for (int i = RevisionPurpose.START; i <= RevisionPurpose.END; i++) {
@@ -410,6 +442,7 @@ public class StatisticAnalysis {
 		for (int i = RevisionOp.START; i <= RevisionOp.MODIFY; i++) {
 			System.out.print(RevisionOp.getOpName(i) + "\t");
 		}
+
 		System.out.println();
 
 		String theRebuttalOp = "";
