@@ -35,6 +35,7 @@ public class PDTBFeatureExtractorV2 {
 	private Hashtable<String, String> newTextTable;
 
 	public static String entRelType = "EntRel";
+	public static String altLexType = "AltLex";
 	public static String explicitRelType = "Explicit";
 	public static String implicitRelType = "Implicit";
 	public static String comparisonType = "Comparison";
@@ -51,9 +52,9 @@ public class PDTBFeatureExtractorV2 {
 	public static int IND_temporalType_IMP = 7;
 	public static int IND_expansionType_EXP = 8;
 	public static int IND_expansionType_IMP = 9;
+	public static int IND_altLexType = 10;
 
-	public int getRealArgNo(Hashtable<String, Integer> lineMap,
-			String searchStr) {
+	public int getRealArgNo(Hashtable<String, Integer> lineMap, String searchStr) {
 		Iterator<String> it = lineMap.keySet().iterator();
 		while (it.hasNext()) {
 			String line = it.next();
@@ -65,7 +66,7 @@ public class PDTBFeatureExtractorV2 {
 		}
 		return -1;
 	}
-	
+
 	public int getRealArgNo(Hashtable<String, Integer> lineMap,
 			String searchStr, int argNo, String txt, String argSpan) {
 		ArrayList<Integer> argOptions = new ArrayList<Integer>();
@@ -131,7 +132,7 @@ public class PDTBFeatureExtractorV2 {
 		}
 		return realArgNo;
 	}
-	
+
 	public int getRealArgNo2(Hashtable<String, Integer> lineMap,
 			String searchStr, int argNo, String txt, String argSpan) {
 		ArrayList<Integer> argOptions = new ArrayList<Integer>();
@@ -198,7 +199,6 @@ public class PDTBFeatureExtractorV2 {
 		return realArgNo;
 	}
 
-
 	public ArrayList<String> getTextFromSpan(String txt, String argSpan) {
 		String[] spanList = argSpan.split(";");
 		ArrayList<String> textList = new ArrayList<String>();
@@ -260,15 +260,17 @@ public class PDTBFeatureExtractorV2 {
 		}
 
 		ManualParseResultFile file = resultMap.get(name);
-		if(file==null) {
+		if (file == null) {
 			System.err.println(name);
 		}
 		List<PipeUnit> pipes = file.getPipes();
 		for (PipeUnit pipe : pipes) {
-			/*int relationType = PipeAttribute.RELATION_TYPE;
-			int semClassType = PipeAttribute.FIRST_SEMCLASS_CONN;
-			String relation = pipe.getAttr(relationType);
-			String semClass = pipe.getAttr(semClassType);*/
+			/*
+			 * int relationType = PipeAttribute.RELATION_TYPE; int semClassType
+			 * = PipeAttribute.FIRST_SEMCLASS_CONN; String relation =
+			 * pipe.getAttr(relationType); String semClass =
+			 * pipe.getAttr(semClassType);
+			 */
 			String relation = pipe.getElementType();
 			String semClass = pipe.getManualRelationType();
 
@@ -276,6 +278,8 @@ public class PDTBFeatureExtractorV2 {
 			int argType = -1;
 			if (relation.equals(entRelType)) {
 				argType = IND_entRelType;
+			} else if (relation.equals(altLexType)) {
+				argType = IND_altLexType;
 			} else {
 				if (relation.equals(explicitRelType)) {
 					if (semClass.equals(comparisonType)) {
@@ -308,17 +312,18 @@ public class PDTBFeatureExtractorV2 {
 
 			int arg1SpanListIND = PipeAttribute.ARG1_SPANLIST;
 			int arg2SpanListIND = PipeAttribute.ARG2_SPANLIST;
-/*
-			String arg1Val = pipe.getAttr(arg1IndexIND);
-			String arg1RawText = pipe.getAttr(arg1RawTextIND);
-			String arg2Val = pipe.getAttr(arg2IndexIND);
-			String arg2RawText = pipe.getAttr(arg2RawTextIND);
-
-			String arg1Span = pipe.getAttr(arg1SpanListIND);
-			String arg2Span = pipe.getAttr(arg2SpanListIND);
-
-			int arg1LineNo = Integer.parseInt(arg1Val);
-			int arg2LineNo = Integer.parseInt(arg2Val);*/
+			/*
+			 * String arg1Val = pipe.getAttr(arg1IndexIND); String arg1RawText =
+			 * pipe.getAttr(arg1RawTextIND); String arg2Val =
+			 * pipe.getAttr(arg2IndexIND); String arg2RawText =
+			 * pipe.getAttr(arg2RawTextIND);
+			 * 
+			 * String arg1Span = pipe.getAttr(arg1SpanListIND); String arg2Span
+			 * = pipe.getAttr(arg2SpanListIND);
+			 * 
+			 * int arg1LineNo = Integer.parseInt(arg1Val); int arg2LineNo =
+			 * Integer.parseInt(arg2Val);
+			 */
 
 			// Get the real line number for arg1 and arg2
 			int realLineArg1No = -1;
@@ -326,33 +331,35 @@ public class PDTBFeatureExtractorV2 {
 
 			String arg1RawText = pipe.getRange1Txt();
 			String arg2RawText = pipe.getRange2Txt();
-			/*if (!pdtb_line_map.containsKey(arg1LineNo)) {
-				String searchStrArg1 = compressStr(arg1RawText);
-				realLineArg1No = getRealArgNo(lineMap, searchStrArg1,
-						arg1LineNo, text, arg1Span);
-				pdtb_line_map.put(arg1LineNo, realLineArg1No);
-			}
-			realLineArg1No = pdtb_line_map.get(arg1LineNo);*/
-			
+			/*
+			 * if (!pdtb_line_map.containsKey(arg1LineNo)) { String
+			 * searchStrArg1 = compressStr(arg1RawText); realLineArg1No =
+			 * getRealArgNo(lineMap, searchStrArg1, arg1LineNo, text, arg1Span);
+			 * pdtb_line_map.put(arg1LineNo, realLineArg1No); } realLineArg1No =
+			 * pdtb_line_map.get(arg1LineNo);
+			 */
+
 			String searchStrArg1 = compressStr(arg1RawText);
 			String searchStrArg2 = compressStr(arg2RawText);
-			
+
 			realLineArg1No = getRealArgNo(lineMap, searchStrArg1);
 			realLineArg2No = getRealArgNo(lineMap, searchStrArg2);
-			if (realLineArg1No != -1)
-				pdtbArg1.put(realLineArg1No, argType);
 
-			/*
-			if (!pdtb_line_map.containsKey(arg2LineNo)) {
-				String searchStrArg2 = compressStr(arg2RawText);
-				realLineArg2No = getRealArgNo(lineMap, searchStrArg2,
-						arg2LineNo, text, arg2Span);
-				pdtb_line_map.put(arg2LineNo, realLineArg2No);
+			if (realLineArg1No != realLineArg2No) {
+				if (realLineArg1No != -1)
+					pdtbArg1.put(realLineArg1No, argType);
+
+				/*
+				 * if (!pdtb_line_map.containsKey(arg2LineNo)) { String
+				 * searchStrArg2 = compressStr(arg2RawText); realLineArg2No =
+				 * getRealArgNo(lineMap, searchStrArg2, arg2LineNo, text,
+				 * arg2Span); pdtb_line_map.put(arg2LineNo, realLineArg2No); }
+				 * 
+				 * realLineArg2No = pdtb_line_map.get(arg2LineNo);
+				 */
+				if (realLineArg2No != -1)
+					pdtbArg2.put(realLineArg2No, argType);
 			}
-			
-			realLineArg2No = pdtb_line_map.get(arg2LineNo);*/
-			if (realLineArg2No != -1)
-				pdtbArg2.put(realLineArg2No, argType);
 		}
 
 	}
@@ -387,14 +394,12 @@ public class PDTBFeatureExtractorV2 {
 	 * @return
 	 */
 	public String compressStr(String str) {
-		/*StringBuffer newStr = new StringBuffer();
-		for (int i = 0; i < str.length(); i++) {
-			char tmp = str.charAt(i);
-			if (Character.isLetterOrDigit(tmp)) {
-				newStr.append(tmp);
-			}
-		}
-		return newStr.toString();*/
+		/*
+		 * StringBuffer newStr = new StringBuffer(); for (int i = 0; i <
+		 * str.length(); i++) { char tmp = str.charAt(i); if
+		 * (Character.isLetterOrDigit(tmp)) { newStr.append(tmp); } } return
+		 * newStr.toString();
+		 */
 		str = str.replaceAll("[^a-zA-Z]", "");
 		str = str.replaceAll(" ", "");
 		return str;
@@ -499,7 +504,8 @@ public class PDTBFeatureExtractorV2 {
 	private PDTBFeatureExtractorV2() throws IOException {
 		// List<ManualParseResultFile> results =
 		// ManualParseResultReader.readFiles(path);
-		List<ManualParseResultFile> results = ManualParseResultReader.readFiles(path);
+		List<ManualParseResultFile> results = ManualParseResultReader
+				.readFiles(path);
 		String refPath = "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus\\Braverman\\Braverman_raw_txt";
 		resultMap_OLD = new Hashtable<String, ManualParseResultFile>();
 		resultMap_NEW = new Hashtable<String, ManualParseResultFile>();
@@ -516,7 +522,7 @@ public class PDTBFeatureExtractorV2 {
 				String fileName = result.getFileName();
 				if (fileName.contains("draft1")) {
 					fileName = getRealNamePipe(fileName);
-					System.out.println("PIPE NAME:"+fileName);
+					System.out.println("PIPE NAME:" + fileName);
 					Hashtable<Integer, Integer> types = new Hashtable<Integer, Integer>();
 					pdtbArg1Results_OLD.put(fileName, types);
 					Hashtable<Integer, Integer> types2 = new Hashtable<Integer, Integer>();
@@ -524,7 +530,7 @@ public class PDTBFeatureExtractorV2 {
 					resultMap_OLD.put(fileName, result);
 				} else if (fileName.contains("draft2")) {
 					fileName = getRealNamePipe(fileName);
-					System.out.println("PIPE NAME:"+fileName);
+					System.out.println("PIPE NAME:" + fileName);
 					Hashtable<Integer, Integer> types = new Hashtable<Integer, Integer>();
 					pdtbArg1Results_NEW.put(fileName, types);
 					Hashtable<Integer, Integer> types2 = new Hashtable<Integer, Integer>();
@@ -578,7 +584,7 @@ public class PDTBFeatureExtractorV2 {
 			int oldStart = oldIndexes.get(0);
 			if (pdtbArg2_OLD.containsKey(oldStart))
 				oldArg2 = Integer.toString(pdtbArg2_OLD.get(oldStart));
-			int oldEnd = oldIndexes.get(oldIndexes.size()-1);
+			int oldEnd = oldIndexes.get(oldIndexes.size() - 1);
 			if (pdtbArg1_OLD.containsKey(oldEnd))
 				oldArg1 = Integer.toString(pdtbArg1_OLD.get(oldEnd));
 		}
@@ -587,7 +593,7 @@ public class PDTBFeatureExtractorV2 {
 			int newStart = newIndexes.get(0);
 			if (pdtbArg2_NEW.containsKey(newStart))
 				newArg2 = Integer.toString(pdtbArg2_NEW.get(newStart));
-			int newEnd = newIndexes.get(newIndexes.size()-1);
+			int newEnd = newIndexes.get(newIndexes.size() - 1);
 			if (pdtbArg1_NEW.containsKey(newEnd))
 				newArg1 = Integer.toString(pdtbArg1_NEW.get(newEnd));
 		}
@@ -596,29 +602,171 @@ public class PDTBFeatureExtractorV2 {
 		featureVector[fIndex] = oldArg2 + "_" + oldArg1;
 		fIndex = features.getIndex("NEW_PDTB_ARG2_ARG1");
 		featureVector[fIndex] = newArg2 + "_" + newArg1;
-		
-		if(oldArg2.equals("0")&&oldArg1.equals("0")&&newArg2.equals("0")&&newArg1.equals("0")) {
-			System.err.println(doc.getDocumentName()+"Extracted:"+name);
-			for(Integer oldIndex: oldIndexes) System.err.print(oldIndex+",");
+
+		if (oldArg2.equals("0") && oldArg1.equals("0") && newArg2.equals("0")
+				&& newArg1.equals("0")) {
+			System.err.println(doc.getDocumentName() + "Extracted:" + name);
+			for (Integer oldIndex : oldIndexes)
+				System.err.print(oldIndex + ",");
 			System.err.println();
 			System.err.println(doc.getOldSentences(oldIndexes));
-			for(Integer newIndex: newIndexes) System.err.print(newIndex+",");
+			for (Integer newIndex : newIndexes)
+				System.err.print(newIndex + ",");
 			System.err.println();
 			System.err.println(doc.getNewSentences(newIndexes));
 		}
 	}
 
 	public void insertFeature(FeatureName features) {
-		features.insertFeature("OLD_PDTB_IsExpansion", Boolean.TYPE);
-		//features.insertFeature("OLD_PDTB_IsTemporal", Boolean.TYPE);
-		features.insertFeature("OLD_PDTB_IsContingency", Boolean.TYPE);
-		//features.insertFeature("OLD_PDTB_IsComparison", Boolean.TYPE);
-		features.insertFeature("NEW_PDTB_IsExpansion", Boolean.TYPE);
-		//features.insertFeature("NEW_PDTB_IsTemporal", Boolean.TYPE);
-		features.insertFeature("NEW_PDTB_IsContingency", Boolean.TYPE);
-		//features.insertFeature("NEW_PDTB_IsComparison", Boolean.TYPE);
+//		features.insertFeature("OLD_PDTB_IsExpansion", Boolean.TYPE);
+//		// features.insertFeature("OLD_PDTB_IsTemporal", Boolean.TYPE);
+//		features.insertFeature("OLD_PDTB_IsContingency", Boolean.TYPE);
+//		// features.insertFeature("OLD_PDTB_IsComparison", Boolean.TYPE);
+//		features.insertFeature("NEW_PDTB_IsExpansion", Boolean.TYPE);
+//		// features.insertFeature("NEW_PDTB_IsTemporal", Boolean.TYPE);
+//		features.insertFeature("NEW_PDTB_IsContingency", Boolean.TYPE);
+//		// features.insertFeature("NEW_PDTB_IsComparison", Boolean.TYPE);
+//		features.insertFeature("OLD_PDTB_IsEntRel", Boolean.TYPE);
+//		features.insertFeature("NEW_PDTB_IsEntRel", Boolean.TYPE);
+//		features.insertFeature("OLD_PDTB_IsExplicit", Boolean.TYPE);
+//		features.insertFeature("NEW_PDTB_IsExplicit", Boolean.TYPE);
+
+		// insertPatternFeature(features, 3);
+		insertSelectedFeatures(features);
+		insertSelectedFeaturesPost(features);
+		insertPDTBVectorFeature(features);
 	}
 	
+	public void insertSelectedFeatures(FeatureName features) {
+		features.insertFeature("OLD_PDTB_IsEntRel", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsEntRel", Boolean.TYPE);
+		
+		features.insertFeature("OLD_PDTB_IsAltLex", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsAltLex", Boolean.TYPE);
+		
+		features.insertFeature("OLD_PDTB_IsComparison_Explicit", Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsComparison_Implicit", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsComparison_Explicit", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsComparison_Implicit", Boolean.TYPE);
+		
+		features.insertFeature("OLD_PDTB_IsContingency_Explicit", Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsContingency_Implicit", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsContingency_Explicit", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsContingency_Implicit", Boolean.TYPE);
+		
+		features.insertFeature("OLD_PDTB_IsExpansion_Explicit", Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsExpansion_Implicit", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsExpansion_Explicit", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsExpansion_Implicit", Boolean.TYPE);
+		
+		features.insertFeature("OLD_PDTB_IsTemporal_Explicit", Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsTemporal_Implicit", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Explicit", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Implicit", Boolean.TYPE);
+		
+	}
+
+	public void insertSelectedFeaturesPost(FeatureName features) {
+		features.insertFeature("OLD_PDTB_IsEntRel_Post", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsEntRel_Post", Boolean.TYPE);
+		
+		features.insertFeature("OLD_PDTB_IsAltLex_Post", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsAltLex_Post", Boolean.TYPE);
+		
+		features.insertFeature("OLD_PDTB_IsComparison_Explicit_Post", Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsComparison_Implicit_Post", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsComparison_Explicit_Post", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsComparison_Implicit_Post", Boolean.TYPE);
+		
+		features.insertFeature("OLD_PDTB_IsContingency_Explicit_Post", Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsContingency_Implicit_Post", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsContingency_Explicit_Post", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsContingency_Implicit_Post", Boolean.TYPE);
+		
+		features.insertFeature("OLD_PDTB_IsExpansion_Explicit_Post", Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsExpansion_Implicit_Post", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsExpansion_Explicit_Post", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsExpansion_Implicit_Post", Boolean.TYPE);
+		
+		features.insertFeature("OLD_PDTB_IsTemporal_Explicit_Post", Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsTemporal_Implicit_Post", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Explicit_Post", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Implicit_Post", Boolean.TYPE);
+	}
+	
+	public void fillInVector(FeatureName features, Object[] featureVector, String featureName, HashSet<Integer> set, int type) {
+		int fIndex = features.getIndex(featureName);
+		if (set.contains(type)) {
+			featureVector[fIndex] = Boolean.toString(true);
+		} else {
+			featureVector[fIndex] = Boolean.toString(false);
+		}
+	}
+	
+	public void extractSelectedFeature(FeatureName features, Object[] featureVector, HashSet<Integer> arg2Type_OLD, HashSet<Integer> arg2Type_NEW) {
+		fillInVector(features, featureVector, "OLD_PDTB_IsEntRel", arg2Type_OLD, IND_entRelType);
+		fillInVector(features, featureVector, "NEW_PDTB_IsEntRel", arg2Type_NEW, IND_entRelType);
+
+		fillInVector(features, featureVector, "OLD_PDTB_IsAltLex", arg2Type_OLD, IND_altLexType);
+		fillInVector(features, featureVector, "NEW_PDTB_IsAltLex", arg2Type_NEW, IND_altLexType);
+
+		
+		fillInVector(features, featureVector, "OLD_PDTB_IsComparison_Explicit", arg2Type_OLD, IND_comparisonType_EXP);
+		fillInVector(features, featureVector, "OLD_PDTB_IsComparison_Implicit", arg2Type_OLD, IND_comparisonType_IMP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsComparison_Explicit", arg2Type_NEW, IND_comparisonType_EXP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsComparison_Implicit", arg2Type_NEW, IND_comparisonType_IMP);
+		
+
+		fillInVector(features, featureVector, "OLD_PDTB_IsContingency_Explicit", arg2Type_OLD, IND_contingencyType_EXP);
+		fillInVector(features, featureVector, "OLD_PDTB_IsContingency_Implicit", arg2Type_OLD, IND_contingencyType_IMP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsContingency_Explicit", arg2Type_NEW, IND_contingencyType_EXP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsContingency_Implicit", arg2Type_NEW, IND_contingencyType_IMP);
+
+		
+		fillInVector(features, featureVector, "OLD_PDTB_IsExpansion_Explicit", arg2Type_OLD, IND_expansionType_EXP);
+		fillInVector(features, featureVector, "OLD_PDTB_IsExpansion_Implicit", arg2Type_OLD, IND_expansionType_IMP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsExpansion_Explicit", arg2Type_NEW, IND_expansionType_EXP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsExpansion_Implicit", arg2Type_NEW, IND_expansionType_IMP);
+
+		
+		fillInVector(features, featureVector, "OLD_PDTB_IsTemporal_Explicit", arg2Type_OLD, IND_temporalType_EXP);
+		fillInVector(features, featureVector, "OLD_PDTB_IsTemporal_Implicit", arg2Type_OLD, IND_temporalType_IMP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsTemporal_Explicit", arg2Type_NEW, IND_temporalType_EXP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsTemporal_Implicit", arg2Type_NEW, IND_temporalType_IMP);
+	}
+	
+	public void extractSelectedFeaturePost(FeatureName features, Object[] featureVector, HashSet<Integer> arg1Type_OLD, HashSet<Integer> arg1Type_NEW) {
+		fillInVector(features, featureVector, "OLD_PDTB_IsEntRel_Post", arg1Type_OLD, IND_entRelType);
+		fillInVector(features, featureVector, "NEW_PDTB_IsEntRel_Post", arg1Type_NEW, IND_entRelType);
+
+		fillInVector(features, featureVector, "OLD_PDTB_IsAltLex_Post", arg1Type_OLD, IND_altLexType);
+		fillInVector(features, featureVector, "NEW_PDTB_IsAltLex_Post", arg1Type_NEW, IND_altLexType);
+
+		
+		fillInVector(features, featureVector, "OLD_PDTB_IsComparison_Explicit_Post", arg1Type_OLD, IND_comparisonType_EXP);
+		fillInVector(features, featureVector, "OLD_PDTB_IsComparison_Implicit_Post", arg1Type_OLD, IND_comparisonType_IMP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsComparison_Explicit_Post", arg1Type_NEW, IND_comparisonType_EXP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsComparison_Implicit_Post", arg1Type_NEW, IND_comparisonType_IMP);
+		
+
+		fillInVector(features, featureVector, "OLD_PDTB_IsContingency_Explicit_Post", arg1Type_OLD, IND_contingencyType_EXP);
+		fillInVector(features, featureVector, "OLD_PDTB_IsContingency_Implicit_Post", arg1Type_OLD, IND_contingencyType_IMP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsContingency_Explicit_Post", arg1Type_NEW, IND_contingencyType_EXP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsContingency_Implicit_Post", arg1Type_NEW, IND_contingencyType_IMP);
+
+		
+		fillInVector(features, featureVector, "OLD_PDTB_IsExpansion_Explicit_Post", arg1Type_OLD, IND_expansionType_EXP);
+		fillInVector(features, featureVector, "OLD_PDTB_IsExpansion_Implicit_Post", arg1Type_OLD, IND_expansionType_IMP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsExpansion_Explicit_Post", arg1Type_NEW, IND_expansionType_EXP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsExpansion_Implicit_Post", arg1Type_NEW, IND_expansionType_IMP);
+
+		
+		fillInVector(features, featureVector, "OLD_PDTB_IsTemporal_Explicit_Post", arg1Type_OLD, IND_temporalType_EXP);
+		fillInVector(features, featureVector, "OLD_PDTB_IsTemporal_Implicit_Post", arg1Type_OLD, IND_temporalType_IMP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsTemporal_Explicit_Post", arg1Type_NEW, IND_temporalType_EXP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsTemporal_Implicit_Post", arg1Type_NEW, IND_temporalType_IMP);
+	}
+
 	public void extractFeature(FeatureName features, Object[] featureVector,
 			RevisionDocument doc, ArrayList<Integer> newIndexes,
 			ArrayList<Integer> oldIndexes) {
@@ -630,9 +778,10 @@ public class PDTBFeatureExtractorV2 {
 				&& pdtbArg2Results_NEW.get(name).size() == 0) {
 			readInfo(doc);
 		}
-		
-		if(oldIndexes.size()==0&& newIndexes.size()==0) {
-		//	System.out.println("UNEXPECTED CASES IN :"+ doc.getDocumentName());
+
+		if (oldIndexes.size() == 0 && newIndexes.size() == 0) {
+			// System.out.println("UNEXPECTED CASES IN :"+
+			// doc.getDocumentName());
 		}
 
 		HashSet<Integer> arg1Type_OLD = new HashSet<Integer>();
@@ -658,76 +807,13 @@ public class PDTBFeatureExtractorV2 {
 			arg2Type_NEW.add(pdtbArg2_NEW.get(newIndex));
 		}
 
-	
-			String fName = "OLD_PDTB_IsExpansion";
-			int fIndex = features.getIndex(fName);
-			if (arg1Type_OLD.contains(IND_expansionType_EXP)||arg1Type_OLD.contains(IND_expansionType_IMP)) {
-				featureVector[fIndex] = Boolean.toString(true);
-			} else {
-				featureVector[fIndex] = Boolean.toString(false);
-			}
-			/*
-			fName = "OLD_PDTB_IsTemporal";
-			fIndex = features.getIndex(fName);
-			if (arg1Type_OLD.contains(IND_temporalType_EXP)||arg1Type_OLD.contains(IND_temporalType_IMP)) {
-				featureVector[fIndex] = Boolean.toString(true);
-			} else {
-				featureVector[fIndex] = Boolean.toString(false);
-			}*/
-			
-			fName = "OLD_PDTB_IsContingency";
-			fIndex = features.getIndex(fName);
-			if (arg1Type_OLD.contains(IND_contingencyType_EXP)||arg1Type_OLD.contains(IND_contingencyType_IMP)) {
-				featureVector[fIndex] = Boolean.toString(true);
-			} else {
-				featureVector[fIndex] = Boolean.toString(false);
-			}
-			
-			/*
-			fName = "OLD_PDTB_IsComparison";
-			fIndex = features.getIndex(fName);
-			if (arg1Type_OLD.contains(IND_comparisonType_EXP)||arg1Type_OLD.contains(IND_comparisonType_IMP)) {
-				featureVector[fIndex] = Boolean.toString(true);
-			} else {
-				featureVector[fIndex] = Boolean.toString(false);
-			}
-			*/
-			
-			fName = "NEW_PDTB_IsExpansion";
-			fIndex = features.getIndex(fName);
-			if (arg1Type_NEW.contains(IND_expansionType_EXP)||arg1Type_NEW.contains(IND_expansionType_IMP)) {
-				featureVector[fIndex] = Boolean.toString(true);
-			} else {
-				featureVector[fIndex] = Boolean.toString(false);
-			}
-			
-			/*
-			fName = "NEW_PDTB_IsTemporal";
-			fIndex = features.getIndex(fName);
-			if (arg1Type_NEW.contains(IND_temporalType_EXP)||arg1Type_NEW.contains(IND_temporalType_IMP)) {
-				featureVector[fIndex] = Boolean.toString(true);
-			} else {
-				featureVector[fIndex] = Boolean.toString(false);
-			}*/
-			
-			fName = "NEW_PDTB_IsContingency";
-			fIndex = features.getIndex(fName);
-			if (arg1Type_NEW.contains(IND_contingencyType_EXP)||arg1Type_NEW.contains(IND_contingencyType_IMP)) {
-				featureVector[fIndex] = Boolean.toString(true);
-			} else {
-				featureVector[fIndex] = Boolean.toString(false);
-			}
-			
-			/*
-			fName = "NEW_PDTB_IsComparison";
-			fIndex = features.getIndex(fName);
-			if (arg1Type_NEW.contains(IND_comparisonType_EXP)||arg1Type_NEW.contains(IND_comparisonType_IMP)) {
-				featureVector[fIndex] = Boolean.toString(true);
-			} else {
-				featureVector[fIndex] = Boolean.toString(false);
-			}*/
+		extractSelectedFeature(features, featureVector, arg2Type_OLD, arg2Type_NEW);
+		extractSelectedFeaturePost(features, featureVector, arg1Type_OLD, arg1Type_NEW);
+		extractPDTBVectorFeature(features, featureVector, doc, newIndexes,
+				oldIndexes);
+
 	}
-	
+
 	public void insertFeatureAll(FeatureName features) {
 		// First test that this does not work
 		for (int i = 1; i <= 9; i++) {
@@ -748,11 +834,473 @@ public class PDTBFeatureExtractorV2 {
 		 */
 	}
 
+	public void insertPatternFeature(FeatureName features, int patternLength) {
+		ArrayList<Object> options = new ArrayList<Object>();
+		List<String> strOptions = new ArrayList<String>();
+		List<String> singleOptions = new ArrayList<String>();
+		singleOptions.add("NULL");
+		singleOptions.add("EntRel");
+		singleOptions.add("Contingency");
+		singleOptions.add("Expansion");
+		singleOptions.add("Comparison");
+		singleOptions.add("Temporal");
+		singleOptions.add("AltLex");
+		int patternLengthHalf = patternLength / 2 + 1;
+		strOptions = generatePatterns(strOptions, singleOptions,
+				patternLengthHalf);
+		for (String str : strOptions) {
+			options.add(str);
+		}
+		features.insertFeature("OLD_PDTB_PATTERN_PRIOR", options);
+		features.insertFeature("NEW_PDTB_PATTERN_PRIOR", options);
+		features.insertFeature("OLD_PDTB_PATTERN_POST", options);
+		features.insertFeature("NEW_PDTB_PATTERN_POST", options);
+	}
+
+	public void insertPDTBVectorFeature(FeatureName features) {
+		features.insertFeature("OLD_PDTB_DIM_ENTREL", Double.class);
+		features.insertFeature("OLD_PDTB_DIM_ALTLEX", Double.class);
+		features.insertFeature("OLD_PDTB_DIM_COMPARISON", Double.class);
+		features.insertFeature("OLD_PDTB_DIM_CONTINGENCY", Double.class);
+		features.insertFeature("OLD_PDTB_DIM_EXPANSION", Double.class);
+		features.insertFeature("OLD_PDTB_DIM_TEMPORAL", Double.class);
+
+		features.insertFeature("NEW_PDTB_DIM_ENTREL", Double.class);
+		features.insertFeature("NEW_PDTB_DIM_ALTLEX", Double.class);
+		features.insertFeature("NEW_PDTB_DIM_COMPARISON", Double.class);
+		features.insertFeature("NEW_PDTB_DIM_CONTINGENCY", Double.class);
+		features.insertFeature("NEW_PDTB_DIM_EXPANSION", Double.class);
+		features.insertFeature("NEW_PDTB_DIM_TEMPORAL", Double.class);
+
+		features.insertFeature("CHANGE_PDTB_DIM_ENTREL", Double.class);
+		features.insertFeature("CHANGE_PDTB_DIM_ALTLEX", Double.class);
+		features.insertFeature("CHANGE_PDTB_DIM_COMPARISON", Double.class);
+		features.insertFeature("CHANGE_PDTB_DIM_CONTINGENCY", Double.class);
+		features.insertFeature("CHANGE_PDTB_DIM_EXPANSION", Double.class);
+		features.insertFeature("CHANGE_PDTB_DIM_TEMPORAL", Double.class);
+	}
+
+	public void extractPDTBVectorFeature(FeatureName features,
+			Object[] featureVector, RevisionDocument doc,
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes) {
+		String name = getRealNameRevision(doc.getDocumentName());
+		System.out.println("FILE NAME:" + name);
+		if (pdtbArg1Results_OLD.get(name).size() == 0
+				&& pdtbArg2Results_OLD.get(name).size() == 0
+				&& pdtbArg1Results_NEW.get(name).size() == 0
+				&& pdtbArg2Results_NEW.get(name).size() == 0) {
+			readInfo(doc);
+		}
+
+		Hashtable<Integer, Integer> pdtbArg1_OLD = pdtbArg1Results_OLD
+				.get(name);
+		Hashtable<Integer, Integer> pdtbArg2_OLD = pdtbArg2Results_OLD
+				.get(name);
+		Hashtable<Integer, Integer> pdtbArg1_NEW = pdtbArg1Results_NEW
+				.get(name);
+		Hashtable<Integer, Integer> pdtbArg2_NEW = pdtbArg2Results_NEW
+				.get(name);
+
+		int old_index = 0;
+		Collections.sort(oldIndexes);
+		for (Integer oldIndex : oldIndexes) {
+			if (oldIndex != -1) {
+				old_index = oldIndex;
+				break;
+			}
+		}
+		int new_index = 0;
+		Collections.sort(newIndexes);
+		for (Integer newIndex : newIndexes) {
+			if (newIndex != -1) {
+				new_index = newIndex;
+				break;
+			}
+		}
+
+		double[] oldVecs = new double[6];
+		double[] newVecs = new double[6];
+		double[] changeVecs = new double[6];
+		if (old_index > 0) {
+			oldVecs = extractVector(doc, old_index, true, pdtbArg1_OLD,
+					pdtbArg2_OLD);
+			changeVecs = extractChangeVector(doc, old_index, true,
+					pdtbArg1_OLD, pdtbArg2_OLD);
+		}
+
+		if (new_index > 0) {
+			newVecs = extractVector(doc, new_index, false, pdtbArg1_NEW,
+					pdtbArg2_NEW);
+			if (changeVecs == null)
+				changeVecs = extractChangeVector(doc, new_index, false,
+						pdtbArg1_NEW, pdtbArg2_NEW);
+		}
+
+		for (double vec : newVecs) {
+			System.out.print(vec + "\t");
+		}
+		System.out.println();
+
+		String[] names = { "ENTREL", "ALTLEX", "COMPARISON", "CONTINGENCY",
+				"EXPANSION", "TEMPORAL" };
+		for (int i = 0; i < 6; i++) {
+			String fName = "OLD_PDTB_DIM_" + names[i];
+			int fIndex = features.getIndex(fName);
+			featureVector[fIndex] = oldVecs[i];
+		}
+		for (int i = 0; i < 6; i++) {
+			String fName = "NEW_PDTB_DIM_" + names[i];
+			int fIndex = features.getIndex(fName);
+			featureVector[fIndex] = newVecs[i];
+		}
+
+		for (int i = 0; i < 6; i++) {
+			String fName = "CHANGE_PDTB_DIM_" + names[i];
+			int fIndex = features.getIndex(fName);
+			featureVector[fIndex] = changeVecs[i];
+		}
+	}
+
+	public void setVector(double[] vector, int argTag) {
+		if (argTag == IND_entRelType) {
+			vector[0] = vector[0] + 1;
+		} else if (argTag == IND_altLexType) {
+			vector[1] = vector[1] + 1;
+		} else if (argTag == IND_comparisonType_EXP
+				|| argTag == IND_comparisonType_IMP) {
+			vector[2] = vector[2] + 1;
+		} else if (argTag == IND_contingencyType_EXP
+				|| argTag == IND_contingencyType_IMP) {
+			vector[3] = vector[3] + 1;
+		} else if (argTag == IND_expansionType_EXP
+				|| argTag == IND_expansionType_IMP) {
+			vector[4] = vector[4] + 1;
+		} else if (argTag == IND_temporalType_EXP
+				|| argTag == IND_temporalType_IMP) {
+			vector[5] = vector[5] + 1;
+		}
+	}
+
+	public void normalize(double[] vector) {
+		double divide = 0;
+		for (double value : vector) {
+			divide += value * value;
+		}
+		if (divide == 0)
+			return;
+		divide = Math.sqrt(divide);
+		for (int i = 0; i < vector.length; i++) {
+			vector[i] = vector[i] / divide;
+		}
+	}
+
+	public double[] extractVector(RevisionDocument doc, int index,
+			boolean isOld, Hashtable<Integer, Integer> arg1Relations,
+			Hashtable<Integer, Integer> arg2Relations) {
+		List<Integer> indices = getParagraphBeforeIndex(doc, index, isOld);
+		double[] vector = new double[6];
+		for (Integer i : indices) {
+			int argTag = -1;
+			if (arg1Relations.containsKey(i)) {
+				argTag = arg1Relations.get(i);
+			} else {
+				if (arg2Relations.containsKey(i + 1)) {
+					argTag = arg2Relations.get(i + 1);
+				}
+			}
+			setVector(vector, argTag);
+		}
+		// normalize(vector);
+		return vector;
+	}
+
+	public double[] extractChangeVector(RevisionDocument doc, int index,
+			boolean isOld, Hashtable<Integer, Integer> arg1Relations,
+			Hashtable<Integer, Integer> arg2Relations) {
+		List<Integer> otherSide = getIndicesOfTheOtherside(doc, index, isOld);
+
+		double[] vec = null;
+
+		if (otherSide == null || otherSide.size() == 0) {
+			vec = extractVector(doc, index, isOld, arg1Relations, arg2Relations);
+		} else {
+			Collections.sort(otherSide);
+			int otherIndex = otherSide.get(0);
+			double[] vecA = extractVector(doc, otherIndex, !isOld,
+					arg1Relations, arg2Relations);
+			double[] vecB = extractVector(doc, index, isOld, arg1Relations,
+					arg2Relations);
+			if (isOld) {
+				vec = minusVec(vecA, vecB);
+			} else {
+				vec = minusVec(vecB, vecA);
+			}
+		}
+		normalize(vec);
+		return vec;
+	}
+
+	public double[] minusVec(double[] a, double[] b) {
+		double[] c = new double[a.length];
+		for (int i = 0; i < a.length; i++) {
+			c[i] = a[i] - b[i];
+		}
+		return c;
+	}
+
+	public List<Integer> getIndicesOfTheOtherside(RevisionDocument doc,
+			int index, boolean isOld) {
+		ArrayList<Integer> otherSide = null;
+		List<Integer> befores = getParagraphBeforeIndex(doc, index, isOld);
+		Collections.sort(befores);
+		int currentIndex = index;
+		int step = 0;
+		if (isOld) {
+			while (otherSide == null) {
+				otherSide = doc.getNewFromOld(currentIndex);
+				if (otherSide == null || otherSide.size() == 0
+						|| (otherSide.size() == 1 && otherSide.get(0) == -1)) {
+					otherSide = null;
+					int i = befores.size() - step - 1;
+					if (i < 0)
+						break;
+					else {
+						currentIndex = befores.get(i);
+						step++;
+					}
+				}
+			}
+		} else {
+			otherSide = doc.getOldFromNew(currentIndex);
+			while (otherSide == null) {
+				otherSide = doc.getOldFromNew(currentIndex);
+				if (otherSide == null || otherSide.size() == 0
+						|| (otherSide.size() == 1 && otherSide.get(0) == -1)) {
+					otherSide = null;
+					int i = befores.size() - step - 1;
+					if (i < 0)
+						break;
+					else {
+						currentIndex = befores.get(i);
+						step++;
+					}
+				}
+			}
+		}
+
+		if (otherSide != null) {
+			Iterator<Integer> it = otherSide.iterator();
+			while (it.hasNext()) {
+				int value = it.next();
+				if (value == -1)
+					it.remove();
+			}
+		}
+		return otherSide;
+	}
+
+	public List<Integer> getParagraphBeforeIndex(RevisionDocument doc,
+			int index, boolean isOld) {
+		List<Integer> indices = new ArrayList<Integer>();
+		if (isOld) {
+			int paragraphNo = doc.getParaNoOfOldSentence(index);
+			int paraStart = doc.getFirstOfOldParagraph(paragraphNo);
+			while (paraStart < index) {
+				indices.add(paraStart);
+				paraStart++;
+			}
+		} else {
+			int paragraphNo = doc.getParaNoOfNewSentence(index);
+			int paraStart = doc.getFirstOfNewParagraph(paragraphNo);
+			while (paraStart < index) {
+				indices.add(paraStart);
+				paraStart++;
+			}
+		}
+		return indices;
+	}
+
+	public void extractPatternFeature(FeatureName features,
+			Object[] featureVector, RevisionDocument doc,
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes,
+			int patternLength) {
+		String name = getRealNameRevision(doc.getDocumentName());
+		System.out.println("FILE NAME:" + name);
+		if (pdtbArg1Results_OLD.get(name).size() == 0
+				&& pdtbArg2Results_OLD.get(name).size() == 0
+				&& pdtbArg1Results_NEW.get(name).size() == 0
+				&& pdtbArg2Results_NEW.get(name).size() == 0) {
+			readInfo(doc);
+		}
+
+		HashSet<Integer> arg1Type_OLD = new HashSet<Integer>();
+		HashSet<Integer> arg2Type_OLD = new HashSet<Integer>();
+		HashSet<Integer> arg1Type_NEW = new HashSet<Integer>();
+		HashSet<Integer> arg2Type_NEW = new HashSet<Integer>();
+
+		Hashtable<Integer, Integer> pdtbArg1_OLD = pdtbArg1Results_OLD
+				.get(name);
+		Hashtable<Integer, Integer> pdtbArg2_OLD = pdtbArg2Results_OLD
+				.get(name);
+		Hashtable<Integer, Integer> pdtbArg1_NEW = pdtbArg1Results_NEW
+				.get(name);
+		Hashtable<Integer, Integer> pdtbArg2_NEW = pdtbArg2Results_NEW
+				.get(name);
+
+		/*
+		 * for (Integer oldIndex : oldIndexes) {
+		 * arg1Type_OLD.add(pdtbArg1_OLD.get(oldIndex));
+		 * arg2Type_OLD.add(pdtbArg2_OLD.get(oldIndex)); } for (Integer newIndex
+		 * : newIndexes) { arg1Type_NEW.add(pdtbArg1_NEW.get(newIndex));
+		 * arg2Type_NEW.add(pdtbArg2_NEW.get(newIndex)); }
+		 */
+		int old_index = 0;
+		Collections.sort(oldIndexes);
+		for (Integer oldIndex : oldIndexes) {
+			if (oldIndex != -1) {
+				old_index = oldIndex;
+				break;
+			}
+		}
+		int new_index = 0;
+		Collections.sort(newIndexes);
+		for (Integer newIndex : newIndexes) {
+			if (newIndex != -1) {
+				new_index = newIndex;
+				break;
+			}
+		}
+
+		int upwards = (patternLength - 1) / 2;
+		StringBuffer sbOld = new StringBuffer();
+		for (int i = old_index - upwards; i <= old_index; i++) {
+			sbOld.append(getArgName(doc, true, i, old_index, pdtbArg1_OLD));
+			if (i != old_index) {
+				sbOld.append("-");
+			}
+		}
+		String patternOld = sbOld.toString();
+		String fName = "OLD_PDTB_PATTERN_PRIOR";
+		int fIndex = features.getIndex(fName);
+		featureVector[fIndex] = patternOld;
+
+		StringBuffer sbOldPost = new StringBuffer();
+		for (int i = old_index; i <= old_index + upwards; i++) {
+			sbOldPost.append(getArgName(doc, true, i, old_index, pdtbArg1_OLD));
+			if (i != old_index + upwards) {
+				sbOldPost.append("-");
+			}
+		}
+		String patternOldPost = sbOldPost.toString();
+		fName = "OLD_PDTB_PATTERN_POST";
+		fIndex = features.getIndex(fName);
+		featureVector[fIndex] = patternOldPost;
+
+		StringBuffer sbNew = new StringBuffer();
+		for (int i = new_index - upwards; i <= new_index; i++) {
+			int indent = 0;
+			sbNew.append(getArgName(doc, false, i, new_index, pdtbArg1_NEW));
+			if (i != new_index) {
+				sbNew.append("-");
+			}
+		}
+		String patternNew = sbNew.toString();
+		fName = "NEW_PDTB_PATTERN_PRIOR";
+		fIndex = features.getIndex(fName);
+		featureVector[fIndex] = patternNew;
+
+		StringBuffer sbNewPost = new StringBuffer();
+		for (int i = new_index; i <= new_index + upwards; i++) {
+			int indent = 0;
+			sbNewPost
+					.append(getArgName(doc, false, i, new_index, pdtbArg1_NEW));
+			if (i != new_index + upwards) {
+				sbNewPost.append("-");
+			}
+		}
+		String patternNewPost = sbNewPost.toString();
+		fName = "NEW_PDTB_PATTERN_POST";
+		fIndex = features.getIndex(fName);
+		featureVector[fIndex] = patternNewPost;
+	}
+
+	public String getArgName(RevisionDocument doc, boolean isOld, int index,
+			int indent, Hashtable<Integer, Integer> pdtbArgs) {
+		String name = "NULL";
+		int testIndex = index;
+		int paraNo = -1;
+		int currentParaNo = -1;
+
+		int sentenceNum = 0;
+		if (isOld) {
+			sentenceNum = doc.getOldDraftSentences().size();
+		} else {
+			sentenceNum = doc.getNewDraftSentences().size();
+		}
+
+		if (testIndex < 1 || testIndex > sentenceNum)
+			return name;
+
+		if (isOld) {
+			paraNo = doc.getParaNoOfOldSentence(testIndex);
+			currentParaNo = doc.getParaNoOfOldSentence(indent);
+		} else {
+			paraNo = doc.getParaNoOfNewSentence(testIndex);
+			currentParaNo = doc.getParaNoOfNewSentence(indent);
+		}
+
+		if (paraNo != currentParaNo)
+			return name;
+		if (!pdtbArgs.containsKey(testIndex)) {
+			return name;
+		} else {
+			int tag = pdtbArgs.get(testIndex);
+			if (tag == IND_entRelType) {
+				name = "EntRel";
+			} else if (tag == IND_comparisonType_EXP
+					|| tag == IND_comparisonType_IMP) {
+				name = "Comparison";
+			} else if (tag == IND_contingencyType_EXP
+					|| tag == IND_contingencyType_IMP) {
+				name = "Contingency";
+			} else if (tag == IND_expansionType_EXP
+					|| tag == IND_expansionType_IMP) {
+				name = "Expansion";
+			} else if (tag == IND_temporalType_EXP
+					|| tag == IND_temporalType_IMP) {
+				name = "Temporal";
+			} else if (tag == IND_altLexType) {
+				name = "AltLex";
+			}
+			return name;
+		}
+	}
+
+	public List<String> generatePatterns(List<String> options,
+			List<String> patterns, int length) {
+		if (length == 0) {
+			return options;
+		} else {
+			List<String> newOptions = new ArrayList<String>();
+			for (String option : options) {
+				for (String pattern : patterns) {
+					newOptions.add(option + "-" + pattern);
+				}
+			}
+			if (options.size() == 0) {
+				for (String pattern : patterns) {
+					newOptions.add(pattern);
+				}
+			}
+			return generatePatterns(newOptions, patterns, length - 1);
+		}
+	}
+
 	public void extractFeatureARG1ARG2(FeatureName features,
 			Object[] featureVector, RevisionDocument doc,
 			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes) {
 		String name = getRealNameRevision(doc.getDocumentName());
-		System.out.println("FILE NAME:"+name);
+		System.out.println("FILE NAME:" + name);
 		if (pdtbArg1Results_OLD.get(name).size() == 0
 				&& pdtbArg2Results_OLD.get(name).size() == 0
 				&& pdtbArg1Results_NEW.get(name).size() == 0

@@ -87,7 +87,7 @@ public class EvaluateMain {
 			int folder = 10;
 			crossValidateAlignClassify(allData, folder, 2);
 		} else if (option == CLASSIFY) {
-			int folder = 10;
+			int folder = 47;
 			// Open this for cross surface classification
 			// resultPath = "C:\\Not Backed Up\\data\\surfaceAllOp.xlsx";
 			resultPath = "C:\\Not Backed Up\\allResults";
@@ -99,7 +99,7 @@ public class EvaluateMain {
 			// Open this for jumbo classification
 			// resultPath = "/Users/faz23/Desktop/34/annotated/allResults2";
 			// crossValidateClassifyJumbo(allData, folder, true, resultPath);
-			crossValidateClassifyJumbo2(allData, folder, true, resultPath);
+			crossValidateClassifyJumbo2(allData, folder, false, resultPath);
 			// trainTestClassifyJumbo2(trainFolder, testFolder, true,
 			// resultPath);
 		}

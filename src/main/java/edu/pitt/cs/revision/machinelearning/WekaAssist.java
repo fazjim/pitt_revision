@@ -569,6 +569,7 @@ public class WekaAssist {
 		search.setNumToSelect(300);
 		filter.setEvaluator(eval);
 		filter.setSearch(search);
+		
 		filter.setInputFormat(train); // initializing the filter once with
 										// training set
 		System.out.println("Selecting features...");

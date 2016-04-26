@@ -21,7 +21,8 @@ public class EvaluateTool {
 	 */
 	public static ArrayList<ArrayList<ArrayList<RevisionDocument>>> getCrossCut(ArrayList<RevisionDocument> docs, int folder) {
 		int size = docs.size();
-		int topK = (int)Math.floor((size*1.0/folder)) + 1;
+		//int topK = (int)Math.floor((size*1.0/folder)) + 1;
+		int topK = (int)Math.round((size*1.0/folder));
 		ArrayList<ArrayList<ArrayList<RevisionDocument>>> crossCuts = new ArrayList<ArrayList<ArrayList<RevisionDocument>>>();
 		Collections.shuffle(docs); //shuffle and get top K as testSet
 		for(int i = 0;i<folder;i++) {
