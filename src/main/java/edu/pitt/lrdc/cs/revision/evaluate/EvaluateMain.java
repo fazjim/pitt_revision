@@ -87,7 +87,7 @@ public class EvaluateMain {
 			int folder = 10;
 			crossValidateAlignClassify(allData, folder, 2);
 		} else if (option == CLASSIFY) {
-			int folder = 47;
+			int folder = 10;
 			// Open this for cross surface classification
 			// resultPath = "C:\\Not Backed Up\\data\\surfaceAllOp.xlsx";
 			resultPath = "C:\\Not Backed Up\\allResults";
@@ -98,8 +98,8 @@ public class EvaluateMain {
 			// highLevel);
 			// Open this for jumbo classification
 			// resultPath = "/Users/faz23/Desktop/34/annotated/allResults2";
-			// crossValidateClassifyJumbo(allData, folder, true, resultPath);
-			crossValidateClassifyJumbo2(allData, folder, false, resultPath);
+			//crossValidateClassifyJumbo(allData, folder, true, resultPath);
+			crossValidateClassifyJumbo2(allData, folder, true, resultPath);
 			// trainTestClassifyJumbo2(trainFolder, testFolder, true,
 			// resultPath);
 		}
@@ -258,6 +258,7 @@ public class EvaluateMain {
 		double[][] confusionMatrixDT = new double[5][5];
 		double[][] confusionMatrixRF = new double[5][5];
 		double[][] confusionMatrixSVM = new double[5][5];
+		double[][] confusionMatrixSVMPDTB = new double[5][5];
 		double[][] confusionMatrixStacking = new double[5][5];
 
 		for (String experiment : experiments) {
@@ -274,7 +275,7 @@ public class EvaluateMain {
 			ArrayList<RevisionDocument> testDocs = crossCuts.get(j).get(1);
 
 			RevisionPurposeClassifier rpc = new RevisionPurposeClassifier();
-			 String[] classifiers = { "DT", "SVM", "RF", "Stacking" };
+			 String[] classifiers = { "DT", "SVM", "RF" };
 			//String[] classifiers = { "SVM" };
 			for (String classifier : classifiers) {
 				resultRow = new ResultInfoRow();
@@ -298,6 +299,21 @@ public class EvaluateMain {
 									confusionMatrixRF[ii][jj] += cm[ii][jj];
 								} else if (classifier.equals("SVM")) {
 									confusionMatrixSVM[ii][jj] += cm[ii][jj];
+								} else if(classifier.equals("Stacking")) {
+									confusionMatrixStacking[ii][jj] += cm[ii][jj];
+								}
+							}
+						}
+					} else if (experiment.equals("PDTB+OLD")) {
+						double[][] cm = eval.confusionMatrix();
+						for (int ii = 0; ii < cm.length; ii++) {
+							for (int jj = 0; jj < cm.length; jj++) {
+								if (classifier.equals("DT")) {
+									confusionMatrixDT[ii][jj] += cm[ii][jj];
+								} else if (classifier.equals("RF")) {
+									confusionMatrixRF[ii][jj] += cm[ii][jj];
+								} else if (classifier.equals("SVM")) {
+									confusionMatrixSVMPDTB[ii][jj] += cm[ii][jj];
 								} else if(classifier.equals("Stacking")) {
 									confusionMatrixStacking[ii][jj] += cm[ii][jj];
 								}
@@ -376,6 +392,7 @@ public class EvaluateMain {
 		// printCM("DT", confusionMatrixDT);
 		printCM("SVM", confusionMatrixSVM);
 		// printCM("RF", confusionMatrixRF);
+		printCM("SVM-PDTB", confusionMatrixSVMPDTB);
 	}
 
 	public static void trainTestClassifyJumbo2(
@@ -620,7 +637,7 @@ public class EvaluateMain {
 
 		ArrayList<String> experiments = new ArrayList<String>();
 		ArrayList<Integer> options = new ArrayList<Integer>();
-		experiments.add("Majority");
+		/*experiments.add("Majority");
 		options.add(100);
 		experiments.add("Unigram");
 		options.add(-1);
@@ -635,7 +652,18 @@ public class EvaluateMain {
 		// experiments.add("PDTB+unigram");
 		// options.add(2);
 		experiments.add("Location+unigram");
-		options.add(0);
+		options.add(0);*/
+		
+		experiments.add("Unigram");
+		options.add(-1);
+		experiments.add("All features-OLD");
+		options.add(11);
+
+		experiments.add("PDTB_Only");
+		options.add(22);
+		
+		experiments.add("PDTB+OLD");
+		options.add(2);
 		allAddRow(writers, experiments);
 
 		allMakeTable(writers);
