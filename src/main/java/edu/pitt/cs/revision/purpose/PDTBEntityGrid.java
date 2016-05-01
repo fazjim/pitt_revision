@@ -1,6 +1,9 @@
 package edu.pitt.cs.revision.purpose;
 
+import java.util.HashSet;
 import java.util.Hashtable;
+
+import edu.pitt.cs.revision.machinelearning.FeatureName;
 
 class RelationGrid {
 	private boolean isAltLex_ARG1 = false;
@@ -294,7 +297,152 @@ class RelationGrid {
 
 public class PDTBEntityGrid {
 	Hashtable<Integer, RelationGrid> entityOldGrid = new Hashtable<Integer, RelationGrid>();
-	Hashtable<Integer, RelationGrid> entityNEWGrid = new Hashtable<Integer, RelationGrid>();
+	Hashtable<Integer, RelationGrid> entityNewGrid = new Hashtable<Integer, RelationGrid>();
 
-	public void 
+	public RelationGrid getGrid(int index, boolean isOld) {
+		if(isOld) {
+			if(!entityOldGrid.containsKey(index)) {
+				RelationGrid rg = new RelationGrid();
+				entityOldGrid.put(index, rg);
+			}
+			return entityOldGrid.get(index);
+		} else {
+			if(!entityNewGrid.containsKey(index)) {
+				RelationGrid rg = new RelationGrid();
+				entityNewGrid.put(index, rg);
+			}
+			return entityNewGrid.get(index);
+		}
+	}
+	
+
+	
+	public void fillInVector(FeatureName features, Object[] featureVector,
+			String featureName, boolean value) {
+		int fIndex = features.getIndex(featureName);
+		featureVector[fIndex] = Boolean.toString(value);
+	}
+
+	public static void insertFeature(FeatureName features, String tagName) {
+		features.insertFeature(tagName + "_OLD_" + "EntRel_ARG1", Boolean.TYPE);
+		features.insertFeature(tagName + "_OLD_" + "EntRel_ARG2", Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "EntRel_ARG1", Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "EntRel_ARG2", Boolean.TYPE);
+
+		features.insertFeature(tagName + "_OLD_" + "AltLex_ARG1", Boolean.TYPE);
+		features.insertFeature(tagName + "_OLD_" + "AltLex_ARG2", Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "AltLex_ARG1", Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "AltLex_ARG2", Boolean.TYPE);
+
+		features.insertFeature(tagName + "_OLD_" + "Explict_Comparison_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_OLD_" + "Explict_Comparison_ARG2",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Explict_Comparison_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Explict_Comparison_ARG2",
+				Boolean.TYPE);
+
+		features.insertFeature(tagName + "_OLD_" + "Explict_Contingency_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_OLD_" + "Explict_Contingency_ARG2",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Explict_Contingency_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Explict_Contingency_ARG2",
+				Boolean.TYPE);
+
+		features.insertFeature(tagName + "_OLD_" + "Explict_Expansion_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_OLD_" + "Explict_Expansion_ARG2",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Explict_Expansion_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Explict_Expansion_ARG2",
+				Boolean.TYPE);
+
+		features.insertFeature(tagName + "_OLD_" + "Explict_Temporal_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_OLD_" + "Explict_Temporal_ARG2",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Explict_Temporal_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Explict_Temporal_ARG2",
+				Boolean.TYPE);
+
+		features.insertFeature(tagName + "_OLD_" + "Implict_Comparison_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_OLD_" + "Implict_Comparison_ARG2",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Implict_Comparison_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Implict_Comparison_ARG2",
+				Boolean.TYPE);
+
+		features.insertFeature(tagName + "_OLD_" + "Implict_Contingency_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_OLD_" + "Implict_Contingency_ARG2",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Implict_Contingency_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Implict_Contingency_ARG2",
+				Boolean.TYPE);
+
+		features.insertFeature(tagName + "_OLD_" + "Implict_Expansion_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_OLD_" + "Implict_Expansion_ARG2",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Implict_Expansion_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Implict_Expansion_ARG2",
+				Boolean.TYPE);
+
+		features.insertFeature(tagName + "_OLD_" + "Implict_Temporal_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_OLD_" + "Implict_Temporal_ARG2",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Implict_Temporal_ARG1",
+				Boolean.TYPE);
+		features.insertFeature(tagName + "_NEW_" + "Implict_Temporal_ARG2",
+				Boolean.TYPE);
+	}
+
+	public void setValue(FeatureName features, Object[] featureVector,
+			String tagName, int index, boolean isOld) {
+		RelationGrid grid = null;
+		String start = tagName;
+		if(isOld) {
+			grid = entityOldGrid.get(index);
+			start = start + "_OLD_";
+		} else {
+			grid = entityNewGrid.get(index);
+			start = start + "_NEW_";
+		}
+		
+		fillInVector(features, featureVector, start+"EntRel_ARG1", grid.isEntRel_ARG1());
+		fillInVector(features, featureVector, start+"EntRel_ARG2", grid.isEntRel_ARG2());
+		
+		fillInVector(features, featureVector, start+"AltLex_ARG1", grid.isAltLex_ARG1());
+		fillInVector(features, featureVector, start+"AltLex_ARG2", grid.isAltLex_ARG2());
+		
+		fillInVector(features, featureVector, start+"Explict_Comparison_ARG1", grid.isComparison_Explicit_ARG1());
+		fillInVector(features, featureVector, start+"Explict_Comparison_ARG2", grid.isComparison_Explicit_ARG2());
+		fillInVector(features, featureVector, start+"Implict_Comparison_ARG1", grid.isComparison_Implicit_ARG1());
+		fillInVector(features, featureVector, start+"Implict_Comparison_ARG2", grid.isComparison_Implicit_ARG2());
+		
+		fillInVector(features, featureVector, start+"Explict_Contingency_ARG1", grid.isContingency_Explicit_ARG1());
+		fillInVector(features, featureVector, start+"Explict_Contingency_ARG2", grid.isContingency_Explicit_ARG2());
+		fillInVector(features, featureVector, start+"Implict_Contingency_ARG1", grid.isContingency_Implicit_ARG1());
+		fillInVector(features, featureVector, start+"Implict_Contingency_ARG2", grid.isContingency_Implicit_ARG2());
+		
+		fillInVector(features, featureVector, start+"Explict_Expansion_ARG1", grid.isExpansion_Explicit_ARG1());
+		fillInVector(features, featureVector, start+"Explict_Expansion_ARG2", grid.isExpansion_Explicit_ARG2());
+		fillInVector(features, featureVector, start+"Implict_Expansion_ARG1", grid.isExpansion_Implicit_ARG1());
+		fillInVector(features, featureVector, start+"Implict_Expansion_ARG2", grid.isExpansion_Implicit_ARG2());
+		
+		fillInVector(features, featureVector, start+"Explict_Temporal_ARG1", grid.isTemporal_Explicit_ARG1());
+		fillInVector(features, featureVector, start+"Explict_Temporal_ARG2", grid.isTemporal_Explicit_ARG2());
+		fillInVector(features, featureVector, start+"Implict_Temporal_ARG1", grid.isTemporal_Implicit_ARG1());
+		fillInVector(features, featureVector, start+"Implict_Temporal_ARG2", grid.isTemporal_Implicit_ARG2());
+	}
 }
