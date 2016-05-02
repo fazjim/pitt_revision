@@ -36,14 +36,14 @@ import java.io.*;
 
 class TxtFilter implements FileFilter {
 
-    /** Test whether the string representation of the file 
-     *   ends with the correct extension. Note that {@ref FileIterator}
-     *   will only call this filter if the file is not a directory,
-     *   so we do not need to test that it is a file.
-     */
-    public boolean accept(File file) {
-        return file.toString().endsWith(".txt");
-    }
+	/**
+	 * Test whether the string representation of the file ends with the correct
+	 * extension. Note that {@ref FileIterator} will only call this filter if the
+	 * file is not a directory, so we do not need to test that it is a file.
+	 */
+	public boolean accept(File file) {
+		return file.toString().endsWith(".txt");
+	}
 }
 
 public class MalletAssist {
@@ -58,11 +58,11 @@ public class MalletAssist {
 	 * @param cat
 	 * @param ID
 	 */
-	
+
 	private Alphabet dataAlphabet;
 	private Alphabet taragetAlphabet;
 	private static String stopwordPath = "C:\\Not Backed Up\\libraries\\mallet-stoplists";
-	
+
 	/**
 	 * The alphabets will increase from each instance
 	 */
@@ -70,18 +70,15 @@ public class MalletAssist {
 		this.dataAlphabet = new Alphabet();
 		this.taragetAlphabet = new Alphabet();
 	}
-	
+
 	public void addInstance(InstanceList list, FeatureName featureTable,
 			Object[] features, String cat, String ID, boolean usingNgram) {
 
 	}
-	
-	
-	
+
 	/**
-	 * How mallet works:
-	 * A pipe contains a dataAlphabet
-	 * A feature sequence adds the features
+	 * How mallet works: A pipe contains a dataAlphabet A feature sequence adds
+	 * the features
 	 * 
 	 * For this one will be a 0-1 unigram (no word count)
 	 *
@@ -91,110 +88,120 @@ public class MalletAssist {
 	public FeatureSequence getUnigramSequence(String sentence) {
 		sentence = sentence.toLowerCase();
 		String[] words = sentence.split(" ");
-		FeatureSequence fs = new FeatureSequence(dataAlphabet,words.length);
-		for(String word: words) {
+		FeatureSequence fs = new FeatureSequence(dataAlphabet, words.length);
+		for (String word : words) {
 			fs.add(word);
 		}
 		return fs;
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		String filePath = "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus\\Braverman\\allTxt";
 		trainTopicModel(filePath, 10, 50);
 	}
-	
-	
-	
-    
 
-  
+	public static List<HashSet<String>> trainTopicModel(String filePath,
+			int numTopics, int topWords) throws Exception {
+		List<HashSet<String>> topicWords = new ArrayList<HashSet<String>>();
+		for (int i = 0; i < numTopics; i++) {
+			topicWords.add(new HashSet<String>());
+		}
 
-  
-	
-	 public static void trainTopicModel(String filePath, int numTopics, int topWords) throws Exception {
+		File[] directories = new File[1];
+		directories[0] = new File(filePath);
+		// Begin by importing documents from text to feature sequences
+		ArrayList<Pipe> pipeList = new ArrayList<Pipe>();
 
-		 	File[] directories = new File[1];
-		 	directories[0] = new File(filePath);
-	        // Begin by importing documents from text to feature sequences
-	        ArrayList<Pipe> pipeList = new ArrayList<Pipe>();
+		// Pipes: lowercase, tokenize, remove stopwords, map to features
+		pipeList.add(new Input2CharSequence("UTF-8"));
+		// pipeList.add( new CharSequenceLowercase() );
+		pipeList.add(new CharSequence2TokenSequence(Pattern
+				.compile("\\p{L}[\\p{L}\\p{P}]+\\p{L}")));
+		pipeList.add(new TokenSequenceLowercase());
+		pipeList.add(new TokenSequenceRemoveStopwords(new File(stopwordPath
+				+ "/en.txt"), "UTF-8", false, false, false));
+		pipeList.add(new TokenSequence2FeatureSequence());
 
-	        // Pipes: lowercase, tokenize, remove stopwords, map to features
-	        pipeList.add(new Input2CharSequence("UTF-8"));
-	        //pipeList.add( new CharSequenceLowercase() );
-	        pipeList.add( new CharSequence2TokenSequence(Pattern.compile("\\p{L}[\\p{L}\\p{P}]+\\p{L}")) );
-	        pipeList.add(new TokenSequenceLowercase());
-	        pipeList.add( new TokenSequenceRemoveStopwords(new File(stopwordPath+"/en.txt"), "UTF-8", false, false, false) );
-	        pipeList.add( new TokenSequence2FeatureSequence() );
-	        
-	        FileIterator fileIterator =
-	                new FileIterator(directories,
-	                                 new TxtFilter(),
-	                                 FileIterator.LAST_DIRECTORY);
+		FileIterator fileIterator = new FileIterator(directories,
+				new TxtFilter(), FileIterator.LAST_DIRECTORY);
 
-	            // Construct a new instance list, passing it the pipe
-	            //  we want to use to process instances.
-	            InstanceList instances = new InstanceList(new SerialPipes(pipeList));
+		// Construct a new instance list, passing it the pipe
+		// we want to use to process instances.
+		InstanceList instances = new InstanceList(new SerialPipes(pipeList));
 
-	            // Now process each instance provided by the iterator.
-	            instances.addThruPipe(fileIterator);
+		// Now process each instance provided by the iterator.
+		instances.addThruPipe(fileIterator);
 
-	       /* Reader fileReader = new InputStreamReader(new FileInputStream(new File(filePath)), "UTF-8");
-	        instances.addThruPipe(new CsvIterator (fileReader, Pattern.compile("^(\\S*)[\\s,]*(\\S*)[\\s,]*(.*)$"),
-	                                               3, 2, 1)); // data, label, name fields*/
+		/*
+		 * Reader fileReader = new InputStreamReader(new FileInputStream(new
+		 * File(filePath)), "UTF-8"); instances.addThruPipe(new CsvIterator
+		 * (fileReader, Pattern.compile("^(\\S*)[\\s,]*(\\S*)[\\s,]*(.*)$"), 3,
+		 * 2, 1)); // data, label, name fields
+		 */
 
-	        // Create a model with 100 topics, alpha_t = 0.01, beta_w = 0.01
-	        //  Note that the first parameter is passed as the sum over topics, while
-	        //  the second is the parameter for a single dimension of the Dirichlet prior
-	        ParallelTopicModel model = new ParallelTopicModel(numTopics, 1.0, 0.01);
+		// Create a model with 100 topics, alpha_t = 0.01, beta_w = 0.01
+		// Note that the first parameter is passed as the sum over topics, while
+		// the second is the parameter for a single dimension of the Dirichlet
+		// prior
+		ParallelTopicModel model = new ParallelTopicModel(numTopics, 1.0, 0.01);
 
-	        model.addInstances(instances);
+		model.addInstances(instances);
 
-	        // Use two parallel samplers, which each look at one half the corpus and combine
-	        //  statistics after every iteration.
-	        model.setNumThreads(8);
+		// Use two parallel samplers, which each look at one half the corpus and
+		// combine
+		// statistics after every iteration.
+		model.setNumThreads(8);
 
-	        // Run the model for 50 iterations and stop (this is for testing only, 
-	        //  for real applications, use 1000 to 2000 iterations)
-	        model.setNumIterations(1000);
-	        model.estimate();
+		// Run the model for 50 iterations and stop (this is for testing only,
+		// for real applications, use 1000 to 2000 iterations)
+		model.setNumIterations(1000);
+		model.estimate();
 
-	        // Show the words and topics in the first instance
+		// Show the words and topics in the first instance
 
-	        // The data alphabet maps word IDs to strings
-	        Alphabet dataAlphabet = instances.getDataAlphabet();
-	        
-	        FeatureSequence tokens = (FeatureSequence) model.getData().get(0).instance.getData();
-	        LabelSequence topics = model.getData().get(0).topicSequence;
-	        
-	        Formatter out = new Formatter(new StringBuilder(), Locale.US);
-	        for (int position = 0; position < tokens.getLength(); position++) {
-	            out.format("%s-%d ", dataAlphabet.lookupObject(tokens.getIndexAtPosition(position)), topics.getIndexAtPosition(position));
-	        }
-	        System.out.println(out);
-	        
-	        // Estimate the topic distribution of the first instance, 
-	        //  given the current Gibbs state.
-	        double[] topicDistribution = model.getTopicProbabilities(0);
+		// The data alphabet maps word IDs to strings
+		Alphabet dataAlphabet = instances.getDataAlphabet();
 
-	        // Get an array of sorted sets of word ID/count pairs
-	        ArrayList<TreeSet<IDSorter>> topicSortedWords = model.getSortedWords();
-	        
-	        // Show top 5 words in topics with proportions for the first document
-	        for (int topic = 0; topic < numTopics; topic++) {
-	            Iterator<IDSorter> iterator = topicSortedWords.get(topic).iterator();
-	            
-	            out = new Formatter(new StringBuilder(), Locale.US);
-	            out.format("%d\t%.3f\t", topic, topicDistribution[topic]);
-	            int rank = 0;
-	            while (iterator.hasNext() && rank < topWords) {
-	                IDSorter idCountPair = iterator.next();
-	                out.format("%s (%.0f) ", dataAlphabet.lookupObject(idCountPair.getID()), idCountPair.getWeight());
-	                rank++;
-	            }
-	            System.out.println(out);
-	        }
-	        
-	    }
+		FeatureSequence tokens = (FeatureSequence) model.getData().get(0).instance
+				.getData();
+		LabelSequence topics = model.getData().get(0).topicSequence;
 
+		Formatter out = new Formatter(new StringBuilder(), Locale.US);
+		for (int position = 0; position < tokens.getLength(); position++) {
+			out.format("%s-%d ", dataAlphabet.lookupObject(tokens
+					.getIndexAtPosition(position)), topics
+					.getIndexAtPosition(position));
+		}
+		System.out.println(out);
+
+		// Estimate the topic distribution of the first instance,
+		// given the current Gibbs state.
+		double[] topicDistribution = model.getTopicProbabilities(0);
+
+		// Get an array of sorted sets of word ID/count pairs
+		ArrayList<TreeSet<IDSorter>> topicSortedWords = model.getSortedWords();
+
+		// Show top 5 words in topics with proportions for the first document
+		for (int topic = 0; topic < numTopics; topic++) {
+			Iterator<IDSorter> iterator = topicSortedWords.get(topic)
+					.iterator();
+
+			out = new Formatter(new StringBuilder(), Locale.US);
+			out.format("%d\t%.3f\t", topic, topicDistribution[topic]);
+			int rank = 0;
+			while (iterator.hasNext() && rank < topWords) {
+				IDSorter idCountPair = iterator.next();
+				out.format("%s (%.0f) ",
+						dataAlphabet.lookupObject(idCountPair.getID()),
+						idCountPair.getWeight());
+				rank++;
+				topicWords.get(topic).add(
+						(dataAlphabet.lookupObject(idCountPair.getID()))
+								.toString());
+			}
+			System.out.println(out);
+		}
+		return topicWords;
+	}
 
 }

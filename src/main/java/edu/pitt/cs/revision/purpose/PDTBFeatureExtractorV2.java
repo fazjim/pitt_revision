@@ -14,6 +14,7 @@ import java.util.Iterator;
 
 import edu.pitt.cs.revision.purpose.pdtb.PipeAttribute;
 import edu.pitt.cs.revision.machinelearning.FeatureName;
+import edu.pitt.cs.revision.machinelearning.MalletAssist;
 import edu.pitt.cs.revision.purpose.pdtb.ManualParseResultFile;
 import edu.pitt.cs.revision.purpose.pdtb.ManualParseResultReader;
 import edu.pitt.cs.revision.purpose.pdtb.ModificationRemover;
@@ -34,6 +35,20 @@ public class PDTBFeatureExtractorV2 {
 	private Hashtable<String, String> oldTextTable;
 	private Hashtable<String, String> newTextTable;
 
+	private Hashtable<String, Hashtable<String, PDTBEntityGrid>> gridTables; // Binds
+																				// the
+																				// file
+																				// and
+																				// the
+																				// tables
+	private int topicNum = 5; // The list of topic names
+	private int entityWords = 50;// number of entity words in each topic
+	String filePath = "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus\\Braverman\\allTxt";
+	
+	private Hashtable<String, HashSet<String>> topicEntities; // The set of
+																// words in the
+																// topic
+
 	public static String entRelType = "EntRel";
 	public static String altLexType = "AltLex";
 	public static String explicitRelType = "Explicit";
@@ -53,6 +68,42 @@ public class PDTBFeatureExtractorV2 {
 	public static int IND_expansionType_EXP = 8;
 	public static int IND_expansionType_IMP = 9;
 	public static int IND_altLexType = 10;
+
+	public static String[] getTypeSense(int index) {
+		String[] values = new String[2];
+		if (index == IND_entRelType) {
+			values[0] = entRelType;
+			values[1] = "";
+		} else if (index == IND_altLexType) {
+			values[0] = altLexType;
+			values[1] = "";
+		} else if (index == IND_comparisonType_EXP) {
+			values[0] = comparisonType;
+			values[1] = explicitRelType;
+		} else if (index == IND_comparisonType_IMP) {
+			values[0] = comparisonType;
+			values[1] = implicitRelType;
+		} else if (index == IND_contingencyType_EXP) {
+			values[0] = contingencyType;
+			values[1] = explicitRelType;
+		} else if (index == IND_contingencyType_IMP) {
+			values[0] = contingencyType;
+			values[1] = implicitRelType;
+		} else if (index == IND_expansionType_EXP) {
+			values[0] = expansionType;
+			values[1] = explicitRelType;
+		} else if (index == IND_expansionType_IMP) {
+			values[0] = expansionType;
+			values[1] = implicitRelType;
+		} else if (index == IND_temporalType_EXP) {
+			values[0] = temporalType;
+			values[1] = explicitRelType;
+		} else if (index == IND_temporalType_IMP) {
+			values[0] = temporalType;
+			values[1] = implicitRelType;
+		}
+		return values;
+	}
 
 	public int getRealArgNo(Hashtable<String, Integer> lineMap, String searchStr) {
 		Iterator<String> it = lineMap.keySet().iterator();
@@ -375,6 +426,8 @@ public class PDTBFeatureExtractorV2 {
 		Hashtable<Integer, Integer> pdtbArg2_NEW = pdtbArg2Results_NEW
 				.get(name);
 
+		Hashtable<String, PDTBEntityGrid> gridTable = gridTables.get(name);
+
 		ArrayList<String> oldSents = doc.getOldDraftSentences();
 		ArrayList<String> newSents = doc.getNewDraftSentences();
 
@@ -382,6 +435,233 @@ public class PDTBFeatureExtractorV2 {
 				oldTextTable);
 		readInfo(doc, resultMap_NEW, newSents, pdtbArg1_NEW, pdtbArg2_NEW,
 				newTextTable);
+
+		readGrid(doc, gridTable, topicNum, topicEntities, pdtbArg1_OLD,
+				pdtbArg2_OLD, pdtbArg1_NEW, pdtbArg2_NEW);
+	}
+
+	/**
+	 * Read in all the grids
+	 * 
+	 * @param doc
+	 * @param gridTable
+	 * @param topicNum
+	 * @param topicEntities
+	 */
+	public void readGrid(RevisionDocument doc,
+			Hashtable<String, PDTBEntityGrid> gridTable, int topicNum,
+			Hashtable<String, HashSet<String>> topicEntities,
+			Hashtable<Integer, Integer> pdtbArg1_OLD,
+			Hashtable<Integer, Integer> pdtbArg2_OLD,
+			Hashtable<Integer, Integer> pdtbArg1_NEW,
+			Hashtable<Integer, Integer> pdtbArg2_NEW) {
+		for (int i = 0; i < topicNum; i++) {
+			String topic = "Topic-" + i;
+			HashSet<String> entities = topicEntities.get(topic);
+			PDTBEntityGrid grid = gridTable.get(topic);
+			fillInGrid(doc, grid, entities, pdtbArg1_OLD, pdtbArg2_OLD, true);
+			fillInGrid(doc, grid, entities, pdtbArg1_NEW, pdtbArg2_NEW, false);
+		}
+	}
+
+	/**
+	 * Fill in the grid Search the str and fill in the grid at paragraphs
+	 * 
+	 * @param doc
+	 * @param grid
+	 * @param entities
+	 * @param pdtbArg1
+	 * @param pdtbArg2
+	 * @param isOld
+	 */
+	public void fillInGrid(RevisionDocument doc, PDTBEntityGrid grid,
+			HashSet<String> entities, Hashtable<Integer, Integer> pdtbArg1,
+			Hashtable<Integer, Integer> pdtbArg2, boolean isOld) {
+		Hashtable<Integer, List<Integer>> paragraphIndices = new Hashtable<Integer, List<Integer>>();
+
+		if (isOld) {
+			int sentenceNum = doc.getOldDraftSentences().size();
+			for (int i = 1; i <= sentenceNum; i++) {
+				int paragraphNo = doc.getParaNoOfOldSentence(i);
+				if (!paragraphIndices.containsKey(paragraphNo)) {
+					int oldStart = doc.getFirstOfOldParagraph(paragraphNo);
+					int oldEnd = doc.getLastOfOldParagraph(paragraphNo);
+					List<Integer> sentences = new ArrayList<Integer>();
+					for (int j = oldStart; j <= oldEnd; j++) {
+						sentences.add(j);
+					}
+					paragraphIndices.put(paragraphNo, sentences);
+				}
+
+				List<Integer> sentencesPara = paragraphIndices.get(paragraphNo);
+				if (hasWord(doc, i, entities, isOld)) {
+					if (pdtbArg1.containsKey(i)) {
+						int arg1 = pdtbArg1.get(i);
+						String[] values = getTypeSense(arg1);
+						grid.getGrid(i, isOld).setValue(values[0], values[1],
+								true);
+					}
+					if (pdtbArg2.containsKey(i)) {
+						int arg2 = pdtbArg2.get(i);
+						String[] values = getTypeSense(arg2);
+						grid.getGrid(i, isOld).setValue(values[0], values[1],
+								false);
+					}
+				}
+
+				int beforeIndex = getRelatedSentenceBefore(sentencesPara, i,
+						doc, entities, isOld);
+				int afterIndex = getRelatedSentenceAfter(sentencesPara, i, doc,
+						entities, isOld);
+
+				if (beforeIndex != -1) {
+					if (pdtbArg1.containsKey(beforeIndex)) {
+						int arg2 = pdtbArg1.get(beforeIndex);
+						String[] values = getTypeSense(arg2);
+						grid.getGrid(i, isOld).setValue(values[0], values[1],
+								false);
+					}
+				}
+				if (afterIndex != -1) {
+					if (pdtbArg2.containsKey(afterIndex)) {
+						int arg1 = pdtbArg2.get(afterIndex);
+						String[] values = getTypeSense(arg1);
+						grid.getGrid(i, isOld).setValue(values[0], values[1],
+								true);
+					}
+				}
+			}
+		} else {
+			int sentenceNum = doc.getNewDraftSentences().size();
+			for (int i = 1; i <= sentenceNum; i++) {
+				int paragraphNo = doc.getParaNoOfNewSentence(i);
+				if (!paragraphIndices.containsKey(paragraphNo)) {
+					int newStart = doc.getFirstOfNewParagraph(paragraphNo);
+					int newEnd = doc.getLastOfNewParagraph(paragraphNo);
+					List<Integer> sentences = new ArrayList<Integer>();
+					for (int j = newStart; j <= newEnd; j++) {
+						sentences.add(j);
+					}
+					paragraphIndices.put(paragraphNo, sentences);
+				}
+
+				List<Integer> sentencesPara = paragraphIndices.get(paragraphNo);
+
+				if (hasWord(doc, i, entities, isOld)) {
+					if (pdtbArg1.containsKey(i)) {
+						int arg1 = pdtbArg1.get(i);
+						String[] values = getTypeSense(arg1);
+						grid.getGrid(i, isOld).setValue(values[0], values[1],
+								true);
+					}
+					if (pdtbArg2.containsKey(i)) {
+						int arg2 = pdtbArg2.get(i);
+						String[] values = getTypeSense(arg2);
+						grid.getGrid(i, isOld).setValue(values[0], values[1],
+								false);
+					}
+				}
+
+				int beforeIndex = getRelatedSentenceBefore(sentencesPara, i,
+						doc, entities, isOld);
+				int afterIndex = getRelatedSentenceAfter(sentencesPara, i, doc,
+						entities, isOld);
+
+				if (beforeIndex != -1) {
+					if (pdtbArg1.containsKey(beforeIndex)) {
+						int arg2 = pdtbArg1.get(beforeIndex);
+						String[] values = getTypeSense(arg2);
+						grid.getGrid(i, isOld).setValue(values[0], values[1],
+								false);
+					}
+				}
+				if (afterIndex != -1) {
+					if (pdtbArg2.containsKey(afterIndex)) {
+						int arg1 = pdtbArg2.get(afterIndex);
+						String[] values = getTypeSense(arg1);
+						grid.getGrid(i, isOld).setValue(values[0], values[1],
+								true);
+					}
+				}
+			}
+		}
+	}
+
+	public boolean hasWord(RevisionDocument doc, int index,
+			HashSet<String> entityWords, boolean isOld) {
+		String sentence = "";
+		if (isOld) {
+			sentence = doc.getOldSentence(index);
+		} else {
+			sentence = doc.getNewSentence(index);
+		}
+		String[] tokens = sentence.split(" ");
+		boolean hasTokenOfTopic = false;
+		for (String token : tokens) {
+			if (entityWords.contains(token)) {
+				hasTokenOfTopic = true;
+				break;
+			}
+		}
+		return hasTokenOfTopic;
+	}
+
+	public int getRelatedSentenceBefore(List<Integer> sentences, int index,
+			RevisionDocument doc, HashSet<String> entityWords, boolean isOld) {
+		int value = -1;
+		if (hasWord(doc, index, entityWords, isOld)) {
+			for (int i = 0; i < sentences.size(); i++) {
+				int sentenceIndex = sentences.get(i);
+				if (sentenceIndex < index) {
+					if (hasWord(doc, sentenceIndex, entityWords, isOld)) {
+						value = sentenceIndex;
+					}
+				} else if (sentenceIndex >= index) {
+					return value;
+				}
+			}
+		} else {
+			return -1;
+		}
+		return value;
+	}
+
+	public int getRelatedSentenceAfter(List<Integer> sentences, int index,
+			RevisionDocument doc, HashSet<String> entityWords, boolean isOld) {
+		int value = -1;
+		if (hasWord(doc, index, entityWords, isOld)) {
+			for (int i = sentences.size() - 1; i >= 0; i--) {
+				int sentenceIndex = sentences.get(i);
+				if (sentenceIndex > index) {
+					if (hasWord(doc, sentenceIndex, entityWords, isOld)) {
+						value = sentenceIndex;
+					}
+				} else if (sentenceIndex <= index) {
+					return value;
+				}
+			}
+		} else {
+			return -1;
+		}
+		return value;
+	}
+
+	
+
+	/**
+	 * Constructing the topic entities
+	 * 
+	 * @throws Exception
+	 */
+	public void constructTopicEntitites(String docPath) throws Exception {
+		topicEntities = new Hashtable<String, HashSet<String>>();
+		// adding the topic entity words below
+		List<HashSet<String>> topicWords = MalletAssist.trainTopicModel(
+				docPath, topicNum, entityWords);
+		for (int i = 0; i < topicNum; i++) {
+			String topicID = "Topic-" + i;
+			topicEntities.put(topicID, topicWords.get(i));
+		}
 	}
 
 	/**
@@ -501,12 +781,13 @@ public class PDTBFeatureExtractorV2 {
 		return fName.trim();
 	}
 
-	private PDTBFeatureExtractorV2() throws IOException {
+	private PDTBFeatureExtractorV2() throws Exception {
 		// List<ManualParseResultFile> results =
 		// ManualParseResultReader.readFiles(path);
 		List<ManualParseResultFile> results = ManualParseResultReader
 				.readFiles(path);
 		String refPath = "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus\\Braverman\\Braverman_raw_txt";
+		constructTopicEntitites(filePath);
 		resultMap_OLD = new Hashtable<String, ManualParseResultFile>();
 		resultMap_NEW = new Hashtable<String, ManualParseResultFile>();
 		pdtbArg1Results_OLD = new Hashtable<String, Hashtable<Integer, Integer>>();
@@ -515,11 +796,22 @@ public class PDTBFeatureExtractorV2 {
 		pdtbArg2Results_NEW = new Hashtable<String, Hashtable<Integer, Integer>>();
 		oldTextTable = new Hashtable<String, String>();
 		newTextTable = new Hashtable<String, String>();
+
+		gridTables = new Hashtable<String, Hashtable<String, PDTBEntityGrid>>();
+
 		readAll(path);
 		for (ManualParseResultFile result : results) {
 			if (result.isPDTB1()) {
 				ModificationRemover.feedTxtInfo(result, refPath);
 				String fileName = result.getFileName();
+
+				Hashtable<String, PDTBEntityGrid> gridTable = new Hashtable<String, PDTBEntityGrid>();
+				for (int i = 0; i < topicNum; i++) {
+					String topic = "Topic-" + i;
+					gridTable.put(topic, new PDTBEntityGrid());
+				}
+				gridTables.put(getRealNamePipe(fileName), gridTable);
+
 				if (fileName.contains("draft1")) {
 					fileName = getRealNamePipe(fileName);
 					System.out.println("PIPE NAME:" + fileName);
@@ -541,7 +833,7 @@ public class PDTBFeatureExtractorV2 {
 		}
 	}
 
-	public static PDTBFeatureExtractorV2 getInstance() throws IOException {
+	public static PDTBFeatureExtractorV2 getInstance() throws Exception {
 		if (instance == null) {
 			instance = new PDTBFeatureExtractorV2();
 		}
@@ -618,83 +910,104 @@ public class PDTBFeatureExtractorV2 {
 	}
 
 	public void insertFeature(FeatureName features) {
-//		features.insertFeature("OLD_PDTB_IsExpansion", Boolean.TYPE);
-//		// features.insertFeature("OLD_PDTB_IsTemporal", Boolean.TYPE);
-//		features.insertFeature("OLD_PDTB_IsContingency", Boolean.TYPE);
-//		// features.insertFeature("OLD_PDTB_IsComparison", Boolean.TYPE);
-//		features.insertFeature("NEW_PDTB_IsExpansion", Boolean.TYPE);
-//		// features.insertFeature("NEW_PDTB_IsTemporal", Boolean.TYPE);
-//		features.insertFeature("NEW_PDTB_IsContingency", Boolean.TYPE);
-//		// features.insertFeature("NEW_PDTB_IsComparison", Boolean.TYPE);
-//		features.insertFeature("OLD_PDTB_IsEntRel", Boolean.TYPE);
-//		features.insertFeature("NEW_PDTB_IsEntRel", Boolean.TYPE);
-//		features.insertFeature("OLD_PDTB_IsExplicit", Boolean.TYPE);
-//		features.insertFeature("NEW_PDTB_IsExplicit", Boolean.TYPE);
+		// features.insertFeature("OLD_PDTB_IsExpansion", Boolean.TYPE);
+		// // features.insertFeature("OLD_PDTB_IsTemporal", Boolean.TYPE);
+		// features.insertFeature("OLD_PDTB_IsContingency", Boolean.TYPE);
+		// // features.insertFeature("OLD_PDTB_IsComparison", Boolean.TYPE);
+		// features.insertFeature("NEW_PDTB_IsExpansion", Boolean.TYPE);
+		// // features.insertFeature("NEW_PDTB_IsTemporal", Boolean.TYPE);
+		// features.insertFeature("NEW_PDTB_IsContingency", Boolean.TYPE);
+		// // features.insertFeature("NEW_PDTB_IsComparison", Boolean.TYPE);
+		// features.insertFeature("OLD_PDTB_IsEntRel", Boolean.TYPE);
+		// features.insertFeature("NEW_PDTB_IsEntRel", Boolean.TYPE);
+		// features.insertFeature("OLD_PDTB_IsExplicit", Boolean.TYPE);
+		// features.insertFeature("NEW_PDTB_IsExplicit", Boolean.TYPE);
 
 		// insertPatternFeature(features, 3);
 		insertSelectedFeatures(features);
 		insertSelectedFeaturesPost(features);
 		insertPDTBVectorFeature(features);
+		for(int i = 0;i<topicNum;i++) {
+			String tagName = "Topic-" + i;
+			PDTBEntityGrid.insertFeature(features, tagName);
+		}
 	}
-	
+
 	public void insertSelectedFeatures(FeatureName features) {
 		features.insertFeature("OLD_PDTB_IsEntRel", Boolean.TYPE);
 		features.insertFeature("NEW_PDTB_IsEntRel", Boolean.TYPE);
-		
+
 		features.insertFeature("OLD_PDTB_IsAltLex", Boolean.TYPE);
 		features.insertFeature("NEW_PDTB_IsAltLex", Boolean.TYPE);
-		
+
 		features.insertFeature("OLD_PDTB_IsComparison_Explicit", Boolean.TYPE);
 		features.insertFeature("OLD_PDTB_IsComparison_Implicit", Boolean.TYPE);
 		features.insertFeature("NEW_PDTB_IsComparison_Explicit", Boolean.TYPE);
 		features.insertFeature("NEW_PDTB_IsComparison_Implicit", Boolean.TYPE);
-		
+
 		features.insertFeature("OLD_PDTB_IsContingency_Explicit", Boolean.TYPE);
 		features.insertFeature("OLD_PDTB_IsContingency_Implicit", Boolean.TYPE);
 		features.insertFeature("NEW_PDTB_IsContingency_Explicit", Boolean.TYPE);
 		features.insertFeature("NEW_PDTB_IsContingency_Implicit", Boolean.TYPE);
-		
+
 		features.insertFeature("OLD_PDTB_IsExpansion_Explicit", Boolean.TYPE);
 		features.insertFeature("OLD_PDTB_IsExpansion_Implicit", Boolean.TYPE);
 		features.insertFeature("NEW_PDTB_IsExpansion_Explicit", Boolean.TYPE);
 		features.insertFeature("NEW_PDTB_IsExpansion_Implicit", Boolean.TYPE);
-		
+
 		features.insertFeature("OLD_PDTB_IsTemporal_Explicit", Boolean.TYPE);
 		features.insertFeature("OLD_PDTB_IsTemporal_Implicit", Boolean.TYPE);
 		features.insertFeature("NEW_PDTB_IsTemporal_Explicit", Boolean.TYPE);
 		features.insertFeature("NEW_PDTB_IsTemporal_Implicit", Boolean.TYPE);
-		
+
 	}
 
 	public void insertSelectedFeaturesPost(FeatureName features) {
 		features.insertFeature("OLD_PDTB_IsEntRel_Post", Boolean.TYPE);
 		features.insertFeature("NEW_PDTB_IsEntRel_Post", Boolean.TYPE);
-		
+
 		features.insertFeature("OLD_PDTB_IsAltLex_Post", Boolean.TYPE);
 		features.insertFeature("NEW_PDTB_IsAltLex_Post", Boolean.TYPE);
-		
-		features.insertFeature("OLD_PDTB_IsComparison_Explicit_Post", Boolean.TYPE);
-		features.insertFeature("OLD_PDTB_IsComparison_Implicit_Post", Boolean.TYPE);
-		features.insertFeature("NEW_PDTB_IsComparison_Explicit_Post", Boolean.TYPE);
-		features.insertFeature("NEW_PDTB_IsComparison_Implicit_Post", Boolean.TYPE);
-		
-		features.insertFeature("OLD_PDTB_IsContingency_Explicit_Post", Boolean.TYPE);
-		features.insertFeature("OLD_PDTB_IsContingency_Implicit_Post", Boolean.TYPE);
-		features.insertFeature("NEW_PDTB_IsContingency_Explicit_Post", Boolean.TYPE);
-		features.insertFeature("NEW_PDTB_IsContingency_Implicit_Post", Boolean.TYPE);
-		
-		features.insertFeature("OLD_PDTB_IsExpansion_Explicit_Post", Boolean.TYPE);
-		features.insertFeature("OLD_PDTB_IsExpansion_Implicit_Post", Boolean.TYPE);
-		features.insertFeature("NEW_PDTB_IsExpansion_Explicit_Post", Boolean.TYPE);
-		features.insertFeature("NEW_PDTB_IsExpansion_Implicit_Post", Boolean.TYPE);
-		
-		features.insertFeature("OLD_PDTB_IsTemporal_Explicit_Post", Boolean.TYPE);
-		features.insertFeature("OLD_PDTB_IsTemporal_Implicit_Post", Boolean.TYPE);
-		features.insertFeature("NEW_PDTB_IsTemporal_Explicit_Post", Boolean.TYPE);
-		features.insertFeature("NEW_PDTB_IsTemporal_Implicit_Post", Boolean.TYPE);
+
+		features.insertFeature("OLD_PDTB_IsComparison_Explicit_Post",
+				Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsComparison_Implicit_Post",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsComparison_Explicit_Post",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsComparison_Implicit_Post",
+				Boolean.TYPE);
+
+		features.insertFeature("OLD_PDTB_IsContingency_Explicit_Post",
+				Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsContingency_Implicit_Post",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsContingency_Explicit_Post",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsContingency_Implicit_Post",
+				Boolean.TYPE);
+
+		features.insertFeature("OLD_PDTB_IsExpansion_Explicit_Post",
+				Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsExpansion_Implicit_Post",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsExpansion_Explicit_Post",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsExpansion_Implicit_Post",
+				Boolean.TYPE);
+
+		features.insertFeature("OLD_PDTB_IsTemporal_Explicit_Post",
+				Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsTemporal_Implicit_Post",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Explicit_Post",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Implicit_Post",
+				Boolean.TYPE);
 	}
-	
-	public void fillInVector(FeatureName features, Object[] featureVector, String featureName, HashSet<Integer> set, int type) {
+
+	public void fillInVector(FeatureName features, Object[] featureVector,
+			String featureName, HashSet<Integer> set, int type) {
 		int fIndex = features.getIndex(featureName);
 		if (set.contains(type)) {
 			featureVector[fIndex] = Boolean.toString(true);
@@ -702,69 +1015,125 @@ public class PDTBFeatureExtractorV2 {
 			featureVector[fIndex] = Boolean.toString(false);
 		}
 	}
-	
-	public void extractSelectedFeature(FeatureName features, Object[] featureVector, HashSet<Integer> arg2Type_OLD, HashSet<Integer> arg2Type_NEW) {
-		fillInVector(features, featureVector, "OLD_PDTB_IsEntRel", arg2Type_OLD, IND_entRelType);
-		fillInVector(features, featureVector, "NEW_PDTB_IsEntRel", arg2Type_NEW, IND_entRelType);
 
-		fillInVector(features, featureVector, "OLD_PDTB_IsAltLex", arg2Type_OLD, IND_altLexType);
-		fillInVector(features, featureVector, "NEW_PDTB_IsAltLex", arg2Type_NEW, IND_altLexType);
+	public void extractSelectedFeature(FeatureName features,
+			Object[] featureVector, HashSet<Integer> arg2Type_OLD,
+			HashSet<Integer> arg2Type_NEW) {
+		fillInVector(features, featureVector, "OLD_PDTB_IsEntRel",
+				arg2Type_OLD, IND_entRelType);
+		fillInVector(features, featureVector, "NEW_PDTB_IsEntRel",
+				arg2Type_NEW, IND_entRelType);
 
-		
-		fillInVector(features, featureVector, "OLD_PDTB_IsComparison_Explicit", arg2Type_OLD, IND_comparisonType_EXP);
-		fillInVector(features, featureVector, "OLD_PDTB_IsComparison_Implicit", arg2Type_OLD, IND_comparisonType_IMP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsComparison_Explicit", arg2Type_NEW, IND_comparisonType_EXP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsComparison_Implicit", arg2Type_NEW, IND_comparisonType_IMP);
-		
+		fillInVector(features, featureVector, "OLD_PDTB_IsAltLex",
+				arg2Type_OLD, IND_altLexType);
+		fillInVector(features, featureVector, "NEW_PDTB_IsAltLex",
+				arg2Type_NEW, IND_altLexType);
 
-		fillInVector(features, featureVector, "OLD_PDTB_IsContingency_Explicit", arg2Type_OLD, IND_contingencyType_EXP);
-		fillInVector(features, featureVector, "OLD_PDTB_IsContingency_Implicit", arg2Type_OLD, IND_contingencyType_IMP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsContingency_Explicit", arg2Type_NEW, IND_contingencyType_EXP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsContingency_Implicit", arg2Type_NEW, IND_contingencyType_IMP);
+		fillInVector(features, featureVector, "OLD_PDTB_IsComparison_Explicit",
+				arg2Type_OLD, IND_comparisonType_EXP);
+		fillInVector(features, featureVector, "OLD_PDTB_IsComparison_Implicit",
+				arg2Type_OLD, IND_comparisonType_IMP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsComparison_Explicit",
+				arg2Type_NEW, IND_comparisonType_EXP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsComparison_Implicit",
+				arg2Type_NEW, IND_comparisonType_IMP);
 
-		
-		fillInVector(features, featureVector, "OLD_PDTB_IsExpansion_Explicit", arg2Type_OLD, IND_expansionType_EXP);
-		fillInVector(features, featureVector, "OLD_PDTB_IsExpansion_Implicit", arg2Type_OLD, IND_expansionType_IMP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsExpansion_Explicit", arg2Type_NEW, IND_expansionType_EXP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsExpansion_Implicit", arg2Type_NEW, IND_expansionType_IMP);
+		fillInVector(features, featureVector,
+				"OLD_PDTB_IsContingency_Explicit", arg2Type_OLD,
+				IND_contingencyType_EXP);
+		fillInVector(features, featureVector,
+				"OLD_PDTB_IsContingency_Implicit", arg2Type_OLD,
+				IND_contingencyType_IMP);
+		fillInVector(features, featureVector,
+				"NEW_PDTB_IsContingency_Explicit", arg2Type_NEW,
+				IND_contingencyType_EXP);
+		fillInVector(features, featureVector,
+				"NEW_PDTB_IsContingency_Implicit", arg2Type_NEW,
+				IND_contingencyType_IMP);
 
-		
-		fillInVector(features, featureVector, "OLD_PDTB_IsTemporal_Explicit", arg2Type_OLD, IND_temporalType_EXP);
-		fillInVector(features, featureVector, "OLD_PDTB_IsTemporal_Implicit", arg2Type_OLD, IND_temporalType_IMP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsTemporal_Explicit", arg2Type_NEW, IND_temporalType_EXP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsTemporal_Implicit", arg2Type_NEW, IND_temporalType_IMP);
+		fillInVector(features, featureVector, "OLD_PDTB_IsExpansion_Explicit",
+				arg2Type_OLD, IND_expansionType_EXP);
+		fillInVector(features, featureVector, "OLD_PDTB_IsExpansion_Implicit",
+				arg2Type_OLD, IND_expansionType_IMP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsExpansion_Explicit",
+				arg2Type_NEW, IND_expansionType_EXP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsExpansion_Implicit",
+				arg2Type_NEW, IND_expansionType_IMP);
+
+		fillInVector(features, featureVector, "OLD_PDTB_IsTemporal_Explicit",
+				arg2Type_OLD, IND_temporalType_EXP);
+		fillInVector(features, featureVector, "OLD_PDTB_IsTemporal_Implicit",
+				arg2Type_OLD, IND_temporalType_IMP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsTemporal_Explicit",
+				arg2Type_NEW, IND_temporalType_EXP);
+		fillInVector(features, featureVector, "NEW_PDTB_IsTemporal_Implicit",
+				arg2Type_NEW, IND_temporalType_IMP);
 	}
-	
-	public void extractSelectedFeaturePost(FeatureName features, Object[] featureVector, HashSet<Integer> arg1Type_OLD, HashSet<Integer> arg1Type_NEW) {
-		fillInVector(features, featureVector, "OLD_PDTB_IsEntRel_Post", arg1Type_OLD, IND_entRelType);
-		fillInVector(features, featureVector, "NEW_PDTB_IsEntRel_Post", arg1Type_NEW, IND_entRelType);
 
-		fillInVector(features, featureVector, "OLD_PDTB_IsAltLex_Post", arg1Type_OLD, IND_altLexType);
-		fillInVector(features, featureVector, "NEW_PDTB_IsAltLex_Post", arg1Type_NEW, IND_altLexType);
+	public void extractSelectedFeaturePost(FeatureName features,
+			Object[] featureVector, HashSet<Integer> arg1Type_OLD,
+			HashSet<Integer> arg1Type_NEW) {
+		fillInVector(features, featureVector, "OLD_PDTB_IsEntRel_Post",
+				arg1Type_OLD, IND_entRelType);
+		fillInVector(features, featureVector, "NEW_PDTB_IsEntRel_Post",
+				arg1Type_NEW, IND_entRelType);
 
-		
-		fillInVector(features, featureVector, "OLD_PDTB_IsComparison_Explicit_Post", arg1Type_OLD, IND_comparisonType_EXP);
-		fillInVector(features, featureVector, "OLD_PDTB_IsComparison_Implicit_Post", arg1Type_OLD, IND_comparisonType_IMP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsComparison_Explicit_Post", arg1Type_NEW, IND_comparisonType_EXP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsComparison_Implicit_Post", arg1Type_NEW, IND_comparisonType_IMP);
-		
+		fillInVector(features, featureVector, "OLD_PDTB_IsAltLex_Post",
+				arg1Type_OLD, IND_altLexType);
+		fillInVector(features, featureVector, "NEW_PDTB_IsAltLex_Post",
+				arg1Type_NEW, IND_altLexType);
 
-		fillInVector(features, featureVector, "OLD_PDTB_IsContingency_Explicit_Post", arg1Type_OLD, IND_contingencyType_EXP);
-		fillInVector(features, featureVector, "OLD_PDTB_IsContingency_Implicit_Post", arg1Type_OLD, IND_contingencyType_IMP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsContingency_Explicit_Post", arg1Type_NEW, IND_contingencyType_EXP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsContingency_Implicit_Post", arg1Type_NEW, IND_contingencyType_IMP);
+		fillInVector(features, featureVector,
+				"OLD_PDTB_IsComparison_Explicit_Post", arg1Type_OLD,
+				IND_comparisonType_EXP);
+		fillInVector(features, featureVector,
+				"OLD_PDTB_IsComparison_Implicit_Post", arg1Type_OLD,
+				IND_comparisonType_IMP);
+		fillInVector(features, featureVector,
+				"NEW_PDTB_IsComparison_Explicit_Post", arg1Type_NEW,
+				IND_comparisonType_EXP);
+		fillInVector(features, featureVector,
+				"NEW_PDTB_IsComparison_Implicit_Post", arg1Type_NEW,
+				IND_comparisonType_IMP);
 
-		
-		fillInVector(features, featureVector, "OLD_PDTB_IsExpansion_Explicit_Post", arg1Type_OLD, IND_expansionType_EXP);
-		fillInVector(features, featureVector, "OLD_PDTB_IsExpansion_Implicit_Post", arg1Type_OLD, IND_expansionType_IMP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsExpansion_Explicit_Post", arg1Type_NEW, IND_expansionType_EXP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsExpansion_Implicit_Post", arg1Type_NEW, IND_expansionType_IMP);
+		fillInVector(features, featureVector,
+				"OLD_PDTB_IsContingency_Explicit_Post", arg1Type_OLD,
+				IND_contingencyType_EXP);
+		fillInVector(features, featureVector,
+				"OLD_PDTB_IsContingency_Implicit_Post", arg1Type_OLD,
+				IND_contingencyType_IMP);
+		fillInVector(features, featureVector,
+				"NEW_PDTB_IsContingency_Explicit_Post", arg1Type_NEW,
+				IND_contingencyType_EXP);
+		fillInVector(features, featureVector,
+				"NEW_PDTB_IsContingency_Implicit_Post", arg1Type_NEW,
+				IND_contingencyType_IMP);
 
-		
-		fillInVector(features, featureVector, "OLD_PDTB_IsTemporal_Explicit_Post", arg1Type_OLD, IND_temporalType_EXP);
-		fillInVector(features, featureVector, "OLD_PDTB_IsTemporal_Implicit_Post", arg1Type_OLD, IND_temporalType_IMP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsTemporal_Explicit_Post", arg1Type_NEW, IND_temporalType_EXP);
-		fillInVector(features, featureVector, "NEW_PDTB_IsTemporal_Implicit_Post", arg1Type_NEW, IND_temporalType_IMP);
+		fillInVector(features, featureVector,
+				"OLD_PDTB_IsExpansion_Explicit_Post", arg1Type_OLD,
+				IND_expansionType_EXP);
+		fillInVector(features, featureVector,
+				"OLD_PDTB_IsExpansion_Implicit_Post", arg1Type_OLD,
+				IND_expansionType_IMP);
+		fillInVector(features, featureVector,
+				"NEW_PDTB_IsExpansion_Explicit_Post", arg1Type_NEW,
+				IND_expansionType_EXP);
+		fillInVector(features, featureVector,
+				"NEW_PDTB_IsExpansion_Implicit_Post", arg1Type_NEW,
+				IND_expansionType_IMP);
+
+		fillInVector(features, featureVector,
+				"OLD_PDTB_IsTemporal_Explicit_Post", arg1Type_OLD,
+				IND_temporalType_EXP);
+		fillInVector(features, featureVector,
+				"OLD_PDTB_IsTemporal_Implicit_Post", arg1Type_OLD,
+				IND_temporalType_IMP);
+		fillInVector(features, featureVector,
+				"NEW_PDTB_IsTemporal_Explicit_Post", arg1Type_NEW,
+				IND_temporalType_EXP);
+		fillInVector(features, featureVector,
+				"NEW_PDTB_IsTemporal_Implicit_Post", arg1Type_NEW,
+				IND_temporalType_IMP);
 	}
 
 	public void extractFeature(FeatureName features, Object[] featureVector,
@@ -807,12 +1176,54 @@ public class PDTBFeatureExtractorV2 {
 			arg2Type_NEW.add(pdtbArg2_NEW.get(newIndex));
 		}
 
-		extractSelectedFeature(features, featureVector, arg2Type_OLD, arg2Type_NEW);
-		extractSelectedFeaturePost(features, featureVector, arg1Type_OLD, arg1Type_NEW);
+		extractSelectedFeature(features, featureVector, arg2Type_OLD,
+				arg2Type_NEW);
+		extractSelectedFeaturePost(features, featureVector, arg1Type_OLD,
+				arg1Type_NEW);
 		extractPDTBVectorFeature(features, featureVector, doc, newIndexes,
 				oldIndexes);
-
+		extractPDTBEntityGridFeature(features, featureVector, doc, newIndexes,
+				oldIndexes);
 	}
+	
+	public void extractPDTBEntityGridFeature(FeatureName features, Object[] featureVector, RevisionDocument doc, ArrayList<Integer> newIndexes,
+			ArrayList<Integer> oldIndexes) {
+		String name = getRealNameRevision(doc.getDocumentName());
+		System.out.println("FILE NAME:" + name);
+		if (pdtbArg1Results_OLD.get(name).size() == 0
+				&& pdtbArg2Results_OLD.get(name).size() == 0
+				&& pdtbArg1Results_NEW.get(name).size() == 0
+				&& pdtbArg2Results_NEW.get(name).size() == 0) {
+			readInfo(doc);
+		}
+
+		int old_index = 0;
+		Collections.sort(oldIndexes);
+		for (Integer oldIndex : oldIndexes) {
+			if (oldIndex != -1) {
+				old_index = oldIndex;
+				break;
+			}
+		}
+		int new_index = 0;
+		Collections.sort(newIndexes);
+		for (Integer newIndex : newIndexes) {
+			if (newIndex != -1) {
+				new_index = newIndex;
+				break;
+			}
+		}
+		
+		Hashtable<String,PDTBEntityGrid> gridTable = gridTables.get(name);
+		for(int i = 0;i<topicNum;i++) {
+			String topicName = "Topic-"+i;
+			PDTBEntityGrid grid = gridTable.get(topicName);
+			System.out.println("TOPIC NAME:"+ topicName);
+			grid.setValue(features, featureVector, topicName, old_index, true);
+			grid.setValue(features, featureVector, topicName, new_index, false);
+		}
+	}
+
 
 	public void insertFeatureAll(FeatureName features) {
 		// First test that this does not work

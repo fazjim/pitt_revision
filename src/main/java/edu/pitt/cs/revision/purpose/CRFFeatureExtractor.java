@@ -632,7 +632,7 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 
 	public Object[] extractFeatures(HeatMapUnit hmu,
 			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc,
-			boolean usingNgram, int remove) throws IOException, ParserConfigurationException, SAXException {
+			boolean usingNgram, int remove) throws Exception {
 		featureVector = new Object[features.getSize()];
 		if (usingNgram) {
 			extractTextFeatures(hmu.scD1 + hmu.scD2);
@@ -715,7 +715,7 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 
 	public ArrayList<Object[]> extractFeatures(
 			ArrayList<ArrayList<HeatMapUnit>> essay, RevisionDocument doc,
-			boolean usingNgram, int remove) throws IOException, ParserConfigurationException, SAXException {
+			boolean usingNgram, int remove) throws Exception {
 		essayInfo = new EssayInfo();
 		essayInfo.parsed = false;
 		ArrayList<Object[]> features = new ArrayList<Object[]>();

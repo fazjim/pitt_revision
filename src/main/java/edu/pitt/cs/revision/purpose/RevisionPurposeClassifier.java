@@ -409,7 +409,7 @@ public class RevisionPurposeClassifier {
 
 	
 	public Instances createInstancesSOLO5Class(ArrayList<RevisionDocument> docs,
-			boolean usingNgram,int option) throws IOException, ParserConfigurationException, SAXException {
+			boolean usingNgram,int option) throws Exception {
 		FeatureExtractor fe = new FeatureExtractor();
 		fe.setOnline(true);
 		// fe.openBatchMode(batchPath);

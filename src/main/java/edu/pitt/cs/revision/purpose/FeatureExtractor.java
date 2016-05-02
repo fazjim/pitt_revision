@@ -2022,7 +2022,7 @@ public class FeatureExtractor {
 
 	public Object[] extractFeatures(RevisionDocument doc,
 			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes,
-			boolean usingNgram, int option) throws IOException {
+			boolean usingNgram, int option) throws Exception {
 		featureVector = new Object[features.getSize()];
 		if (usingNgram) {
 			String sentence = extractSentence(doc, newIndexes, oldIndexes, true);
@@ -2075,8 +2075,7 @@ public class FeatureExtractor {
 	}
 
 	public void buildFeatures(boolean usingNgram, ArrayList<String> categories,
-			int remove) throws IOException, ParserConfigurationException,
-			SAXException {
+			int remove) throws Exception {
 		features = new FeatureName();
 		insertCategory(categories);
 		System.out.println("=======================REMOVE IS:" + remove);
@@ -2113,8 +2112,7 @@ public class FeatureExtractor {
 	}
 
 	public void buildFeaturesCRF(boolean usingNgram,
-			ArrayList<String> categories, int remove) throws IOException,
-			ParserConfigurationException, SAXException {
+			ArrayList<String> categories, int remove) throws Exception {
 		features = new FeatureName();
 		insertCategory(categories);
 		System.out.println("=======================REMOVE IS:" + remove);
@@ -2165,8 +2163,7 @@ public class FeatureExtractor {
 
 	// extract features
 	public Object[] extractFeatures(RevisionDocument doc, RevisionUnit ru,
-			boolean usingNgram, int remove) throws IOException,
-			ParserConfigurationException, SAXException {
+			boolean usingNgram, int remove) throws Exception {
 		
 		featureVector = new Object[features.getSize()];
 		if (usingNgram) {

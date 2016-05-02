@@ -296,9 +296,19 @@ class RelationGrid {
 }
 
 public class PDTBEntityGrid {
+	private String topic;
+	
+	public void setTopic(String topic) {
+		this.topic = topic;
+	}
+	
+	public String getTopic() {
+		return this.topic;
+	}
+	
 	Hashtable<Integer, RelationGrid> entityOldGrid = new Hashtable<Integer, RelationGrid>();
 	Hashtable<Integer, RelationGrid> entityNewGrid = new Hashtable<Integer, RelationGrid>();
-
+	
 	public RelationGrid getGrid(int index, boolean isOld) {
 		if(isOld) {
 			if(!entityOldGrid.containsKey(index)) {
@@ -409,16 +419,15 @@ public class PDTBEntityGrid {
 
 	public void setValue(FeatureName features, Object[] featureVector,
 			String tagName, int index, boolean isOld) {
-		RelationGrid grid = null;
+		RelationGrid grid = getGrid(index, isOld);
 		String start = tagName;
 		if(isOld) {
-			grid = entityOldGrid.get(index);
+			//grid = entityOldGrid.get(index);
 			start = start + "_OLD_";
 		} else {
-			grid = entityNewGrid.get(index);
+			//grid = entityNewGrid.get(index);
 			start = start + "_NEW_";
 		}
-		
 		fillInVector(features, featureVector, start+"EntRel_ARG1", grid.isEntRel_ARG1());
 		fillInVector(features, featureVector, start+"EntRel_ARG2", grid.isEntRel_ARG2());
 		
