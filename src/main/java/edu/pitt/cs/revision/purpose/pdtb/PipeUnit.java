@@ -12,6 +12,26 @@ import java.util.StringTokenizer;
 public class PipeUnit {
 	private String[] attrs = new String[PipeAttribute.NUM_ATTRs];
 
+	private int arg1SentenceIndex;
+	private int arg2SentenceIndex;
+	
+	
+	public int getArg1SentenceIndex() {
+		return arg1SentenceIndex;
+	}
+
+	public void setArg1SentenceIndex(int arg1SentenceIndex) {
+		this.arg1SentenceIndex = arg1SentenceIndex;
+	}
+
+	public int getArg2SentenceIndex() {
+		return arg2SentenceIndex;
+	}
+
+	public void setArg2SentenceIndex(int arg2SentenceIndex) {
+		this.arg2SentenceIndex = arg2SentenceIndex;
+	}
+
 	/**
 	 * Constructor, pass in the line to construct all the attributes
 	 * 

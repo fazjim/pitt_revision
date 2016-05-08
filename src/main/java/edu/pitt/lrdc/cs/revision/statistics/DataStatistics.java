@@ -29,12 +29,20 @@ public class DataStatistics {
 	public static void stat(ArrayList<RevisionDocument> docs) {
 		double oldAverageSent = 0;
 		double newAverageSent = 0;
+		double oldWordCnt = 0;
+		double newWordCnt = 0;
 		ArrayList<Double> oldSentNums = new ArrayList<Double>();
 		ArrayList<Double> newSentNums = new ArrayList<Double>();
 		
 		for (RevisionDocument doc : docs) {
 			oldAverageSent += doc.getOldDraftSentences().size();
 			newAverageSent += doc.getNewDraftSentences().size();
+			for(String sent: doc.getOldDraftSentences()) {
+				oldWordCnt += sent.split(" ").length;
+			}
+			for(String sent: doc.getNewDraftSentences()) {
+				newWordCnt += sent.split(" ").length;
+			}
 			ArrayList<RevisionDocument> tmp = new ArrayList<RevisionDocument>();
 			tmp.add(doc);
 			System.out.println(doc.getDocumentName());
@@ -59,6 +67,12 @@ public class DataStatistics {
 		System.out.println("=============Multi revisions=================");
 		statMultiRevisions(docs);
 		
+		System.out.println("OLD Total:"+oldAverageSent);
+		System.out.println("NEW Total:"+newAverageSent);
+		System.out.println("Sentences: "+(oldAverageSent+newAverageSent));
+		System.out.println("OLD Word Total:"+oldWordCnt);
+		System.out.println("NEW Word Total:"+newWordCnt);
+		System.out.println("Words: " + (oldWordCnt + newWordCnt));
 		System.out.println("OLD:"+oldAverageSent/docs.size());
 		System.out.println("NEW:"+newAverageSent/docs.size());
 		System.out.println("OLD STD:"+getStd(oldSentNums));
@@ -320,7 +334,7 @@ public class DataStatistics {
 		 * docs.addAll(docs2); //docs.addAll(docs3);
 		 */
 		String path = "C:\\Not Backed Up\\data\\naaclData\\C1";
-		path = "C:\\Not Backed Up\\data_phrase_science\\BarnettPhraseAlign";
+		//path = "C:\\Not Backed Up\\data_phrase_science\\BarnettPhraseAlign";
 		ds.stat(RevisionDocumentReader.readDocs(path));
 	}
 }

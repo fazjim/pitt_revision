@@ -143,18 +143,18 @@ public class MalletAssist {
 		// Note that the first parameter is passed as the sum over topics, while
 		// the second is the parameter for a single dimension of the Dirichlet
 		// prior
-		ParallelTopicModel model = new ParallelTopicModel(numTopics, 1.0, 0.01);
+		ParallelTopicModel model = new ParallelTopicModel(numTopics, 5, 0.1);
 
 		model.addInstances(instances);
 
 		// Use two parallel samplers, which each look at one half the corpus and
 		// combine
 		// statistics after every iteration.
-		model.setNumThreads(8);
+		model.setNumThreads(4);
 
 		// Run the model for 50 iterations and stop (this is for testing only,
 		// for real applications, use 1000 to 2000 iterations)
-		model.setNumIterations(1000);
+		model.setNumIterations(2000);
 		model.estimate();
 
 		// Show the words and topics in the first instance

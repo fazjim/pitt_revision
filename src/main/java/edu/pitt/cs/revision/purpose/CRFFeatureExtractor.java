@@ -640,7 +640,8 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 		}
 		if (remove == -1)
 			return featureVector;
-		if (remove == 10 || remove == 11 || remove == 3 || remove == 2 || remove == 5) {
+		if (remove == 10 || remove == 11 || remove == 3 || remove == 2
+				|| remove == 5 || remove == 6) {
 			extractLocGroup(hmu, essay);
 			extractTextGroup(hmu, essay);
 		}
@@ -653,14 +654,19 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 			newIndices.add(hmu.realNewIndex);
 		if (hmu.realOldIndex != -1)
 			oldIndices.add(hmu.realOldIndex);
-		if (remove == 2 || remove == 10 || remove == 22) {
+		if (remove == 2 || remove == 10 || remove == 22 || remove == 6) {
 			// extractLanguageGroup(doc, ru);
-			 PDTBFeatureExtractorV2.getInstance().extractFeature(features,
-			 featureVector, doc, newIndices, oldIndices);
-			 /*PDTBFeatureExtractorV2.getInstance().extractFeatureARG1ARG2(features,
-			 featureVector, doc, newIndices,
-			 oldIndices);*/
+			PDTBFeatureExtractorV2.getInstance().extractFeature(features,
+					featureVector, doc, newIndices, oldIndices);
+			/*
+			 * PDTBFeatureExtractorV2.getInstance().extractFeatureARG1ARG2(features
+			 * , featureVector, doc, newIndices, oldIndices);
+			 */
 
+		}
+		if (remove == 6 || remove == 10) {
+			PDTBFeatureExtractorV2.getInstance().extractPDTBEntityGridFeature(
+					features, featureVector, doc, newIndices, oldIndices);
 		}
 		if (remove == 3 || remove == 10)
 			// extractMetaGroup(doc, ru);
@@ -671,7 +677,7 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 					features, featureVector, doc, newIndices, oldIndices);
 
 		if (remove == 4 || remove == 10 || remove == 2) {
-			//extractFeaturesPriorPost(hmu, essay, doc, 1);
+			// extractFeaturesPriorPost(hmu, essay, doc, 1);
 		}
 		if (remove == 5 || remove == 10) {
 			// extractLanguageGroup(doc, ru);

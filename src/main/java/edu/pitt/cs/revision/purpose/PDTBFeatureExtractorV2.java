@@ -29,6 +29,9 @@ public class PDTBFeatureExtractorV2 {
 	private Hashtable<String, Hashtable<Integer, Integer>> pdtbArg2Results_OLD;
 	private Hashtable<String, Hashtable<Integer, Integer>> pdtbArg1Results_NEW;
 	private Hashtable<String, Hashtable<Integer, Integer>> pdtbArg2Results_NEW;
+	private Hashtable<String, Hashtable<Integer, Integer>> pdtbOwnResults_OLD;
+	private Hashtable<String, Hashtable<Integer, Integer>> pdtbOwnResults_NEW;
+
 	private Hashtable<String, ManualParseResultFile> resultMap_OLD;
 	private Hashtable<String, ManualParseResultFile> resultMap_NEW;
 	private String path = "C:\\Not Backed Up\\discourse_parse_results\\manual2";
@@ -41,10 +44,10 @@ public class PDTBFeatureExtractorV2 {
 																				// and
 																				// the
 																				// tables
-	private int topicNum = 5; // The list of topic names
-	private int entityWords = 50;// number of entity words in each topic
+	private int topicNum = 2; // The list of topic names
+	private int entityWords = 200;// number of entity words in each topic
 	String filePath = "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus\\Braverman\\allTxt";
-	
+
 	private Hashtable<String, HashSet<String>> topicEntities; // The set of
 																// words in the
 																// topic
@@ -78,29 +81,29 @@ public class PDTBFeatureExtractorV2 {
 			values[0] = altLexType;
 			values[1] = "";
 		} else if (index == IND_comparisonType_EXP) {
-			values[0] = comparisonType;
-			values[1] = explicitRelType;
+			values[0] = explicitRelType;
+			values[1] = comparisonType;
 		} else if (index == IND_comparisonType_IMP) {
-			values[0] = comparisonType;
-			values[1] = implicitRelType;
+			values[1] = comparisonType;
+			values[0] = implicitRelType;
 		} else if (index == IND_contingencyType_EXP) {
-			values[0] = contingencyType;
-			values[1] = explicitRelType;
+			values[1] = contingencyType;
+			values[0] = explicitRelType;
 		} else if (index == IND_contingencyType_IMP) {
-			values[0] = contingencyType;
-			values[1] = implicitRelType;
+			values[1] = contingencyType;
+			values[0] = implicitRelType;
 		} else if (index == IND_expansionType_EXP) {
-			values[0] = expansionType;
-			values[1] = explicitRelType;
+			values[1] = expansionType;
+			values[0] = explicitRelType;
 		} else if (index == IND_expansionType_IMP) {
-			values[0] = expansionType;
-			values[1] = implicitRelType;
+			values[1] = expansionType;
+			values[0] = implicitRelType;
 		} else if (index == IND_temporalType_EXP) {
-			values[0] = temporalType;
-			values[1] = explicitRelType;
+			values[1] = temporalType;
+			values[0] = explicitRelType;
 		} else if (index == IND_temporalType_IMP) {
-			values[0] = temporalType;
-			values[1] = implicitRelType;
+			values[1] = temporalType;
+			values[0] = implicitRelType;
 		}
 		return values;
 	}
@@ -298,6 +301,7 @@ public class PDTBFeatureExtractorV2 {
 			Hashtable<String, ManualParseResultFile> resultMap,
 			ArrayList<String> sentences, Hashtable<Integer, Integer> pdtbArg1,
 			Hashtable<Integer, Integer> pdtbArg2,
+			Hashtable<Integer, Integer> pdtbOwn,
 			Hashtable<String, String> txtTable) {
 		// Map of lines
 		Hashtable<String, Integer> lineMap = new Hashtable<String, Integer>();
@@ -410,9 +414,15 @@ public class PDTBFeatureExtractorV2 {
 				 */
 				if (realLineArg2No != -1)
 					pdtbArg2.put(realLineArg2No, argType);
+			} else {
+				pdtbOwn.put(realLineArg2No, argType);
 			}
+			
+			pipe.setArg1SentenceIndex(realLineArg1No);
+			pipe.setArg2SentenceIndex(realLineArg2No);
 		}
 
+		//Setting up things, can build the graph now
 	}
 
 	public void readInfo(RevisionDocument doc) {
@@ -426,18 +436,21 @@ public class PDTBFeatureExtractorV2 {
 		Hashtable<Integer, Integer> pdtbArg2_NEW = pdtbArg2Results_NEW
 				.get(name);
 
+		Hashtable<Integer, Integer> pdtbOwn_OLD = pdtbOwnResults_OLD.get(name);
+		Hashtable<Integer, Integer> pdtbOwn_NEW = pdtbOwnResults_NEW.get(name);
+
 		Hashtable<String, PDTBEntityGrid> gridTable = gridTables.get(name);
 
 		ArrayList<String> oldSents = doc.getOldDraftSentences();
 		ArrayList<String> newSents = doc.getNewDraftSentences();
 
 		readInfo(doc, resultMap_OLD, oldSents, pdtbArg1_OLD, pdtbArg2_OLD,
-				oldTextTable);
+				pdtbOwn_OLD, oldTextTable);
 		readInfo(doc, resultMap_NEW, newSents, pdtbArg1_NEW, pdtbArg2_NEW,
-				newTextTable);
+				pdtbOwn_NEW, newTextTable);
 
 		readGrid(doc, gridTable, topicNum, topicEntities, pdtbArg1_OLD,
-				pdtbArg2_OLD, pdtbArg1_NEW, pdtbArg2_NEW);
+				pdtbArg2_OLD, pdtbArg1_NEW, pdtbArg2_NEW, pdtbOwn_OLD, pdtbOwn_NEW);
 	}
 
 	/**
@@ -454,13 +467,18 @@ public class PDTBFeatureExtractorV2 {
 			Hashtable<Integer, Integer> pdtbArg1_OLD,
 			Hashtable<Integer, Integer> pdtbArg2_OLD,
 			Hashtable<Integer, Integer> pdtbArg1_NEW,
-			Hashtable<Integer, Integer> pdtbArg2_NEW) {
+			Hashtable<Integer, Integer> pdtbArg2_NEW,
+			Hashtable<Integer, Integer> pdtbOwn_OLD,
+			Hashtable<Integer, Integer> pdtbOwn_NEW) {
+		PDTBEntityGrid mergedGrid = gridTable.get("Merged");
 		for (int i = 0; i < topicNum; i++) {
 			String topic = "Topic-" + i;
 			HashSet<String> entities = topicEntities.get(topic);
 			PDTBEntityGrid grid = gridTable.get(topic);
-			fillInGrid(doc, grid, entities, pdtbArg1_OLD, pdtbArg2_OLD, true);
-			fillInGrid(doc, grid, entities, pdtbArg1_NEW, pdtbArg2_NEW, false);
+			fillInGrid(doc, grid, entities, pdtbArg1_OLD, pdtbArg2_OLD,
+					pdtbOwn_OLD, true, mergedGrid);
+			fillInGrid(doc, grid, entities, pdtbArg1_NEW, pdtbArg2_NEW,
+					pdtbOwn_NEW, false, mergedGrid);
 		}
 	}
 
@@ -476,7 +494,9 @@ public class PDTBFeatureExtractorV2 {
 	 */
 	public void fillInGrid(RevisionDocument doc, PDTBEntityGrid grid,
 			HashSet<String> entities, Hashtable<Integer, Integer> pdtbArg1,
-			Hashtable<Integer, Integer> pdtbArg2, boolean isOld) {
+			Hashtable<Integer, Integer> pdtbArg2,
+			Hashtable<Integer, Integer> pdtbOwn, boolean isOld,
+			PDTBEntityGrid mergedGrid) {
 		Hashtable<Integer, List<Integer>> paragraphIndices = new Hashtable<Integer, List<Integer>>();
 
 		if (isOld) {
@@ -499,13 +519,21 @@ public class PDTBFeatureExtractorV2 {
 						int arg1 = pdtbArg1.get(i);
 						String[] values = getTypeSense(arg1);
 						grid.getGrid(i, isOld).setValue(values[0], values[1],
-								true);
+								true, 1);
 					}
 					if (pdtbArg2.containsKey(i)) {
 						int arg2 = pdtbArg2.get(i);
 						String[] values = getTypeSense(arg2);
 						grid.getGrid(i, isOld).setValue(values[0], values[1],
-								false);
+								false, 1);
+					}
+					if (pdtbOwn.containsKey(i)) {
+						int arg = pdtbOwn.get(i);
+						String[] values = getTypeSense(arg);
+						grid.getGrid(i, isOld).setValue(values[0], values[1],
+								true, 0.5);
+						grid.getGrid(i, isOld).setValue(values[0], values[1],
+								false, 0.5);
 					}
 				}
 
@@ -519,7 +547,8 @@ public class PDTBFeatureExtractorV2 {
 						int arg2 = pdtbArg1.get(beforeIndex);
 						String[] values = getTypeSense(arg2);
 						grid.getGrid(i, isOld).setValue(values[0], values[1],
-								false);
+								false, (i - beforeIndex));
+
 					}
 				}
 				if (afterIndex != -1) {
@@ -527,9 +556,11 @@ public class PDTBFeatureExtractorV2 {
 						int arg1 = pdtbArg2.get(afterIndex);
 						String[] values = getTypeSense(arg1);
 						grid.getGrid(i, isOld).setValue(values[0], values[1],
-								true);
+								true, (afterIndex - i));
+
 					}
 				}
+				mergedGrid.getGrid(i, isOld).merge(grid.getGrid(i, isOld));
 			}
 		} else {
 			int sentenceNum = doc.getNewDraftSentences().size();
@@ -552,13 +583,24 @@ public class PDTBFeatureExtractorV2 {
 						int arg1 = pdtbArg1.get(i);
 						String[] values = getTypeSense(arg1);
 						grid.getGrid(i, isOld).setValue(values[0], values[1],
-								true);
+								true, 1);
+
 					}
 					if (pdtbArg2.containsKey(i)) {
 						int arg2 = pdtbArg2.get(i);
 						String[] values = getTypeSense(arg2);
 						grid.getGrid(i, isOld).setValue(values[0], values[1],
-								false);
+								false, 1);
+
+					}
+
+					if (pdtbOwn.containsKey(i)) {
+						int arg = pdtbOwn.get(i);
+						String[] values = getTypeSense(arg);
+						grid.getGrid(i, isOld).setValue(values[0], values[1],
+								true, 0.5);
+						grid.getGrid(i, isOld).setValue(values[0], values[1],
+								false, 0.5);
 					}
 				}
 
@@ -572,7 +614,8 @@ public class PDTBFeatureExtractorV2 {
 						int arg2 = pdtbArg1.get(beforeIndex);
 						String[] values = getTypeSense(arg2);
 						grid.getGrid(i, isOld).setValue(values[0], values[1],
-								false);
+								false, (i - beforeIndex));
+
 					}
 				}
 				if (afterIndex != -1) {
@@ -580,9 +623,11 @@ public class PDTBFeatureExtractorV2 {
 						int arg1 = pdtbArg2.get(afterIndex);
 						String[] values = getTypeSense(arg1);
 						grid.getGrid(i, isOld).setValue(values[0], values[1],
-								true);
+								true, (afterIndex - i));
+
 					}
 				}
+				mergedGrid.getGrid(i, isOld).merge(grid.getGrid(i, isOld));
 			}
 		}
 	}
@@ -598,6 +643,9 @@ public class PDTBFeatureExtractorV2 {
 		String[] tokens = sentence.split(" ");
 		boolean hasTokenOfTopic = false;
 		for (String token : tokens) {
+			token = token.toLowerCase().trim();
+			if (token.contains("'"))
+				token = token.substring(0, token.indexOf("'"));
 			if (entityWords.contains(token)) {
 				hasTokenOfTopic = true;
 				break;
@@ -645,8 +693,6 @@ public class PDTBFeatureExtractorV2 {
 		}
 		return value;
 	}
-
-	
 
 	/**
 	 * Constructing the topic entities
@@ -794,6 +840,8 @@ public class PDTBFeatureExtractorV2 {
 		pdtbArg2Results_OLD = new Hashtable<String, Hashtable<Integer, Integer>>();
 		pdtbArg1Results_NEW = new Hashtable<String, Hashtable<Integer, Integer>>();
 		pdtbArg2Results_NEW = new Hashtable<String, Hashtable<Integer, Integer>>();
+		pdtbOwnResults_OLD = new Hashtable<String, Hashtable<Integer, Integer>>();
+		pdtbOwnResults_NEW = new Hashtable<String, Hashtable<Integer, Integer>>();
 		oldTextTable = new Hashtable<String, String>();
 		newTextTable = new Hashtable<String, String>();
 
@@ -810,6 +858,7 @@ public class PDTBFeatureExtractorV2 {
 					String topic = "Topic-" + i;
 					gridTable.put(topic, new PDTBEntityGrid());
 				}
+				gridTable.put("Merged", new PDTBEntityGrid());
 				gridTables.put(getRealNamePipe(fileName), gridTable);
 
 				if (fileName.contains("draft1")) {
@@ -819,6 +868,8 @@ public class PDTBFeatureExtractorV2 {
 					pdtbArg1Results_OLD.put(fileName, types);
 					Hashtable<Integer, Integer> types2 = new Hashtable<Integer, Integer>();
 					pdtbArg2Results_OLD.put(fileName, types2);
+					Hashtable<Integer, Integer> types3 = new Hashtable<Integer, Integer>();
+					pdtbOwnResults_OLD.put(fileName, types3);
 					resultMap_OLD.put(fileName, result);
 				} else if (fileName.contains("draft2")) {
 					fileName = getRealNamePipe(fileName);
@@ -827,6 +878,8 @@ public class PDTBFeatureExtractorV2 {
 					pdtbArg1Results_NEW.put(fileName, types);
 					Hashtable<Integer, Integer> types2 = new Hashtable<Integer, Integer>();
 					pdtbArg2Results_NEW.put(fileName, types2);
+					Hashtable<Integer, Integer> types3 = new Hashtable<Integer, Integer>();
+					pdtbOwnResults_NEW.put(fileName, types3);
 					resultMap_NEW.put(fileName, result);
 				}
 			}
@@ -927,10 +980,23 @@ public class PDTBFeatureExtractorV2 {
 		insertSelectedFeatures(features);
 		insertSelectedFeaturesPost(features);
 		insertPDTBVectorFeature(features);
-		for(int i = 0;i<topicNum;i++) {
-			String tagName = "Topic-" + i;
-			PDTBEntityGrid.insertFeature(features, tagName);
+	}
+
+	public void insertPDTBEntityFeatures(FeatureName features) {
+		for (int i = 0; i < topicNum; i++) {
+			// String tagName = "Topic-" + i;
+			// PDTBEntityGrid.insertFeature(features, tagName);
+			String tagName = "Topic-" + i + "-Weight-";
+			PDTBEntityGrid.insertFeatureWeight(features, tagName);
+			PDTBEntityGrid.insertFeatureWeightDiff(features, tagName);
 		}
+		// String tagName = "Merged";
+		// PDTBEntityGrid.insertFeature(features, tagName);
+		// PDTBEntityGrid.insertCountFeature(features, "MergeCount");
+		// PDTBEntityGrid.insertCountFeature(features, "MergeWeight");
+		String tagName = "Merged-Weight-";
+		PDTBEntityGrid.insertFeatureWeight(features, tagName);
+		PDTBEntityGrid.insertFeatureWeightDiff(features, tagName);
 	}
 
 	public void insertSelectedFeatures(FeatureName features) {
@@ -1166,14 +1232,23 @@ public class PDTBFeatureExtractorV2 {
 				.get(name);
 		Hashtable<Integer, Integer> pdtbArg2_NEW = pdtbArg2Results_NEW
 				.get(name);
+		Hashtable<Integer, Integer> pdtbOwn_OLD = pdtbOwnResults_NEW.get(name);
+		Hashtable<Integer, Integer> pdtbOwn_NEW = pdtbOwnResults_NEW.get(name);
 
 		for (Integer oldIndex : oldIndexes) {
 			arg1Type_OLD.add(pdtbArg1_OLD.get(oldIndex));
 			arg2Type_OLD.add(pdtbArg2_OLD.get(oldIndex));
+
+			arg1Type_OLD.add(pdtbOwn_OLD.get(oldIndex));
+			arg2Type_OLD.add(pdtbOwn_OLD.get(oldIndex));
+
 		}
 		for (Integer newIndex : newIndexes) {
 			arg1Type_NEW.add(pdtbArg1_NEW.get(newIndex));
 			arg2Type_NEW.add(pdtbArg2_NEW.get(newIndex));
+
+			arg1Type_NEW.add(pdtbOwn_NEW.get(newIndex));
+			arg2Type_NEW.add(pdtbOwn_NEW.get(newIndex));
 		}
 
 		extractSelectedFeature(features, featureVector, arg2Type_OLD,
@@ -1182,12 +1257,15 @@ public class PDTBFeatureExtractorV2 {
 				arg1Type_NEW);
 		extractPDTBVectorFeature(features, featureVector, doc, newIndexes,
 				oldIndexes);
-		extractPDTBEntityGridFeature(features, featureVector, doc, newIndexes,
-				oldIndexes);
+		/*
+		 * extractPDTBEntityGridFeature(features, featureVector, doc,
+		 * newIndexes, oldIndexes);
+		 */
 	}
-	
-	public void extractPDTBEntityGridFeature(FeatureName features, Object[] featureVector, RevisionDocument doc, ArrayList<Integer> newIndexes,
-			ArrayList<Integer> oldIndexes) {
+
+	public void extractPDTBEntityGridFeature(FeatureName features,
+			Object[] featureVector, RevisionDocument doc,
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes) {
 		String name = getRealNameRevision(doc.getDocumentName());
 		System.out.println("FILE NAME:" + name);
 		if (pdtbArg1Results_OLD.get(name).size() == 0
@@ -1213,17 +1291,39 @@ public class PDTBFeatureExtractorV2 {
 				break;
 			}
 		}
-		
-		Hashtable<String,PDTBEntityGrid> gridTable = gridTables.get(name);
-		for(int i = 0;i<topicNum;i++) {
-			String topicName = "Topic-"+i;
-			PDTBEntityGrid grid = gridTable.get(topicName);
-			System.out.println("TOPIC NAME:"+ topicName);
-			grid.setValue(features, featureVector, topicName, old_index, true);
-			grid.setValue(features, featureVector, topicName, new_index, false);
-		}
-	}
 
+		Hashtable<String, PDTBEntityGrid> gridTable = gridTables.get(name);
+
+		for (int i = 0; i < topicNum; i++) {
+			String topicName = "Topic-" + i;
+			PDTBEntityGrid grid = gridTable.get(topicName);
+			System.out.println("TOPIC NAME:" + topicName);
+			String tagName = topicName + "-Weight-";
+			// grid.setValue(features, featureVector, topicName, old_index,
+			// true);
+			// grid.setValue(features, featureVector, topicName, new_index,
+			// false);
+			grid.setValueWeight(features, featureVector, tagName, old_index,
+					true);
+			grid.setValueWeight(features, featureVector, tagName, new_index,
+					false);
+			grid.setValueWeightDiff(features, featureVector, tagName,
+					old_index, new_index);
+		}
+		PDTBEntityGrid grid = gridTable.get("Merged");
+		// String topicName = "Merged";
+		// grid.setValue(features, featureVector, topicName, old_index, true);
+		// grid.setValue(features, featureVector, topicName, new_index, false);
+		// grid.setValueCount(features, featureVector, "MergeCount", old_index,
+		// true);
+		// grid.setValueCount(features, featureVector, "MergeCount", new_index,
+		// false);
+		String tagName = "Merged" + "-Weight-";
+		grid.setValueWeight(features, featureVector, tagName, old_index, true);
+		grid.setValueWeight(features, featureVector, tagName, new_index, false);
+		grid.setValueWeightDiff(features, featureVector, tagName, old_index,
+				new_index);
+	}
 
 	public void insertFeatureAll(FeatureName features) {
 		// First test that this does not work

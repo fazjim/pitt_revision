@@ -566,7 +566,7 @@ public class WekaAssist {
 		// BestFirst search = new BestFirst();
 		Ranker search = new Ranker();
 
-		search.setNumToSelect(300);
+		search.setNumToSelect(500);
 		filter.setEvaluator(eval);
 		filter.setSearch(search);
 		

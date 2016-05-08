@@ -2084,14 +2084,17 @@ public class FeatureExtractor {
 		if (remove == -1)
 			return;
 		if (remove == 0 || remove == 10 || remove == 11 || remove == 2
-				|| remove == 3)
+				|| remove == 3 || remove == 6)
 			insertLocGroup();
 		if (remove == 1 || remove == 10 || remove == 11 || remove == 2
-				|| remove == 3)
+				|| remove == 3 || remove == 6)
 			insertTextGroup();
-		if (remove == 2 || remove == 10 || remove == 22) {
+		if (remove == 2 || remove == 10 || remove == 22 || remove == 6) {
 			//PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
 			PDTBFeatureExtractorV2.getInstance().insertFeature(features);
+		}
+		if(remove == 6 || remove == 10) {
+			PDTBFeatureExtractorV2.getInstance().insertPDTBEntityFeatures(features);
 		}
 		if (remove == 3 || remove == 10) {
 			// insertMetaGroup();
@@ -2121,14 +2124,17 @@ public class FeatureExtractor {
 		if (remove == -1)
 			return;
 		if (remove == 0 || remove == 10 || remove == 11 || remove == 3
-				|| remove == 2 || remove == 5)
+				|| remove == 2 || remove == 5 || remove == 6)
 			insertLocGroup();
 		if (remove == 1 || remove == 10 || remove == 11 || remove == 3
-				|| remove == 2 || remove == 5)
+				|| remove == 2 || remove == 5 || remove == 6)
 			insertTextGroup();
-		if (remove == 2 || remove == 10 || remove == 22) {
+		if (remove == 2 || remove == 10 || remove == 22 || remove == 6)  {
 			//PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
 			PDTBFeatureExtractorV2.getInstance().insertFeature(features);
+		}
+		if(remove == 6 || remove == 10) {
+			PDTBFeatureExtractorV2.getInstance().insertPDTBEntityFeatures(features);
 		}
 		if (remove == 5 || remove == 10) {
 			// PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
@@ -2174,12 +2180,12 @@ public class FeatureExtractor {
 		if (remove == -1)
 			return featureVector;
 		if (remove == 0 || remove == 10 || remove == 11 || remove == 3
-				|| remove == 2)
+				|| remove == 2 || remove == 6)
 			extractLocGroup(doc, ru);
 		if (remove == 1 || remove == 10 || remove == 11 || remove == 3
-				|| remove == 2)
+				|| remove == 2 || remove == 6)
 			extractTextGroup(doc, ru);
-		if (remove == 2 || remove == 10 || remove == 22) {
+		if (remove == 2 || remove == 10 || remove == 22 || remove == 6) {
 			// extractLanguageGroup(doc, ru);
 			ArrayList<Integer> newSents = ru.getNewSentenceIndex();
 			ArrayList<Integer> oldSents = ru.getOldSentenceIndex();
@@ -2191,6 +2197,15 @@ public class FeatureExtractor {
 			/*PDTBFeatureExtractorV2.getInstance().extractFeatureARG1ARG2(features,
 					featureVector, doc, ru.getNewSentenceIndex(),
 					ru.getOldSentenceIndex());*/
+		}
+		if(remove == 6 || remove == 10) {
+			ArrayList<Integer> newSents = ru.getNewSentenceIndex();
+			ArrayList<Integer> oldSents = ru.getOldSentenceIndex();
+			
+		
+			PDTBFeatureExtractorV2.getInstance().extractPDTBEntityGridFeature(features,
+					featureVector, doc, newSents,
+					oldSents);
 		}
 		if (remove == 3 || remove == 10)
 			// extractMetaGroup(doc, ru);
