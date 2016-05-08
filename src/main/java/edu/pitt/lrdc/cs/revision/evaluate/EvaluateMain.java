@@ -692,14 +692,14 @@ public class EvaluateMain {
 
 		experiments.add("Unigram");
 		options.add(-1);
-		experiments.add("All features-OLD");
-		options.add(11);
+		//experiments.add("All features-OLD");
+		//options.add(11);
 
-		experiments.add("PDTB_Only");
-		options.add(22);
+		//experiments.add("PDTB_Only");
+		//options.add(22);
 
-		experiments.add("PDTB+OLD");
-		options.add(2);
+		//experiments.add("PDTB+OLD");
+		//options.add(2);
 		
 		experiments.add("Entity");
 		options.add(6);

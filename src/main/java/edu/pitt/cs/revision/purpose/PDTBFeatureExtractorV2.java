@@ -21,6 +21,7 @@ import edu.pitt.cs.revision.purpose.pdtb.ModificationRemover;
 import edu.pitt.cs.revision.purpose.pdtb.ParseResultFile;
 import edu.pitt.cs.revision.purpose.pdtb.ParseResultReader;
 import edu.pitt.cs.revision.purpose.pdtb.PipeUnit;
+import edu.pitt.lrdc.cs.revision.io.MyLogger;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
 
 public class PDTBFeatureExtractorV2 {
@@ -51,6 +52,8 @@ public class PDTBFeatureExtractorV2 {
 	private Hashtable<String, HashSet<String>> topicEntities; // The set of
 																// words in the
 																// topic
+	private Hashtable<String, Hashtable<Integer, PDTBGraph>> graphDocIndex_OLD;
+	private Hashtable<String, Hashtable<Integer, PDTBGraph>> graphDocIndex_NEW;
 
 	public static String entRelType = "EntRel";
 	public static String altLexType = "AltLex";
@@ -417,15 +420,15 @@ public class PDTBFeatureExtractorV2 {
 			} else {
 				pdtbOwn.put(realLineArg2No, argType);
 			}
-			
+
 			pipe.setArg1SentenceIndex(realLineArg1No);
 			pipe.setArg2SentenceIndex(realLineArg2No);
 		}
 
-		//Setting up things, can build the graph now
+		// Setting up things, can build the graph now
 	}
 
-	public void readInfo(RevisionDocument doc) {
+	public void readInfo(RevisionDocument doc) throws IOException {
 		String name = getRealNameRevision(doc.getDocumentName());
 		Hashtable<Integer, Integer> pdtbArg1_OLD = pdtbArg1Results_OLD
 				.get(name);
@@ -450,7 +453,81 @@ public class PDTBFeatureExtractorV2 {
 				pdtbOwn_NEW, newTextTable);
 
 		readGrid(doc, gridTable, topicNum, topicEntities, pdtbArg1_OLD,
-				pdtbArg2_OLD, pdtbArg1_NEW, pdtbArg2_NEW, pdtbOwn_OLD, pdtbOwn_NEW);
+				pdtbArg2_OLD, pdtbArg1_NEW, pdtbArg2_NEW, pdtbOwn_OLD,
+				pdtbOwn_NEW);
+
+		Hashtable<Integer, PDTBGraph> graphTableOld = graphDocIndex_OLD
+				.get(name);
+		Hashtable<Integer, PDTBGraph> graphTableNew = graphDocIndex_NEW
+				.get(name);
+		readGraph(doc, resultMap_OLD, resultMap_NEW, graphTableOld,
+				graphTableNew);
+	}
+
+	/**
+	 * Constructing the graphs
+	 * 
+	 * @param doc
+	 * @param resultMap_OLD
+	 * @param resultMap_NEW
+	 * @param graphOld
+	 * @param graphNew
+	 * @throws IOException
+	 */
+	public void readGraph(RevisionDocument doc,
+			Hashtable<String, ManualParseResultFile> resultMap_OLD,
+			Hashtable<String, ManualParseResultFile> resultMap_NEW,
+			Hashtable<Integer, PDTBGraph> graphOld,
+			Hashtable<Integer, PDTBGraph> graphNew) throws IOException {
+		String name = getRealNameRevision(doc.getDocumentName());
+		ManualParseResultFile oldFile = resultMap_OLD.get(name);
+		ManualParseResultFile newFile = resultMap_NEW.get(name);
+		readGraph(doc, oldFile, graphOld, true);
+		readGraph(doc, newFile, graphOld, false);
+	}
+
+	public void readGraph(RevisionDocument doc,
+			ManualParseResultFile parseFile,
+			Hashtable<Integer, PDTBGraph> graphIndex, boolean isOld)
+			throws IOException {
+		int paragraphNums = 0;
+		if (isOld) {
+			paragraphNums = doc.getOldParagraphNum();
+		} else {
+			paragraphNums = doc.getNewParagraphNum();
+		}
+
+		List<PipeUnit> allUnits = parseFile.getPipes();
+		for (int i = 1; i <= paragraphNums; i++) {
+			int firstIndex = 0;
+			int lastIndex = 0;
+			if (isOld) {
+				firstIndex = doc.getFirstOfOldParagraph(i);
+				lastIndex = doc.getLastOfOldParagraph(i);
+			} else {
+				firstIndex = doc.getFirstOfNewParagraph(i);
+				lastIndex = doc.getLastOfNewParagraph(i);
+			}
+			PDTBGraph graph = new PDTBGraph();
+
+			List<PipeUnit> units = new ArrayList<PipeUnit>();
+			List<Integer> sentences = new ArrayList<Integer>();
+			for (int j = firstIndex; j <= lastIndex; j++) {
+				sentences.add(j);
+			}
+			for (PipeUnit unit : allUnits) {
+				if (unit.getArg1SentenceIndex() >= firstIndex
+						&& unit.getArg2SentenceIndex() <= lastIndex) {
+					units.add(unit);
+				}
+			}
+			graph.buildGraph(units, doc, isOld, sentences);
+			graph.setStartSentenceIndex(firstIndex);
+			graph.setEndSentenceIndex(lastIndex);
+			String headline = doc.getDocumentName() + "\n";
+			MyLogger.getInstance().log(headline + graph.toString());
+			graphIndex.put(i, graph);
+		}
 	}
 
 	/**
@@ -844,6 +921,8 @@ public class PDTBFeatureExtractorV2 {
 		pdtbOwnResults_NEW = new Hashtable<String, Hashtable<Integer, Integer>>();
 		oldTextTable = new Hashtable<String, String>();
 		newTextTable = new Hashtable<String, String>();
+		graphDocIndex_OLD = new Hashtable<String, Hashtable<Integer, PDTBGraph>>();
+		graphDocIndex_NEW = new Hashtable<String, Hashtable<Integer, PDTBGraph>>();
 
 		gridTables = new Hashtable<String, Hashtable<String, PDTBEntityGrid>>();
 
@@ -871,6 +950,9 @@ public class PDTBFeatureExtractorV2 {
 					Hashtable<Integer, Integer> types3 = new Hashtable<Integer, Integer>();
 					pdtbOwnResults_OLD.put(fileName, types3);
 					resultMap_OLD.put(fileName, result);
+
+					Hashtable<Integer, PDTBGraph> graphIndex = new Hashtable<Integer, PDTBGraph>();
+					graphDocIndex_OLD.put(fileName, graphIndex);
 				} else if (fileName.contains("draft2")) {
 					fileName = getRealNamePipe(fileName);
 					System.out.println("PIPE NAME:" + fileName);
@@ -881,6 +963,9 @@ public class PDTBFeatureExtractorV2 {
 					Hashtable<Integer, Integer> types3 = new Hashtable<Integer, Integer>();
 					pdtbOwnResults_NEW.put(fileName, types3);
 					resultMap_NEW.put(fileName, result);
+
+					Hashtable<Integer, PDTBGraph> graphIndex = new Hashtable<Integer, PDTBGraph>();
+					graphDocIndex_NEW.put(fileName, graphIndex);
 				}
 			}
 		}
@@ -1072,6 +1157,82 @@ public class PDTBFeatureExtractorV2 {
 				Boolean.TYPE);
 	}
 
+	
+	public void insertSelectedFeaturesWeighted(FeatureName features) {
+		features.insertFeature("OLD_PDTB_IsEntRel_Weighted", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsEntRel_Weighted", Boolean.TYPE);
+
+		features.insertFeature("OLD_PDTB_IsAltLex_Weighted", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsAltLex_Weighted", Boolean.TYPE);
+
+		features.insertFeature("OLD_PDTB_IsComparison_Explicit_Weighted", Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsComparison_Implicit_Weighted", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsComparison_Explicit_Weighted", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsComparison_Implicit_Weighted", Boolean.TYPE);
+
+		features.insertFeature("OLD_PDTB_IsContingency_Explicit_Weighted", Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsContingency_Implicit_Weighted", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsContingency_Explicit_Weighted", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsContingency_Implicit_Weighted", Boolean.TYPE);
+
+		features.insertFeature("OLD_PDTB_IsExpansion_Explicit_Weighted", Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsExpansion_Implicit_Weighted", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsExpansion_Explicit_Weighted", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsExpansion_Implicit_Weighted", Boolean.TYPE);
+
+		features.insertFeature("OLD_PDTB_IsTemporal_Explicit_Weighted", Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsTemporal_Implicit_Weighted", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Explicit_Weighted", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Implicit_Weighted", Boolean.TYPE);
+
+	}
+
+	public void insertSelectedFeaturesPostWeighted(FeatureName features) {
+		features.insertFeature("OLD_PDTB_IsEntRel_Post_Weighted", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsEntRel_Post_Weighted", Boolean.TYPE);
+
+		features.insertFeature("OLD_PDTB_IsAltLex_Post_Weighted", Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsAltLex_Post_Weighted", Boolean.TYPE);
+
+		features.insertFeature("OLD_PDTB_IsComparison_Explicit_Post_Weighted",
+				Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsComparison_Implicit_Post_Weighted",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsComparison_Explicit_Post_Weighted",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsComparison_Implicit_Post_Weighted",
+				Boolean.TYPE);
+
+		features.insertFeature("OLD_PDTB_IsContingency_Explicit_Post_Weighted",
+				Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsContingency_Implicit_Post_Weighted",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsContingency_Explicit_Post_Weighted",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsContingency_Implicit_Post_Weighted",
+				Boolean.TYPE);
+
+		features.insertFeature("OLD_PDTB_IsExpansion_Explicit_Post_Weighted",
+				Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsExpansion_Implicit_Post_Weighted",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsExpansion_Explicit_Post_Weighted",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsExpansion_Implicit_Post_Weighted",
+				Boolean.TYPE);
+
+		features.insertFeature("OLD_PDTB_IsTemporal_Explicit_Post_Weighted",
+				Boolean.TYPE);
+		features.insertFeature("OLD_PDTB_IsTemporal_Implicit_Post_Weighted",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Explicit_Post_Weighted",
+				Boolean.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Implicit_Post_Weighted",
+				Boolean.TYPE);
+	}
+
+	
+	
 	public void fillInVector(FeatureName features, Object[] featureVector,
 			String featureName, HashSet<Integer> set, int type) {
 		int fIndex = features.getIndex(featureName);
@@ -1204,7 +1365,7 @@ public class PDTBFeatureExtractorV2 {
 
 	public void extractFeature(FeatureName features, Object[] featureVector,
 			RevisionDocument doc, ArrayList<Integer> newIndexes,
-			ArrayList<Integer> oldIndexes) {
+			ArrayList<Integer> oldIndexes) throws IOException {
 		String name = getRealNameRevision(doc.getDocumentName());
 		// System.out.println(name);
 		if (pdtbArg1Results_OLD.get(name).size() == 0
@@ -1265,7 +1426,8 @@ public class PDTBFeatureExtractorV2 {
 
 	public void extractPDTBEntityGridFeature(FeatureName features,
 			Object[] featureVector, RevisionDocument doc,
-			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes) {
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes)
+			throws IOException {
 		String name = getRealNameRevision(doc.getDocumentName());
 		System.out.println("FILE NAME:" + name);
 		if (pdtbArg1Results_OLD.get(name).size() == 0
@@ -1393,7 +1555,8 @@ public class PDTBFeatureExtractorV2 {
 
 	public void extractPDTBVectorFeature(FeatureName features,
 			Object[] featureVector, RevisionDocument doc,
-			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes) {
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes)
+			throws IOException {
 		String name = getRealNameRevision(doc.getDocumentName());
 		System.out.println("FILE NAME:" + name);
 		if (pdtbArg1Results_OLD.get(name).size() == 0
@@ -1634,7 +1797,7 @@ public class PDTBFeatureExtractorV2 {
 	public void extractPatternFeature(FeatureName features,
 			Object[] featureVector, RevisionDocument doc,
 			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes,
-			int patternLength) {
+			int patternLength) throws IOException {
 		String name = getRealNameRevision(doc.getDocumentName());
 		System.out.println("FILE NAME:" + name);
 		if (pdtbArg1Results_OLD.get(name).size() == 0
@@ -1809,7 +1972,8 @@ public class PDTBFeatureExtractorV2 {
 
 	public void extractFeatureARG1ARG2(FeatureName features,
 			Object[] featureVector, RevisionDocument doc,
-			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes) {
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes)
+			throws IOException {
 		String name = getRealNameRevision(doc.getDocumentName());
 		System.out.println("FILE NAME:" + name);
 		if (pdtbArg1Results_OLD.get(name).size() == 0
@@ -1824,7 +1988,7 @@ public class PDTBFeatureExtractorV2 {
 
 	public void extractFeatureAll(FeatureName features, Object[] featureVector,
 			RevisionDocument doc, ArrayList<Integer> newIndexes,
-			ArrayList<Integer> oldIndexes) {
+			ArrayList<Integer> oldIndexes) throws IOException {
 		String name = getRealNameRevision(doc.getDocumentName());
 		// System.out.println(name);
 		if (pdtbArg1Results_OLD.get(name).size() == 0

@@ -154,7 +154,7 @@ public class MalletAssist {
 
 		// Run the model for 50 iterations and stop (this is for testing only,
 		// for real applications, use 1000 to 2000 iterations)
-		model.setNumIterations(2000);
+		model.setNumIterations(50);
 		model.estimate();
 
 		// Show the words and topics in the first instance
