@@ -665,7 +665,9 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 
 		}
 		if (remove == 6 || remove == 10) {
-			PDTBFeatureExtractorV2.getInstance().extractPDTBEntityGridFeature(
+			// PDTBFeatureExtractorV2.getInstance().extractPDTBEntityGridFeature(
+			// features, featureVector, doc, newIndices, oldIndices);
+			PDTBFeatureExtractorV2.getInstance().extractWeightedFeature(
 					features, featureVector, doc, newIndices, oldIndices);
 		}
 		if (remove == 3 || remove == 10)

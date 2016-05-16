@@ -98,8 +98,8 @@ public class EvaluateMain {
 			// highLevel);
 			// Open this for jumbo classification
 			// resultPath = "/Users/faz23/Desktop/34/annotated/allResults2";
-			 crossValidateClassifyJumbo(allData, folder, true, resultPath);
-			//crossValidateClassifyJumbo2(allData, folder, true, resultPath);
+			//crossValidateClassifyJumbo(allData, folder, true, resultPath);
+			crossValidateClassifyJumbo2(allData, folder, true, resultPath);
 			// trainTestClassifyJumbo2(trainFolder, testFolder, true,
 			// resultPath);
 		}
@@ -229,14 +229,26 @@ public class EvaluateMain {
 		experiments.add("All features-OLD");
 		options.add(11);
 
-		experiments.add("PDTB_Only");
-		options.add(22);
+		//experiments.add("PDTB_Only");
+		//options.add(22);
 
 		experiments.add("PDTB+OLD");
 		options.add(2);
+		
+		experiments.add("AutoPDTB+OLD");
+		options.add(8);
 
-		experiments.add("EntityGrid");
+		experiments.add("PDTBGraph");
 		options.add(6);
+		
+		experiments.add("AutoPDTBGraph");
+		options.add(7);
+		
+		experiments.add("PDTBTree");
+		options.add(9);
+		
+		experiments.add("AutoPDTBTree");
+		options.add(12);
 		// experiments.add("Language features");
 		// options.add(4);
 
@@ -324,7 +336,7 @@ public class EvaluateMain {
 								}
 							}
 						}
-					} else if (experiment.equals("EntityGrid")) {
+					} else if (experiment.equals("PDTBGraph")) {
 						double[][] cm = eval.confusionMatrix();
 						for (int ii = 0; ii < cm.length; ii++) {
 							for (int jj = 0; jj < cm.length; jj++) {
@@ -420,7 +432,7 @@ public class EvaluateMain {
 		printCM("SVM", confusionMatrixSVM);
 		// printCM("RF", confusionMatrixRF);
 		printCM("SVM-PDTB", confusionMatrixSVMPDTB);
-		printCM("Entity-Grid", confusionMatrixSVMEntity);
+		printCM("PDTBGraph", confusionMatrixSVMEntity);
 	}
 
 	public static void trainTestClassifyJumbo2(
@@ -692,18 +704,26 @@ public class EvaluateMain {
 
 		experiments.add("Unigram");
 		options.add(-1);
-		//experiments.add("All features-OLD");
-		//options.add(11);
+		experiments.add("All features-OLD");
+		options.add(11);
 
 		//experiments.add("PDTB_Only");
 		//options.add(22);
 
-		//experiments.add("PDTB+OLD");
-		//options.add(2);
+		experiments.add("PDTB+OLD");
+		options.add(2);
 		
-		experiments.add("Entity");
+		experiments.add("AutoPDTB+OLD");
+		options.add(8);
+		
+		experiments.add("PDTBGraph");
 		options.add(6);
+		
+		experiments.add("AutoPDTBGraph");
+		options.add(7);
 		allAddRow(writers, experiments);
+		
+		
 
 		allMakeTable(writers);
 		ArrayList<String> purposes = new ArrayList<String>();

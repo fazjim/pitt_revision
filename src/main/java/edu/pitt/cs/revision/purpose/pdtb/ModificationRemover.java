@@ -110,20 +110,20 @@ public class ModificationRemover {
 		}
 	}
 
-	public static void removeBoundaryCases(ParseResultFile file, String referencePath) throws IOException {
+	public static void removeBoundaryCases(ParseResultFile file,
+			String referencePath) throws IOException {
 		String name = file.getFileName();
 		File f = new File(name);
 		String fileName = f.getName();
-//		if (fileName.contains(" - "))
-//			fileName = fileName.substring(0, fileName.indexOf(" - ")).trim();
-//		fileName = fileName.replaceAll("\\.txt", "").trim();
-		
+		// if (fileName.contains(" - "))
+		// fileName = fileName.substring(0, fileName.indexOf(" - ")).trim();
+		// fileName = fileName.replaceAll("\\.txt", "").trim();
+
 		if (fileName.contains(" - "))
-			fileName = fileName.substring(0, fileName.indexOf(" - "))
-					.trim();
+			fileName = fileName.substring(0, fileName.indexOf(" - ")).trim();
 		fileName = fileName.replaceAll("\\.txt", "").trim();
 		fileName = fileName.replaceAll("\\.pipe", "").trim();
-		
+
 		String d1FolderPath = referencePath + "/draft1";
 		String d2FolderPath = referencePath + "/draft2";
 		File d1Folder = new File(d1FolderPath);
@@ -163,44 +163,44 @@ public class ModificationRemover {
 
 			List<PipeUnit> units = file.getPipes();
 			Iterator<PipeUnit> it = units.iterator();
-			
+
 			String[] paragraphs = null;
 			if (name.contains("draft1")) {
 				paragraphs = d1Txt.split("\n");
 			} else {
 				paragraphs = d2Txt.split("\n");
 			}
-			while(it.hasNext()) {
+			while (it.hasNext()) {
 				PipeUnit unit = it.next();
 				String range1 = unit.getRange1TxtAuto();
 				String range2 = unit.getRange2TxtAuto();
 				boolean isRange1End = false;
 				boolean isRange2Start = false;
-				for(String paragraph: paragraphs) {
-					if(paragraph.endsWith(range1)) {
+				for (String paragraph : paragraphs) {
+					if (paragraph.endsWith(range1)) {
 						isRange1End = true;
-					} else if(paragraph.startsWith(range2)) {
+					} else if (paragraph.startsWith(range2)) {
 						isRange2Start = true;
 					}
 				}
-				
-				if(isRange1End && isRange2Start) {
+
+				if (isRange1End && isRange2Start) {
 					it.remove();
 				}
 			}
 		}
 	}
-	
+
 	public static String concatenateString(List<int[]> rangeList, String txt) {
 		String str = "";
-		for(int i = 0;i<rangeList.size();i++) {
+		for (int i = 0; i < rangeList.size(); i++) {
 			int start = rangeList.get(i)[0];
 			int end = rangeList.get(i)[1];
-			str += txt.substring(start,end) + " ";
+			str += txt.substring(start, end) + " ";
 		}
 		return str;
 	}
-	
+
 	public static void feedTxtInfo(ManualParseResultFile file,
 			String referencePath) throws IOException {
 		String name = file.getFileName();
@@ -254,50 +254,171 @@ public class ModificationRemover {
 				int[] range1Indices = retrieveRanges(range1);
 				int[] range2Indices = retrieveRanges(range2);
 				int[] connectiveIndices = null;
-				
+
 				List<int[]> range1IndiceList = retrieveRangesList(range1);
 				List<int[]> range2IndiceList = retrieveRangesList(range2);
 				List<int[]> range3IndiceList = null;
-				
+
 				String range1Txt = "";
 				String range2Txt = "";
 				String connective = "";
-				if(range3.trim().length()>0) {
+				if (range3.trim().length() > 0) {
 					connectiveIndices = retrieveRanges(range3);
 					range3IndiceList = retrieveRangesList(range3);
 				}
-				
+
 				if (name.contains("draft1")) {
 					range1Txt = d1Txt.substring(range1Indices[0],
 							range1Indices[1]);
 					range2Txt = d1Txt.substring(range2Indices[0],
 							range2Indices[1]);
-					if(connectiveIndices !=null) {
-						connective = d1Txt.substring(connectiveIndices[0], connectiveIndices[1]);
+					if (connectiveIndices != null) {
+						connective = d1Txt.substring(connectiveIndices[0],
+								connectiveIndices[1]);
 					}
-					
+
 					/*
-					range1Txt = concatenateString(range1IndiceList, d1Txt);
-					range2Txt = concatenateString(range2IndiceList, d1Txt);
-					if(connectiveIndices !=null) {
-						connective = concatenateString(range3IndiceList, d1Txt);
-					}*/
-					
+					 * range1Txt = concatenateString(range1IndiceList, d1Txt);
+					 * range2Txt = concatenateString(range2IndiceList, d1Txt);
+					 * if(connectiveIndices !=null) { connective =
+					 * concatenateString(range3IndiceList, d1Txt); }
+					 */
+
 				} else {
 					range1Txt = d2Txt.substring(range1Indices[0],
 							range1Indices[1]);
 					range2Txt = d2Txt.substring(range2Indices[0],
 							range2Indices[1]);
-					if(connectiveIndices !=null) {
-						connective = d2Txt.substring(connectiveIndices[0], connectiveIndices[1]);
+					if (connectiveIndices != null) {
+						connective = d2Txt.substring(connectiveIndices[0],
+								connectiveIndices[1]);
 					}
-					
+
 					/*
-					range1Txt = concatenateString(range1IndiceList, d2Txt);
-					range2Txt = concatenateString(range2IndiceList, d2Txt);
-					if(connectiveIndices !=null) {
-						connective = concatenateString(range3IndiceList, d2Txt);
-					}*/
+					 * range1Txt = concatenateString(range1IndiceList, d2Txt);
+					 * range2Txt = concatenateString(range2IndiceList, d2Txt);
+					 * if(connectiveIndices !=null) { connective =
+					 * concatenateString(range3IndiceList, d2Txt); }
+					 */
+				}
+				unit.setRange1Txt(range1Txt);
+				unit.setRange2Txt(range2Txt);
+				unit.setConnectiveManual(connective);
+			}
+		}
+	}
+
+	public static void feedTxtInfo(ParseResultFile file, String referencePath)
+			throws IOException {
+		String name = file.getFileName();
+		System.err.println("Feed text information to:" + name);
+		File f = new File(name);
+		String fileName = f.getName();
+		if (fileName.contains(" - "))
+			fileName = fileName.substring(0, fileName.indexOf(" - ")).trim();
+		fileName = fileName.replaceAll("\\.txt", "").trim();
+		String d1FolderPath = referencePath + "/draft1";
+		String d2FolderPath = referencePath + "/draft2";
+		File d1Folder = new File(d1FolderPath);
+		File d2Folder = new File(d2FolderPath);
+		File d1File = null;
+		File d2File = null;
+		File[] subsD1 = d1Folder.listFiles();
+		File[] subsD2 = d2Folder.listFiles();
+		for (File d1Temp : subsD1) {
+			if (d1Temp.isFile()) {
+				if (d1Temp.getName().contains(fileName)) {
+					d1File = d1Temp;
+					break;
+				}
+			}
+		}
+		for (File d2Temp : subsD2) {
+			if (d2Temp.isFile()) {
+				if (d2Temp.getName().contains(fileName)) {
+					d2File = d2Temp;
+					break;
+				}
+			}
+		}
+
+		if (d1File == null) {
+			System.out.println("D1 file is null");
+		} else if (d2File == null) {
+			System.out.println("D2 file is null");
+		} else {
+
+			String d1Txt = readTxt(d1File);
+			String d2Txt = readTxt(d2File);
+
+			List<PipeUnit> units = file.getPipes();
+			for (PipeUnit unit : units) {
+				String range1 = unit.getSent1Range();
+				String range2 = unit.getSent2Range();
+				String range3 = unit.getConnectiveRange();
+				int[] range1Indices = null;
+				int[] range2Indices = null;
+				if (range1.trim().length() > 0)
+					range1Indices = retrieveRanges(range1);
+
+				if (range2.trim().length() > 0)
+					range2Indices = retrieveRanges(range2);
+				int[] connectiveIndices = null;
+
+				List<int[]> range3IndiceList = null;
+
+				String range1Txt = "";
+				String range2Txt = "";
+				String connective = "";
+				if (range3.trim().length() > 0) {
+					connectiveIndices = retrieveRanges(range3);
+					range3IndiceList = retrieveRangesList(range3);
+				}
+
+				if (name.contains("draft1")) {
+					if (range1Indices != null) {
+						range1Txt = d1Txt.substring(range1Indices[0],
+								range1Indices[1]);
+					} else {
+						range1Txt = unit.getRange1TxtAuto();
+					}
+
+					if (range2Indices != null) {
+						range2Txt = d1Txt.substring(range2Indices[0],
+								range2Indices[1]);
+					} else {
+						range2Txt = unit.getRange2TxtAuto();
+					}
+					if (connectiveIndices != null) {
+						connective = d1Txt.substring(connectiveIndices[0],
+								connectiveIndices[1]);
+					}
+
+				} else {
+					if (range1Indices != null) {
+						range1Txt = d2Txt.substring(range1Indices[0],
+								range1Indices[1]);
+					} else {
+						range1Txt = unit.getRange1TxtAuto();
+					}
+					if (range2Indices != null) {
+						range2Txt = d2Txt.substring(range2Indices[0],
+								range2Indices[1]);
+					} else {
+						range2Txt = unit.getRange2TxtAuto();
+					}
+
+					if (connectiveIndices != null) {
+						connective = d2Txt.substring(connectiveIndices[0],
+								connectiveIndices[1]);
+					}
+
+					/*
+					 * range1Txt = concatenateString(range1IndiceList, d2Txt);
+					 * range2Txt = concatenateString(range2IndiceList, d2Txt);
+					 * if(connectiveIndices !=null) { connective =
+					 * concatenateString(range3IndiceList, d2Txt); }
+					 */
 				}
 				unit.setRange1Txt(range1Txt);
 				unit.setRange2Txt(range2Txt);
@@ -443,7 +564,7 @@ public class ModificationRemover {
 			return retrieveRangesShort(range);
 		}
 	}
-	
+
 	public static List<int[]> retrieveRangesList(String range) {
 		int start = -1;
 		int end = -1;

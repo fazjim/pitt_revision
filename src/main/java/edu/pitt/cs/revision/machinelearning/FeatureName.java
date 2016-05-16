@@ -47,6 +47,8 @@ public class FeatureName {
 	 * @return
 	 */
 	public int getIndex(String featureName) {
+		if(!featureIndex.containsKey(featureName)) System.err.println(featureName);
+		if(featureIndex==null) System.err.println("WTF!!!!!");
 		return featureIndex.get(featureName);
 	}
 	

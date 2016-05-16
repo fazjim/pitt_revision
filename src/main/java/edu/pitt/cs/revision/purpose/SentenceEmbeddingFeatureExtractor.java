@@ -531,7 +531,8 @@ public class SentenceEmbeddingFeatureExtractor {
 				oldToken = oldToken.replace(",", "");
 			oldToken = oldToken.toLowerCase();
 			if (!oldToken.equals(".") && !oldToken.equals(",")) {
-				if (w2v.hasWord(oldToken) && !stopWords.contains(oldToken)) {
+				//if (w2v.hasWord(oldToken) && !stopWords.contains(oldToken)) {
+				if (w2v.hasWord(oldToken)) {
 					double[] tmp = w2v.getWordVector(oldToken);
 					addArray(s1Array, tmp);
 				}
@@ -544,7 +545,8 @@ public class SentenceEmbeddingFeatureExtractor {
 			if (!newToken.equals(","))
 				newToken = newToken.replace(",", "");
 			if (!newToken.equals(".") && !newToken.equals(",")) {
-				if (w2v.hasWord(newToken) && !stopWords.contains(newToken)) {
+				//if (w2v.hasWord(newToken) && !stopWords.contains(newToken)) {
+				if (w2v.hasWord(newToken)) {
 					double[] tmp = w2v.getWordVector(newToken);
 					addArray(s2Array, tmp);
 				}
@@ -563,7 +565,8 @@ public class SentenceEmbeddingFeatureExtractor {
 			absS1 += s1[i] * s1[i];
 			absS2 += s2[i] * s2[i];
 		}
-		return multi / Math.sqrt(absS1) * Math.sqrt(absS2);
+		if(absS1 == 0 || absS2 == 0) return 0;
+		return multi / (Math.sqrt(absS1) * Math.sqrt(absS2));
 	}
 
 	public void extractDivide(FeatureName features, Object[] featureVector,
@@ -696,7 +699,8 @@ public class SentenceEmbeddingFeatureExtractor {
 	}
 
 	public static void main(String[] args) throws IOException {
-		String word = "Hello";
-		SentenceEmbeddingFeatureExtractor.getInstance();
+		String sentence1 = "I like your examples, however, the thesis of each paragraph is not very clear. ";
+		String sentence2 = "Some of them appear in the top of the paragraph while others are in the bottom.";
+		System.out.println("Value:"+SentenceEmbeddingFeatureExtractor.getInstance().calculateSim(sentence1, sentence2));
 	}
 }

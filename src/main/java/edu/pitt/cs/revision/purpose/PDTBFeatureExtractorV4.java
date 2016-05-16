@@ -21,11 +21,12 @@ import edu.pitt.cs.revision.purpose.pdtb.ModificationRemover;
 import edu.pitt.cs.revision.purpose.pdtb.ParseResultFile;
 import edu.pitt.cs.revision.purpose.pdtb.ParseResultReader;
 import edu.pitt.cs.revision.purpose.pdtb.PipeUnit;
+import edu.pitt.lrdc.cs.revision.alignment.distance.LDCalculator;
 import edu.pitt.lrdc.cs.revision.io.MyLogger;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
 
-public class PDTBFeatureExtractorV2 {
-	private static PDTBFeatureExtractorV2 instance;
+public class PDTBFeatureExtractorV4 {
+	private static PDTBFeatureExtractorV4 instance;
 	private Hashtable<String, Hashtable<Integer, Integer>> pdtbArg1Results_OLD;
 	private Hashtable<String, Hashtable<Integer, Integer>> pdtbArg2Results_OLD;
 	private Hashtable<String, Hashtable<Integer, Integer>> pdtbArg1Results_NEW;
@@ -33,9 +34,9 @@ public class PDTBFeatureExtractorV2 {
 	private Hashtable<String, Hashtable<Integer, Integer>> pdtbOwnResults_OLD;
 	private Hashtable<String, Hashtable<Integer, Integer>> pdtbOwnResults_NEW;
 
-	private Hashtable<String, ManualParseResultFile> resultMap_OLD;
-	private Hashtable<String, ManualParseResultFile> resultMap_NEW;
-	private String path = "C:\\Not Backed Up\\discourse_parse_results\\manual2";
+	private Hashtable<String, ParseResultFile> resultMap_OLD;
+	private Hashtable<String, ParseResultFile> resultMap_NEW;
+	private String path = "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus\\Braverman";
 	private Hashtable<String, String> oldTextTable;
 	private Hashtable<String, String> newTextTable;
 
@@ -54,7 +55,7 @@ public class PDTBFeatureExtractorV2 {
 																// topic
 	private Hashtable<String, Hashtable<Integer, PDTBGraph>> graphDocIndex_OLD;
 	private Hashtable<String, Hashtable<Integer, PDTBGraph>> graphDocIndex_NEW;
-
+	
 	private Hashtable<String, Hashtable<Integer, PDTBTree>> treeDocIndex_OLD;
 	private Hashtable<String, Hashtable<Integer, PDTBTree>> treeDocIndex_NEW;
 
@@ -124,7 +125,20 @@ public class PDTBFeatureExtractorV2 {
 				return lineMap.get(line);
 			}
 		}
-		return -1;
+		
+		//Find the most similar one
+		Iterator<String> it2 = lineMap.keySet().iterator();
+		int sim = Integer.MAX_VALUE;
+		int index = -1;
+		while(it2.hasNext()) {
+			String line = it2.next();
+			int val = LDCalculator.calc(line, searchStr);
+			if(val<sim) {
+				index = lineMap.get(line);
+				val = sim;
+			}
+		}
+		return index;
 	}
 
 	public int getRealArgNo(Hashtable<String, Integer> lineMap,
@@ -304,7 +318,7 @@ public class PDTBFeatureExtractorV2 {
 	 * @param pdtbArg2
 	 */
 	public void readInfo(RevisionDocument doc,
-			Hashtable<String, ManualParseResultFile> resultMap,
+			Hashtable<String, ParseResultFile> resultMap,
 			ArrayList<String> sentences, Hashtable<Integer, Integer> pdtbArg1,
 			Hashtable<Integer, Integer> pdtbArg2,
 			Hashtable<Integer, Integer> pdtbOwn,
@@ -317,10 +331,11 @@ public class PDTBFeatureExtractorV2 {
 		String text = txtTable.get(name);
 
 		for (int i = 0; i < sentences.size(); i++) {
+			System.err.println("Compressed sentences:"+compressStr(sentences.get(i)));
 			lineMap.put(compressStr(sentences.get(i)), i + 1);
 		}
 
-		ManualParseResultFile file = resultMap.get(name);
+		ParseResultFile file = resultMap.get(name);
 		if (file == null) {
 			System.err.println(name);
 		}
@@ -333,7 +348,7 @@ public class PDTBFeatureExtractorV2 {
 			 * pipe.getAttr(semClassType);
 			 */
 			String relation = pipe.getElementType();
-			String semClass = pipe.getManualRelationType();
+			String semClass = pipe.getRelationType();
 
 			// Get the argument type
 			int argType = -1;
@@ -390,8 +405,8 @@ public class PDTBFeatureExtractorV2 {
 			int realLineArg1No = -1;
 			int realLineArg2No = -1;
 
-			String arg1RawText = pipe.getRange1Txt();
-			String arg2RawText = pipe.getRange2Txt();
+			String arg1RawText = pipe.getRange1TxtAuto();
+			String arg2RawText = pipe.getRange2TxtAuto();
 			/*
 			 * if (!pdtb_line_map.containsKey(arg1LineNo)) { String
 			 * searchStrArg1 = compressStr(arg1RawText); realLineArg1No =
@@ -400,12 +415,21 @@ public class PDTBFeatureExtractorV2 {
 			 * pdtb_line_map.get(arg1LineNo);
 			 */
 
+			
 			String searchStrArg1 = compressStr(arg1RawText);
 			String searchStrArg2 = compressStr(arg2RawText);
-
+			
+			
 			realLineArg1No = getRealArgNo(lineMap, searchStrArg1);
 			realLineArg2No = getRealArgNo(lineMap, searchStrArg2);
 
+			if(realLineArg1No == -1) {
+				System.err.println(searchStrArg1);
+			}
+			if(realLineArg2No == -1) {
+				System.err.println(searchStrArg2);
+			}
+			
 			if (realLineArg1No != realLineArg2No) {
 				if (realLineArg1No != -1)
 					pdtbArg1.put(realLineArg1No, argType);
@@ -463,13 +487,15 @@ public class PDTBFeatureExtractorV2 {
 				.get(name);
 		Hashtable<Integer, PDTBGraph> graphTableNew = graphDocIndex_NEW
 				.get(name);
-
-		Hashtable<Integer, PDTBTree> treeTableOld = treeDocIndex_OLD.get(name);
-		Hashtable<Integer, PDTBTree> treeTableNew = treeDocIndex_NEW.get(name);
-
 		readGraph(doc, resultMap_OLD, resultMap_NEW, graphTableOld,
 				graphTableNew);
-		readTree(doc, resultMap_OLD, resultMap_NEW, treeTableOld, treeTableNew);
+		
+		Hashtable<Integer, PDTBTree> treeTableOld = treeDocIndex_OLD
+				.get(name);
+		Hashtable<Integer, PDTBTree> treeTableNew = treeDocIndex_NEW
+				.get(name);
+		readTree(doc, resultMap_OLD, resultMap_NEW, treeTableOld,
+				treeTableNew);
 	}
 
 	/**
@@ -483,17 +509,18 @@ public class PDTBFeatureExtractorV2 {
 	 * @throws IOException
 	 */
 	public void readGraph(RevisionDocument doc,
-			Hashtable<String, ManualParseResultFile> resultMap_OLD,
-			Hashtable<String, ManualParseResultFile> resultMap_NEW,
+			Hashtable<String, ParseResultFile> resultMap_OLD,
+			Hashtable<String, ParseResultFile> resultMap_NEW,
 			Hashtable<Integer, PDTBGraph> graphOld,
 			Hashtable<Integer, PDTBGraph> graphNew) throws IOException {
 		String name = getRealNameRevision(doc.getDocumentName());
-		ManualParseResultFile oldFile = resultMap_OLD.get(name);
-		ManualParseResultFile newFile = resultMap_NEW.get(name);
+		ParseResultFile oldFile = resultMap_OLD.get(name);
+		ParseResultFile newFile = resultMap_NEW.get(name);
 		readGraph(doc, oldFile, graphOld, true);
 		readGraph(doc, newFile, graphNew, false);
 	}
 
+	
 	/**
 	 * Constructing the tree
 	 * 
@@ -505,19 +532,19 @@ public class PDTBFeatureExtractorV2 {
 	 * @throws IOException
 	 */
 	public void readTree(RevisionDocument doc,
-			Hashtable<String, ManualParseResultFile> resultMap_OLD,
-			Hashtable<String, ManualParseResultFile> resultMap_NEW,
+			Hashtable<String, ParseResultFile> resultMap_OLD,
+			Hashtable<String, ParseResultFile> resultMap_NEW,
 			Hashtable<Integer, PDTBTree> treeOld,
 			Hashtable<Integer, PDTBTree> treeNew) throws IOException {
 		String name = getRealNameRevision(doc.getDocumentName());
-		ManualParseResultFile oldFile = resultMap_OLD.get(name);
-		ManualParseResultFile newFile = resultMap_NEW.get(name);
+		ParseResultFile oldFile = resultMap_OLD.get(name);
+		ParseResultFile newFile = resultMap_NEW.get(name);
 		readTree(doc, oldFile, treeOld, true);
 		readTree(doc, newFile, treeNew, false);
 	}
-
+	
 	public void readGraph(RevisionDocument doc,
-			ManualParseResultFile parseFile,
+			ParseResultFile parseFile,
 			Hashtable<Integer, PDTBGraph> graphIndex, boolean isOld)
 			throws IOException {
 		int paragraphNums = 0;
@@ -554,13 +581,14 @@ public class PDTBFeatureExtractorV2 {
 			graph.setStartSentenceIndex(firstIndex);
 			graph.setEndSentenceIndex(lastIndex);
 			graph.buildGraph(units, doc, isOld, sentences);
-			String headline = doc.getDocumentName() + ", isOld:" + isOld + "\n";
-			MyLogger.getInstance().log(headline + graph.toString());
+			String headline = doc.getDocumentName() + ", isOld:"+ isOld + "\n";
+			//MyLogger.getInstance().log(headline + graph.toString());
 			graphIndex.put(i, graph);
 		}
 	}
 
-	public void readTree(RevisionDocument doc, ManualParseResultFile parseFile,
+	public void readTree(RevisionDocument doc,
+			ParseResultFile parseFile,
 			Hashtable<Integer, PDTBTree> treeIndex, boolean isOld)
 			throws IOException {
 		int paragraphNums = 0;
@@ -594,13 +622,14 @@ public class PDTBFeatureExtractorV2 {
 					units.add(unit);
 				}
 			}
-			// graph.setStartSentenceIndex(firstIndex);
-			// graph.setEndSentenceIndex(lastIndex);
+			//graph.setStartSentenceIndex(firstIndex);
+			//graph.setEndSentenceIndex(lastIndex);
 			tree.buildTree(units, doc, isOld, sentences);
 			treeIndex.put(i, tree);
 		}
 	}
 
+	
 	/**
 	 * Read in all the grids
 	 * 
@@ -975,15 +1004,15 @@ public class PDTBFeatureExtractorV2 {
 		return fName.trim();
 	}
 
-	private PDTBFeatureExtractorV2() throws Exception {
+	private PDTBFeatureExtractorV4() throws Exception {
 		// List<ManualParseResultFile> results =
 		// ManualParseResultReader.readFiles(path);
-		List<ManualParseResultFile> results = ManualParseResultReader
+		List<ParseResultFile> results = ParseResultReader
 				.readFiles(path);
 		String refPath = "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus\\Braverman\\Braverman_raw_txt";
 		constructTopicEntitites(filePath);
-		resultMap_OLD = new Hashtable<String, ManualParseResultFile>();
-		resultMap_NEW = new Hashtable<String, ManualParseResultFile>();
+		resultMap_OLD = new Hashtable<String, ParseResultFile>();
+		resultMap_NEW = new Hashtable<String, ParseResultFile>();
 		pdtbArg1Results_OLD = new Hashtable<String, Hashtable<Integer, Integer>>();
 		pdtbArg2Results_OLD = new Hashtable<String, Hashtable<Integer, Integer>>();
 		pdtbArg1Results_NEW = new Hashtable<String, Hashtable<Integer, Integer>>();
@@ -997,11 +1026,11 @@ public class PDTBFeatureExtractorV2 {
 
 		treeDocIndex_OLD = new Hashtable<String, Hashtable<Integer, PDTBTree>>();
 		treeDocIndex_NEW = new Hashtable<String, Hashtable<Integer, PDTBTree>>();
-
+		
 		gridTables = new Hashtable<String, Hashtable<String, PDTBEntityGrid>>();
 
 		readAll(path);
-		for (ManualParseResultFile result : results) {
+		for (ParseResultFile result : results) {
 			if (result.isPDTB1()) {
 				ModificationRemover.feedTxtInfo(result, refPath);
 				String fileName = result.getFileName();
@@ -1026,8 +1055,8 @@ public class PDTBFeatureExtractorV2 {
 					resultMap_OLD.put(fileName, result);
 
 					Hashtable<Integer, PDTBGraph> graphIndex = new Hashtable<Integer, PDTBGraph>();
-					Hashtable<Integer, PDTBTree> treeIndex = new Hashtable<Integer, PDTBTree>();
 					graphDocIndex_OLD.put(fileName, graphIndex);
+					Hashtable<Integer, PDTBTree> treeIndex = new Hashtable<Integer, PDTBTree>();
 					treeDocIndex_OLD.put(fileName, treeIndex);
 				} else if (fileName.contains("draft2")) {
 					fileName = getRealNamePipe(fileName);
@@ -1041,17 +1070,17 @@ public class PDTBFeatureExtractorV2 {
 					resultMap_NEW.put(fileName, result);
 
 					Hashtable<Integer, PDTBGraph> graphIndex = new Hashtable<Integer, PDTBGraph>();
-					Hashtable<Integer, PDTBTree> treeIndex = new Hashtable<Integer, PDTBTree>();
 					graphDocIndex_NEW.put(fileName, graphIndex);
+					Hashtable<Integer, PDTBTree> treeIndex = new Hashtable<Integer, PDTBTree>();
 					treeDocIndex_NEW.put(fileName, treeIndex);
 				}
 			}
 		}
 	}
 
-	public static PDTBFeatureExtractorV2 getInstance() throws Exception {
+	public static PDTBFeatureExtractorV4 getInstance() throws Exception {
 		if (instance == null) {
-			instance = new PDTBFeatureExtractorV2();
+			instance = new PDTBFeatureExtractorV4();
 		}
 		return instance;
 	}
@@ -1242,8 +1271,7 @@ public class PDTBFeatureExtractorV2 {
 		features.insertFeature("OLD_PDTB_IsAltLex_Weighted_Group", Double.TYPE);
 		features.insertFeature("NEW_PDTB_IsAltLex_Weighted_Group", Double.TYPE);
 
-		features.insertFeature("OLD_PDTB_IsComparison_Weighted_Group",
-				Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsComparison_Weighted_Group", Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsComparison_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1251,8 +1279,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsComparison_Weighted_Group",
-				Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsComparison_Weighted_Group", Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsComparison_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1260,8 +1287,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("OLD_PDTB_IsContingency_Weighted_Group",
-				Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsContingency_Weighted_Group", Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsContingency_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1269,8 +1295,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsContingency_Weighted_Group",
-				Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsContingency_Weighted_Group", Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsContingency_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1278,8 +1303,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("OLD_PDTB_IsExpansion_Weighted_Group",
-				Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsExpansion_Weighted_Group", Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsExpansion_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1287,8 +1311,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsExpansion_Weighted_Group",
-				Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsExpansion_Weighted_Group", Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsExpansion_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1296,8 +1319,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("OLD_PDTB_IsTemporal_Weighted_Group",
-				Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsTemporal_Weighted_Group", Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsTemporal_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1305,8 +1327,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsTemporal_Weighted_Group",
-				Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Weighted_Group", Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsTemporal_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1314,7 +1335,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 	}
-
+	
 	public void insertSelectedFeaturesWeighted(FeatureName features) {
 		features.insertFeature("OLD_PDTB_IsEntRel_Weighted", Double.TYPE);
 		features.insertFeature("NEW_PDTB_IsEntRel_Weighted", Double.TYPE);
@@ -1475,14 +1496,15 @@ public class PDTBFeatureExtractorV2 {
 		}
 	}
 
-	public void insertSelectedFeaturesPostWeighted(FeatureName features) {
-		features.insertFeature("OLD_PDTB_IsEntRel_Post_Weighted", Double.TYPE);
-		features.insertFeature("NEW_PDTB_IsEntRel_Post_Weighted", Double.TYPE);
+	
+	public void insertSelectedFeaturesPostGroupWeighted(FeatureName features) {
+		features.insertFeature("OLD_PDTB_IsEntRel_Post_Weighted_Group", Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsEntRel_Post_Weighted_Group", Double.TYPE);
 
-		features.insertFeature("OLD_PDTB_IsAltLex_Post_Weighted", Double.TYPE);
-		features.insertFeature("NEW_PDTB_IsAltLex_Post_Weighted", Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsAltLex_Post_Weighted_Group", Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsAltLex_Post_Weighted_Group", Double.TYPE);
 
-		features.insertFeature("OLD_PDTB_IsComparison_Post_Weighted",
+		features.insertFeature("OLD_PDTB_IsComparison_Post_Weighted_Group",
 				Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsComparison_Explicit_Post_Weighted",
@@ -1491,7 +1513,7 @@ public class PDTBFeatureExtractorV2 {
 		 * , Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsComparison_Post_Weighted",
+		features.insertFeature("NEW_PDTB_IsComparison_Post_Weighted_Group",
 				Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsComparison_Explicit_Post_Weighted",
@@ -1500,7 +1522,7 @@ public class PDTBFeatureExtractorV2 {
 		 * , Double.TYPE);
 		 */
 
-		features.insertFeature("OLD_PDTB_IsContingency_Post_Weighted",
+		features.insertFeature("OLD_PDTB_IsContingency_Post_Weighted_Group",
 				Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsContingency_Explicit_Post_Weighted"
@@ -1509,7 +1531,7 @@ public class PDTBFeatureExtractorV2 {
 		 * , Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsContingency_Post_Weighted",
+		features.insertFeature("NEW_PDTB_IsContingency_Post_Weighted_Group",
 				Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsContingency_Explicit_Post_Weighted"
@@ -1518,7 +1540,7 @@ public class PDTBFeatureExtractorV2 {
 		 * , Double.TYPE);
 		 */
 
-		features.insertFeature("OLD_PDTB_IsExpansion_Post_Weighted",
+		features.insertFeature("OLD_PDTB_IsExpansion_Post_Weighted_Group",
 				Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsExpansion_Explicit_Post_Weighted",
@@ -1527,7 +1549,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsExpansion_Post_Weighted",
+		features.insertFeature("NEW_PDTB_IsExpansion_Post_Weighted_Group",
 				Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsExpansion_Explicit_Post_Weighted",
@@ -1536,7 +1558,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("OLD_PDTB_IsTemporal_Post_Weighted", Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsTemporal_Post_Weighted_Group", Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsTemporal_Explicit_Post_Weighted",
 		 * Double.TYPE);
@@ -1544,7 +1566,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsTemporal_Post_Weighted", Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Post_Weighted_Group", Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsTemporal_Explicit_Post_Weighted",
 		 * Double.TYPE);
@@ -1552,7 +1574,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 	}
-
+	
 	public void insertSelectedFeaturesPostWeightedTree(FeatureName features,
 			int levels) {
 		for (int i = 1; i <= levels; i++) {
@@ -1643,18 +1665,15 @@ public class PDTBFeatureExtractorV2 {
 		}
 	}
 
-	public void insertSelectedFeaturesPostGroupWeighted(FeatureName features) {
-		features.insertFeature("OLD_PDTB_IsEntRel_Post_Weighted_Group",
-				Double.TYPE);
-		features.insertFeature("NEW_PDTB_IsEntRel_Post_Weighted_Group",
-				Double.TYPE);
+	
+	public void insertSelectedFeaturesPostWeighted(FeatureName features) {
+		features.insertFeature("OLD_PDTB_IsEntRel_Post_Weighted", Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsEntRel_Post_Weighted", Double.TYPE);
 
-		features.insertFeature("OLD_PDTB_IsAltLex_Post_Weighted_Group",
-				Double.TYPE);
-		features.insertFeature("NEW_PDTB_IsAltLex_Post_Weighted_Group",
-				Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsAltLex_Post_Weighted", Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsAltLex_Post_Weighted", Double.TYPE);
 
-		features.insertFeature("OLD_PDTB_IsComparison_Post_Weighted_Group",
+		features.insertFeature("OLD_PDTB_IsComparison_Post_Weighted",
 				Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsComparison_Explicit_Post_Weighted",
@@ -1663,7 +1682,7 @@ public class PDTBFeatureExtractorV2 {
 		 * , Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsComparison_Post_Weighted_Group",
+		features.insertFeature("NEW_PDTB_IsComparison_Post_Weighted",
 				Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsComparison_Explicit_Post_Weighted",
@@ -1672,7 +1691,7 @@ public class PDTBFeatureExtractorV2 {
 		 * , Double.TYPE);
 		 */
 
-		features.insertFeature("OLD_PDTB_IsContingency_Post_Weighted_Group",
+		features.insertFeature("OLD_PDTB_IsContingency_Post_Weighted",
 				Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsContingency_Explicit_Post_Weighted"
@@ -1681,7 +1700,7 @@ public class PDTBFeatureExtractorV2 {
 		 * , Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsContingency_Post_Weighted_Group",
+		features.insertFeature("NEW_PDTB_IsContingency_Post_Weighted",
 				Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsContingency_Explicit_Post_Weighted"
@@ -1690,7 +1709,7 @@ public class PDTBFeatureExtractorV2 {
 		 * , Double.TYPE);
 		 */
 
-		features.insertFeature("OLD_PDTB_IsExpansion_Post_Weighted_Group",
+		features.insertFeature("OLD_PDTB_IsExpansion_Post_Weighted",
 				Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsExpansion_Explicit_Post_Weighted",
@@ -1699,7 +1718,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsExpansion_Post_Weighted_Group",
+		features.insertFeature("NEW_PDTB_IsExpansion_Post_Weighted",
 				Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsExpansion_Explicit_Post_Weighted",
@@ -1708,8 +1727,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("OLD_PDTB_IsTemporal_Post_Weighted_Group",
-				Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsTemporal_Post_Weighted", Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsTemporal_Explicit_Post_Weighted",
 		 * Double.TYPE);
@@ -1717,8 +1735,7 @@ public class PDTBFeatureExtractorV2 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsTemporal_Post_Weighted_Group",
-				Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Post_Weighted", Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsTemporal_Explicit_Post_Weighted",
 		 * Double.TYPE);
@@ -1871,6 +1888,54 @@ public class PDTBFeatureExtractorV2 {
 		featureVector[fIndex] = value;
 	}
 
+	public void extractSelectedFeatureWeightedGroup(FeatureName features,
+			Object[] featureVector, PDTBGraph graph, String prefix,
+			String postFix, boolean upwards, int sentenceIndex) {
+		// IsEntRel, IsAltLex, IsComparison_Explicit, IsComparison_Implicit,
+		// IsContigency_Explicit, IsContigency_Implicit, IsExpansion_Explicit,
+		// IsExpansion_Implicit, IsTemporal_Explicit, IsTemporal_Implicit
+		if (graph != null) {
+			Hashtable<String, Double> weights = null;
+			if (upwards)
+				//weights = graph.getValueArg2(sentenceIndex);
+				weights = graph.getOutGroupValueArg2(sentenceIndex);
+			else
+				//weights = graph.getValueArg1(sentenceIndex);
+				weights = graph.getOutGroupValueArg1(sentenceIndex);
+			
+			String logStr = "index:"+sentenceIndex + "\n";
+			Iterator<String> it = weights.keySet().iterator();
+			while (it.hasNext()) {
+				String key = it.next();
+				double value = weights.get(key);
+				logStr += key + ":" + value + ",";
+			}
+			MyLogger.getInstance().log(logStr);
+			
+			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
+					+ postFix + "_Group", weights.get("EntRel"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
+					+ postFix+ "_Group", weights.get("AltLex"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsComparison" + postFix+ "_Group",
+					weights.get("Comparison"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsContingency" + postFix+ "_Group",
+					weights.get("Contingency"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion" + postFix+ "_Group",
+					weights.get("Expansion"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal" + postFix+ "_Group",
+					weights.get("Temporal"));
+		} else {
+			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
+					+ postFix+ "_Group", 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
+					+ postFix+ "_Group", 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsComparison" + postFix+ "_Group", 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsContingency" + postFix+ "_Group", 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion" + postFix+ "_Group", 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal" + postFix+ "_Group", 0);
+		}
+	}
+	
 	public void extractSelectedFeature(FeatureName features,
 			Object[] featureVector, HashSet<Integer> arg2Type_OLD,
 			HashSet<Integer> arg2Type_NEW) {
@@ -2025,14 +2090,14 @@ public class PDTBFeatureExtractorV2 {
 			}
 		}
 
-		// Hashtable<Integer, Integer> pdtbArg1_OLD = pdtbArg1Results_OLD
-		// .get(name);
-		// Hashtable<Integer, Integer> pdtbArg2_OLD = pdtbArg2Results_OLD
-		// .get(name);
-		// Hashtable<Integer, Integer> pdtbArg1_NEW = pdtbArg1Results_NEW
-		// .get(name);
-		// Hashtable<Integer, Integer> pdtbArg2_NEW = pdtbArg2Results_NEW
-		// .get(name);
+//		Hashtable<Integer, Integer> pdtbArg1_OLD = pdtbArg1Results_OLD
+//				.get(name);
+//		Hashtable<Integer, Integer> pdtbArg2_OLD = pdtbArg2Results_OLD
+//				.get(name);
+//		Hashtable<Integer, Integer> pdtbArg1_NEW = pdtbArg1Results_NEW
+//				.get(name);
+//		Hashtable<Integer, Integer> pdtbArg2_NEW = pdtbArg2Results_NEW
+//				.get(name);
 		Hashtable<Integer, PDTBGraph> graph_OLD = graphDocIndex_OLD.get(name);
 		Hashtable<Integer, PDTBGraph> graph_NEW = graphDocIndex_NEW.get(name);
 
@@ -2053,16 +2118,15 @@ public class PDTBFeatureExtractorV2 {
 		boolean upwards = true;
 		extractSelectedFeatureWeighted(features, featureVector, oldGraph,
 				prefix, postFix, upwards, oldIndex);
-
 		extractSelectedFeatureWeightedGroup(features, featureVector, oldGraph,
 				prefix, postFix, upwards, oldIndex);
+
 
 		// Act as arg2, new
 		prefix = "NEW_";
 		postFix = "_Weighted";
 		extractSelectedFeatureWeighted(features, featureVector, newGraph,
 				prefix, postFix, upwards, newIndex);
-
 		extractSelectedFeatureWeightedGroup(features, featureVector, newGraph,
 				prefix, postFix, upwards, newIndex);
 
@@ -2077,7 +2141,6 @@ public class PDTBFeatureExtractorV2 {
 		upwards = false;
 		extractSelectedFeatureWeighted(features, featureVector, oldGraph,
 				prefix, postFix, upwards, oldIndex);
-
 		extractSelectedFeatureWeightedGroup(features, featureVector, oldGraph,
 				prefix, postFix, upwards, oldIndex);
 
@@ -2086,7 +2149,6 @@ public class PDTBFeatureExtractorV2 {
 		// Act as arg1, new
 		extractSelectedFeatureWeighted(features, featureVector, newGraph,
 				prefix, postFix, upwards, newIndex);
-
 		extractSelectedFeatureWeightedGroup(features, featureVector, newGraph,
 				prefix, postFix, upwards, newIndex);
 
@@ -2179,6 +2241,52 @@ public class PDTBFeatureExtractorV2 {
 		extractSelectedFeatureWeightedTree(features, featureVector, newTree,
 				prefix, postFix, upwards, newIndex, levels);
 	}
+	
+	public void extractSelectedFeatureWeighted(FeatureName features,
+			Object[] featureVector, PDTBGraph graph, String prefix,
+			String postFix, boolean upwards, int sentenceIndex) {
+		// IsEntRel, IsAltLex, IsComparison_Explicit, IsComparison_Implicit,
+		// IsContigency_Explicit, IsContigency_Implicit, IsExpansion_Explicit,
+		// IsExpansion_Implicit, IsTemporal_Explicit, IsTemporal_Implicit
+		if (graph != null) {
+			Hashtable<String, Double> weights = null;
+			if (upwards)
+				weights = graph.getValueArg2(sentenceIndex);
+			else
+				weights = graph.getValueArg1(sentenceIndex);
+			
+			String logStr = "index:"+sentenceIndex + "\n";
+			Iterator<String> it = weights.keySet().iterator();
+			while (it.hasNext()) {
+				String key = it.next();
+				double value = weights.get(key);
+				logStr += key + ":" + value + ",";
+			}
+			//MyLogger.getInstance().log(logStr);
+			
+			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
+					+ postFix, weights.get("EntRel"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
+					+ postFix, weights.get("AltLex"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsComparison" + postFix,
+					weights.get("Comparison"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsContingency" + postFix,
+					weights.get("Contingency"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion" + postFix,
+					weights.get("Expansion"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal" + postFix,
+					weights.get("Temporal"));
+		} else {
+			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
+					+ postFix, 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
+					+ postFix, 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsComparison" + postFix, 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsContingency" + postFix, 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion" + postFix, 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal" + postFix, 0);
+		}
+	}
 
 	public double getValue(Hashtable<String, Double> table, String key) {
 		if (table.containsKey(key)) {
@@ -2187,7 +2295,7 @@ public class PDTBFeatureExtractorV2 {
 			return 0;
 		}
 	}
-
+	
 	public void extractSelectedFeatureWeightedTree(FeatureName features,
 			Object[] featureVector, PDTBTree tree, String prefix,
 			String postFix, boolean upwards, int sentenceIndex, int levels) {
@@ -2246,113 +2354,10 @@ public class PDTBFeatureExtractorV2 {
 			}
 		}
 	}
-
-	public void extractSelectedFeatureWeighted(FeatureName features,
-			Object[] featureVector, PDTBGraph graph, String prefix,
-			String postFix, boolean upwards, int sentenceIndex) {
-		// IsEntRel, IsAltLex, IsComparison_Explicit, IsComparison_Implicit,
-		// IsContigency_Explicit, IsContigency_Implicit, IsExpansion_Explicit,
-		// IsExpansion_Implicit, IsTemporal_Explicit, IsTemporal_Implicit
-		if (graph != null) {
-			Hashtable<String, Double> weights = null;
-			if (upwards)
-				weights = graph.getValueArg2(sentenceIndex);
-			else
-				weights = graph.getValueArg1(sentenceIndex);
-
-			String logStr = "index:" + sentenceIndex + "\n";
-			Iterator<String> it = weights.keySet().iterator();
-			while (it.hasNext()) {
-				String key = it.next();
-				double value = weights.get(key);
-				logStr += key + ":" + value + ",";
-			}
-			// MyLogger.getInstance().log(logStr);
-
-			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
-					+ postFix, weights.get("EntRel"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
-					+ postFix, weights.get("AltLex"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsComparison"
-					+ postFix, weights.get("Comparison"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsContingency"
-					+ postFix, weights.get("Contingency"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion"
-					+ postFix, weights.get("Expansion"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal"
-					+ postFix, weights.get("Temporal"));
-		} else {
-			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
-					+ postFix, 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
-					+ postFix, 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsComparison"
-					+ postFix, 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsContingency"
-					+ postFix, 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion"
-					+ postFix, 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal"
-					+ postFix, 0);
-		}
-	}
-
-	public void extractSelectedFeatureWeightedGroup(FeatureName features,
-			Object[] featureVector, PDTBGraph graph, String prefix,
-			String postFix, boolean upwards, int sentenceIndex) {
-		// IsEntRel, IsAltLex, IsComparison_Explicit, IsComparison_Implicit,
-		// IsContigency_Explicit, IsContigency_Implicit, IsExpansion_Explicit,
-		// IsExpansion_Implicit, IsTemporal_Explicit, IsTemporal_Implicit
-		if (graph != null) {
-			Hashtable<String, Double> weights = null;
-			if (upwards)
-				// weights = graph.getValueArg2(sentenceIndex);
-				weights = graph.getOutGroupValueArg2(sentenceIndex);
-			else
-				// weights = graph.getValueArg1(sentenceIndex);
-				weights = graph.getOutGroupValueArg1(sentenceIndex);
-
-			String logStr = "index:" + sentenceIndex + "\n";
-			Iterator<String> it = weights.keySet().iterator();
-			while (it.hasNext()) {
-				String key = it.next();
-				double value = weights.get(key);
-				logStr += key + ":" + value + ",";
-			}
-			MyLogger.getInstance().log(logStr);
-
-			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
-					+ postFix + "_Group", weights.get("EntRel"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
-					+ postFix + "_Group", weights.get("AltLex"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsComparison"
-					+ postFix + "_Group", weights.get("Comparison"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsContingency"
-					+ postFix + "_Group", weights.get("Contingency"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion"
-					+ postFix + "_Group", weights.get("Expansion"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal"
-					+ postFix + "_Group", weights.get("Temporal"));
-		} else {
-			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
-					+ postFix + "_Group", 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
-					+ postFix + "_Group", 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsComparison"
-					+ postFix + "_Group", 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsContingency"
-					+ postFix + "_Group", 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion"
-					+ postFix + "_Group", 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal"
-					+ postFix + "_Group", 0);
-		}
-	}
-
+	
 	public void extractSelectedFeatureWeightedDiff(FeatureName features,
-			Object[] featureVector, PDTBGraph oldGraph, PDTBGraph newGraph,
-			String prefix, String postFix, boolean upwards, int oldIndex,
-			int newIndex) {
+			Object[] featureVector, PDTBGraph oldGraph, PDTBGraph newGraph, String prefix,
+			String postFix, boolean upwards, int oldIndex, int newIndex) {
 		// IsEntRel, IsAltLex, IsComparison_Explicit, IsComparison_Implicit,
 		// IsContigency_Explicit, IsContigency_Implicit, IsExpansion_Explicit,
 		// IsExpansion_Implicit, IsTemporal_Explicit, IsTemporal_Implicit
@@ -2363,20 +2368,18 @@ public class PDTBFeatureExtractorV2 {
 		double contingency_OLD = 0;
 		double expansion_OLD = 0;
 		double temporal_OLD = 0;
-
+		
 		double entRel_NEW = 0;
 		double altLex_NEW = 0;
 		double comparison_NEW = 0;
 		double contingency_NEW = 0;
 		double expansion_NEW = 0;
 		double temporal_NEW = 0;
-
-		if (oldGraph != null) {
+		
+		if(oldGraph!=null) {
 			Hashtable<String, Double> weights = null;
-			if (upwards)
-				weights = oldGraph.getValueArg2(oldIndex);
-			else
-				weights = oldGraph.getValueArg1(oldIndex);
+			if(upwards) weights = oldGraph.getValueArg2(oldIndex);
+			else weights = oldGraph.getValueArg1(oldIndex);
 			entRel_OLD = weights.get("EntRel");
 			altLex_OLD = weights.get("AltLex");
 			comparison_OLD = weights.get("Comparison");
@@ -2384,13 +2387,11 @@ public class PDTBFeatureExtractorV2 {
 			expansion_OLD = weights.get("Expansion");
 			temporal_OLD = weights.get("Temporal");
 		}
-
-		if (newGraph != null) {
+		
+		if(newGraph!=null) {
 			Hashtable<String, Double> weights = null;
-			if (upwards)
-				weights = newGraph.getValueArg2(newIndex);
-			else
-				weights = newGraph.getValueArg1(newIndex);
+			if(upwards) weights = newGraph.getValueArg2(newIndex);
+			else weights = newGraph.getValueArg1(newIndex);
 			entRel_NEW = weights.get("EntRel");
 			altLex_NEW = weights.get("AltLex");
 			comparison_NEW = weights.get("Comparison");
@@ -2399,17 +2400,15 @@ public class PDTBFeatureExtractorV2 {
 			temporal_NEW = weights.get("Temporal");
 		}
 		fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
-				+ postFix, entRel_NEW - entRel_OLD);
+				+ postFix, entRel_NEW-entRel_OLD);
 		fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
 				+ postFix, altLex_NEW - altLex_OLD);
-		fillInVector(features, featureVector, prefix + "PDTB_IsComparison"
-				+ postFix, comparison_NEW - comparison_OLD);
-		fillInVector(features, featureVector, prefix + "PDTB_IsContingency"
-				+ postFix, contingency_NEW - contingency_OLD);
-		fillInVector(features, featureVector, prefix + "PDTB_IsExpansion"
-				+ postFix, expansion_NEW - expansion_OLD);
-		fillInVector(features, featureVector, prefix + "PDTB_IsTemporal"
-				+ postFix, temporal_NEW - temporal_OLD);
+		fillInVector(features, featureVector, prefix + "PDTB_IsComparison" + postFix,
+				comparison_NEW - comparison_OLD);
+		fillInVector(features, featureVector, prefix + "PDTB_IsContingency" + postFix,
+				contingency_NEW - contingency_OLD);
+		fillInVector(features, featureVector, prefix + "PDTB_IsExpansion" + postFix, expansion_NEW-expansion_OLD);
+		fillInVector(features, featureVector, prefix + "PDTB_IsTemporal" + postFix, temporal_NEW-temporal_OLD);
 	}
 
 	public void extractFeature(FeatureName features, Object[] featureVector,

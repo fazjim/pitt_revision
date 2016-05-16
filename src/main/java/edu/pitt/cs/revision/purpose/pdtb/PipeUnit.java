@@ -68,6 +68,12 @@ public class PipeUnit {
 		return range1;
 	}
 
+	public String getConnectiveRange() {
+		String range1 = getAttr(PipeAttribute.CONN_SPANLIST);
+		return range1;
+	}
+
+	
 	public String getSent2Range() {
 		String range2 = getAttr(PipeAttribute.ARG2_SPANLIST);
 		return range2;
@@ -108,7 +114,13 @@ public class PipeUnit {
 	}
 	
 	public String getRelationType() {
-		return getAttr(PipeAttribute.FIRST_SEMCLASS_CONN);
+		String attr = getAttr(PipeAttribute.FIRST_SEMCLASS_CONN);
+		String attr2 = getManualRelationType().trim();
+		if(attr2.equals("Comparison")||attr2.equals("Contingency")||attr2.equals("Expansion")||attr2.equals("Temporal")) {
+			return attr2;
+		} else {
+			return attr;
+		}
 	}
 	
 	public String getManualRelationType() {
