@@ -555,7 +555,7 @@ public class PDTBFeatureExtractorV2 {
 			graph.setEndSentenceIndex(lastIndex);
 			graph.buildGraph(units, doc, isOld, sentences);
 			String headline = doc.getDocumentName() + ", isOld:" + isOld + "\n";
-			MyLogger.getInstance().log(headline + graph.toString());
+			//MyLogger.getInstance().log(headline + graph.toString());
 			graphIndex.put(i, graph);
 		}
 	}
@@ -2201,14 +2201,14 @@ public class PDTBFeatureExtractorV2 {
 			else
 				weights = tree.getValueArg1(sentenceIndex);
 
-			String logStr = "index:" + sentenceIndex + "\n";
+			String logStr = "Tree weight index:" + sentenceIndex + "\n";
 			Iterator<String> it = weights.keySet().iterator();
 			while (it.hasNext()) {
 				String key = it.next();
 				double value = weights.get(key);
 				logStr += key + ":" + value + ",";
 			}
-			// MyLogger.getInstance().log(logStr);
+		    MyLogger.getInstance().log(logStr);
 			for (int i = 1; i <= levels; i++) {
 				String key = "_Level_" + i;
 				fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
@@ -2319,7 +2319,7 @@ public class PDTBFeatureExtractorV2 {
 				double value = weights.get(key);
 				logStr += key + ":" + value + ",";
 			}
-			MyLogger.getInstance().log(logStr);
+			//MyLogger.getInstance().log(logStr);
 
 			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
 					+ postFix + "_Group", weights.get("EntRel"));

@@ -135,10 +135,33 @@ public class PDTBTree {
 	private Hashtable<Integer, HashSet<Integer>> relationIndexStart;
 	private Hashtable<Integer, HashSet<Integer>> relationIndexEnd;
 
+	private Hashtable<String, Integer> relationLevelInformation;
+
 	public PDTBTree() {
 		relationIndex = new Hashtable<String, PDTBRelation>();
 		relationIndexStart = new Hashtable<Integer, HashSet<Integer>>();
 		relationIndexEnd = new Hashtable<Integer, HashSet<Integer>>();
+
+		relationLevelInformation = new Hashtable<String, Integer>();
+	}
+
+	public void fillInRelationLevelInformation(PDTBTreeNode root, int level) {
+		if (root.isLeaf()) {
+			int sentenceIndex = root.getSentenceIndex();
+			String key = sentenceIndex + "-" + sentenceIndex;
+			relationLevelInformation.put(key, level);
+		} else {
+			PDTBTreeNode left = root.getLeft();
+			PDTBTreeNode right = root.getRight();
+			List<PDTBRelation> relations = getRelations(left, right);
+			for (PDTBRelation relation : relations) {
+				String key = relation.getPreIndex() + "-"
+						+ relation.getPostIndex();
+				relationLevelInformation.put(key, level);
+			}
+			fillInRelationLevelInformation(left, level + 1);
+			fillInRelationLevelInformation(right, level + 1);
+		}
 	}
 
 	public int getParents(int sentenceIndex, PDTBTreeNode root,
@@ -151,11 +174,11 @@ public class PDTBTree {
 			if (left.getStartingIndex() <= sentenceIndex
 					&& left.getEndingIndex() >= sentenceIndex) {
 				int level = getParents(sentenceIndex, left, nodeTable);
-				nodeTable.put(-(level + 1), left);
+				nodeTable.put(-(level + 1), root);
 				return level + 1;
 			} else {
 				int level = getParents(sentenceIndex, right, nodeTable);
-				nodeTable.put(level + 1, right);
+				nodeTable.put(level + 1, root);
 				return level + 1;
 			}
 		}
@@ -167,16 +190,28 @@ public class PDTBTree {
 		getParents(sentenceIndex, rootNode, parentTable);
 		Iterator<Integer> it = parentTable.keySet().iterator();
 		Hashtable<String, Double> valueMatrix = new Hashtable<String, Double>();
+		int levelMax = 0;
 		while (it.hasNext()) {
-			int level = it.next();
+			int l = it.next();
+			if (l < levelMax)
+				levelMax = l;
+		}
+
+		for (int level = -1; level >= levelMax; level--) {
+			boolean shouldStop = false;
 			PDTBTreeNode node = parentTable.get(level);
-			if (level < 0) {
+			if (node != null) {
 				List<PDTBRelation> relations = node.getRelations();
 				for (PDTBRelation relation : relations) {
+					String relationKey = relation.getPreIndex() + "-"
+							+ relation.getPostIndex();
+					int relationLevel = relationLevelInformation
+							.get(relationKey);
 					String key = "NoRel";
 					if (relation.getElementType().equals("NoRel")
 							|| relation.getSense().equals("NoRel")) {
 						key = "NoRel";
+						shouldStop = true;
 					} else if (relation.getElementType().equals("AltLex")) {
 						key = "AltLex";
 					} else if (relation.getElementType().equals("EntRel")) {
@@ -186,8 +221,17 @@ public class PDTBTree {
 							key = relation.getSense();
 						}
 					}
-					valueMatrix.put(key+"-"+(-level), 1.0);
+					if (relationLevel > 3)
+						relationLevel = 3;
+					String newKey = key + "-" + relationLevel;
+					double val = 1.0 / (Math.pow(2, (-level) - 1));
+					if(relation.getPreIndex()==sentenceIndex) val = 1.0;
+					if (!valueMatrix.containsKey(newKey)
+							|| valueMatrix.get(newKey) < val)
+						valueMatrix.put(newKey, val);
 				}
+				if (shouldStop)
+					break;
 			}
 		}
 		return valueMatrix;
@@ -197,17 +241,28 @@ public class PDTBTree {
 		Hashtable<Integer, PDTBTreeNode> parentTable = new Hashtable<Integer, PDTBTreeNode>();
 		getParents(sentenceIndex, rootNode, parentTable);
 		Iterator<Integer> it = parentTable.keySet().iterator();
-		Hashtable<String, Double> valueMatrix = new Hashtable<String, Double>();
+		int levelMax = 0;
 		while (it.hasNext()) {
-			int level = it.next();
+			int l = it.next();
+			if (l > levelMax)
+				levelMax = l;
+		}
+		Hashtable<String, Double> valueMatrix = new Hashtable<String, Double>();
+		for (int level = 1; level <= levelMax; level++) {
+			boolean shouldStop = false;
 			PDTBTreeNode node = parentTable.get(level);
-			if (level > 0) {
+			if (node != null) {
 				List<PDTBRelation> relations = node.getRelations();
 				for (PDTBRelation relation : relations) {
+					String relationKey = relation.getPreIndex() + "-"
+							+ relation.getPostIndex();
+					int relationLevel = relationLevelInformation
+							.get(relationKey);
 					String key = "NoRel";
 					if (relation.getElementType().equals("NoRel")
 							|| relation.getSense().equals("NoRel")) {
 						key = "NoRel";
+						shouldStop = true;
 					} else if (relation.getElementType().equals("AltLex")) {
 						key = "AltLex";
 					} else if (relation.getElementType().equals("EntRel")) {
@@ -217,8 +272,18 @@ public class PDTBTree {
 							key = relation.getSense();
 						}
 					}
-					valueMatrix.put(key+"-"+(level), 1.0);
+					if (relationLevel > 3)
+						relationLevel = 3;
+					String newKey = key + "-" + relationLevel;
+					double val = 1.0 / (Math.pow(2, (level - 1)));
+					if(relation.getPostIndex() == sentenceIndex) val = 1.0;
+					if (!valueMatrix.containsKey(newKey)
+							|| valueMatrix.get(newKey) < val)
+						valueMatrix.put(newKey, val);
+
 				}
+				if (shouldStop)
+					break;
 			}
 		}
 		return valueMatrix;
@@ -274,9 +339,19 @@ public class PDTBTree {
 		}
 		rootNode = buildTree(leafNodes);
 		String headline = doc.getDocumentName();
-		headline += ", isOld" + isOld;
+		headline += ", isOld: " + isOld;
 		headline += "\n";
 		MyLogger.getInstance().log(headline + this.toString());
+
+		fillInRelationLevelInformation(rootNode, 1);
+		String str = "";
+		Iterator<String> relationIt = relationLevelInformation.keySet().iterator();
+		while(relationIt.hasNext()) {
+			String key = relationIt.next();
+			int level = relationLevelInformation.get(key);
+			str += key + ":"+ level+"\n";
+		}
+		MyLogger.getInstance().log(str);
 	}
 
 	/**
@@ -300,7 +375,7 @@ public class PDTBTree {
 			int maxIndex = -1;
 			for (int i = 0; i < treeNodes.size() - 1; i++) {
 				double val = getSim(treeNodes.get(i), treeNodes.get(i + 1));
-			
+
 				if (val >= max) {
 					max = val;
 					maxIndex = i;
@@ -309,20 +384,20 @@ public class PDTBTree {
 			PDTBTreeNode leftNode = treeNodes.get(maxIndex);
 			PDTBTreeNode rightNode = treeNodes.get(maxIndex + 1);
 			PDTBTreeNode newNode = mergeNode(leftNode, rightNode);
-			//treeNodes.remove(leftNode);
+			// treeNodes.remove(leftNode);
 			treeNodes.remove(rightNode);
 			treeNodes.set(maxIndex, newNode);
-			//treeNodes.add(newNode);
+			// treeNodes.add(newNode);
 			return buildTree(treeNodes);
 		}
 	}
 
 	public String toString() {
-		String str = "";
-		return printTree(rootNode, str, 0);
+		return printTree(rootNode, 0);
 	}
 
-	public String printTree(PDTBTreeNode root, String str, int level) {
+	public String printTree(PDTBTreeNode root, int level) {
+		String str = "";
 		str += root.toString();
 		str += "|";
 		str += "\n";
@@ -331,10 +406,14 @@ public class PDTBTree {
 				str += "\t";
 			}
 			PDTBTreeNode left = root.getLeft();
-			printTree(left, str, level + 1);
+			str += printTree(left, level + 1);
 			str += "\n";
+			for (int i = 0; i < level; i++) {
+				str += "\t";
+			}
 			PDTBTreeNode right = root.getRight();
-			printTree(right, str, level + 1);
+			str += printTree(right, level + 1);
+			str += "\n";
 		}
 		return str;
 	}
@@ -391,9 +470,9 @@ public class PDTBTree {
 			String sentence2 = node2.getSentence();
 			double sim = SentenceEmbeddingFeatureExtractor.getInstance()
 					.calculateSim(sentence1, sentence2);
-			if(sim == 0) {
-				System.err.println("SENT1:"+sentence1);
-				System.err.println("SENT2:"+ sentence2);
+			if (sim == 0) {
+				System.err.println("SENT1:" + sentence1);
+				System.err.println("SENT2:" + sentence2);
 			}
 			return sim;
 		} else {

@@ -531,8 +531,8 @@ public class SentenceEmbeddingFeatureExtractor {
 				oldToken = oldToken.replace(",", "");
 			oldToken = oldToken.toLowerCase();
 			if (!oldToken.equals(".") && !oldToken.equals(",")) {
-				//if (w2v.hasWord(oldToken) && !stopWords.contains(oldToken)) {
-				if (w2v.hasWord(oldToken)) {
+				if (w2v.hasWord(oldToken) && !stopWords.contains(oldToken)) {
+				//if (w2v.hasWord(oldToken)) {
 					double[] tmp = w2v.getWordVector(oldToken);
 					addArray(s1Array, tmp);
 				}
@@ -545,8 +545,8 @@ public class SentenceEmbeddingFeatureExtractor {
 			if (!newToken.equals(","))
 				newToken = newToken.replace(",", "");
 			if (!newToken.equals(".") && !newToken.equals(",")) {
-				//if (w2v.hasWord(newToken) && !stopWords.contains(newToken)) {
-				if (w2v.hasWord(newToken)) {
+				if (w2v.hasWord(newToken) && !stopWords.contains(newToken)) {
+				//if (w2v.hasWord(newToken)) {
 					double[] tmp = w2v.getWordVector(newToken);
 					addArray(s2Array, tmp);
 				}

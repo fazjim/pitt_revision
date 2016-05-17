@@ -1910,7 +1910,7 @@ public class PDTBFeatureExtractorV4 {
 				double value = weights.get(key);
 				logStr += key + ":" + value + ",";
 			}
-			MyLogger.getInstance().log(logStr);
+			//MyLogger.getInstance().log(logStr);
 			
 			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
 					+ postFix + "_Group", weights.get("EntRel"));
@@ -2309,14 +2309,14 @@ public class PDTBFeatureExtractorV4 {
 			else
 				weights = tree.getValueArg1(sentenceIndex);
 
-			String logStr = "index:" + sentenceIndex + "\n";
+			String logStr = "Weights: index:" + sentenceIndex + "\n";
 			Iterator<String> it = weights.keySet().iterator();
 			while (it.hasNext()) {
 				String key = it.next();
 				double value = weights.get(key);
 				logStr += key + ":" + value + ",";
 			}
-			// MyLogger.getInstance().log(logStr);
+			MyLogger.getInstance().log(logStr);
 			for (int i = 1; i <= levels; i++) {
 				String key = "_Level_" + i;
 				fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"

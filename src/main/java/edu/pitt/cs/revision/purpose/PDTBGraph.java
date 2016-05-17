@@ -54,6 +54,9 @@ class PDTBRelation {
 	String elementType;
 	boolean isParallel;
 
+	public String toString() {
+		return preIndex+":"+postIndex+", Type:"+elementType+", Sense:"+sense;
+	}
 	public String getElementType() {
 		return elementType;
 	}
@@ -1147,8 +1150,8 @@ public class PDTBGraph {
 				nextSim = sims.get(j + 1);
 			}
 
-			//if (currentSim < cutoff || (currentSim < (avg-std) && currentSim < lastSim && currentSim < nextSim)) {
-			if (currentSim < cutoff ||((currentSim < lastSim  && currentSim < nextSim))) {
+			if (currentSim < cutoff || (currentSim < (avg-std) && currentSim < lastSim && currentSim < nextSim)) {
+			//if (currentSim < cutoff ||((currentSim < lastSim  && currentSim < nextSim))) {
 				int pre = j;
 				int post = j + 1;
 				int preIndex = sentences.get(pre);

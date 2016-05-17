@@ -249,6 +249,12 @@ public class EvaluateMain {
 		
 		experiments.add("AutoPDTBTree");
 		options.add(12);
+		
+		experiments.add("PDTBMix");
+		options.add(14);
+		
+		experiments.add("AutoPDTBMix");
+		options.add(15);
 		// experiments.add("Language features");
 		// options.add(4);
 
@@ -276,6 +282,8 @@ public class EvaluateMain {
 		double[][] confusionMatrixSVM = new double[5][5];
 		double[][] confusionMatrixSVMPDTB = new double[5][5];
 		double[][] confusionMatrixSVMEntity = new double[5][5];
+		double[][] confusionMatrixSVMTree = new double[5][5];
+		double[][] confusionMatrixSVMMix = new double[5][5];
 		double[][] confusionMatrixStacking = new double[5][5];
 
 		for (String experiment : experiments) {
@@ -346,6 +354,38 @@ public class EvaluateMain {
 									confusionMatrixRF[ii][jj] += cm[ii][jj];
 								} else if (classifier.equals("SVM")) {
 									confusionMatrixSVMEntity[ii][jj] += cm[ii][jj];
+								} else if (classifier.equals("Stacking")) {
+									confusionMatrixStacking[ii][jj] += cm[ii][jj];
+								}
+							}
+						}
+					}
+					else if (experiment.equals("PDTBTree")) {
+						double[][] cm = eval.confusionMatrix();
+						for (int ii = 0; ii < cm.length; ii++) {
+							for (int jj = 0; jj < cm.length; jj++) {
+								if (classifier.equals("DT")) {
+									confusionMatrixDT[ii][jj] += cm[ii][jj];
+								} else if (classifier.equals("RF")) {
+									confusionMatrixRF[ii][jj] += cm[ii][jj];
+								} else if (classifier.equals("SVM")) {
+									confusionMatrixSVMTree[ii][jj] += cm[ii][jj];
+								} else if (classifier.equals("Stacking")) {
+									confusionMatrixStacking[ii][jj] += cm[ii][jj];
+								}
+							}
+						}
+					}
+					else if (experiment.equals("PDTBMix")) {
+						double[][] cm = eval.confusionMatrix();
+						for (int ii = 0; ii < cm.length; ii++) {
+							for (int jj = 0; jj < cm.length; jj++) {
+								if (classifier.equals("DT")) {
+									confusionMatrixDT[ii][jj] += cm[ii][jj];
+								} else if (classifier.equals("RF")) {
+									confusionMatrixRF[ii][jj] += cm[ii][jj];
+								} else if (classifier.equals("SVM")) {
+									confusionMatrixSVMMix[ii][jj] += cm[ii][jj];
 								} else if (classifier.equals("Stacking")) {
 									confusionMatrixStacking[ii][jj] += cm[ii][jj];
 								}
@@ -433,6 +473,8 @@ public class EvaluateMain {
 		// printCM("RF", confusionMatrixRF);
 		printCM("SVM-PDTB", confusionMatrixSVMPDTB);
 		printCM("PDTBGraph", confusionMatrixSVMEntity);
+		printCM("PDTBTree", confusionMatrixSVMTree);
+		printCM("PDTBMix", confusionMatrixSVMMix);
 	}
 
 	public static void trainTestClassifyJumbo2(
