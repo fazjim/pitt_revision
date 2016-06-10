@@ -1,5 +1,9 @@
 package edu.pitt.lrdc.cs.revision.statistics;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -26,7 +30,7 @@ public class DataStatistics {
 		return Math.sqrt(std);
 	}
 	
-	public static void stat(ArrayList<RevisionDocument> docs) {
+	public static void stat(ArrayList<RevisionDocument> docs) throws IOException {
 		double oldAverageSent = 0;
 		double newAverageSent = 0;
 		double oldWordCnt = 0;
@@ -34,7 +38,21 @@ public class DataStatistics {
 		ArrayList<Double> oldSentNums = new ArrayList<Double>();
 		ArrayList<Double> newSentNums = new ArrayList<Double>();
 		
+		
+		
 		for (RevisionDocument doc : docs) {
+			String docPath = doc.getDocumentName();
+			File f = new File(docPath);
+			String fileName = f.getName();
+			fileName = fileName.replace(".xlsx", "");
+			String oldFolder = "C:\\Not Backed Up\\C2\\draft1";
+			String newFolder = "C:\\Not Backed Up\\C2\\draft2";
+			BufferedWriter writer = new BufferedWriter(new FileWriter(oldFolder+"/"+fileName));
+			BufferedWriter writer2 = new BufferedWriter(new FileWriter(newFolder+"/"+fileName));
+			writer.write(doc.getOriginalTxtOld());
+			writer2.write(doc.getOriginalTxtNew());
+			writer.close();
+			writer2.close();
 			oldAverageSent += doc.getOldDraftSentences().size();
 			newAverageSent += doc.getNewDraftSentences().size();
 			for(String sent: doc.getOldDraftSentences()) {
@@ -333,7 +351,7 @@ public class DataStatistics {
 		 * //ArrayList<RevisionDocument> docs3 = rd.readDocs(class2);
 		 * docs.addAll(docs2); //docs.addAll(docs3);
 		 */
-		String path = "C:\\Not Backed Up\\data\\naaclData\\C1";
+		String path = "C:\\Not Backed Up\\data\\naaclData\\C2";
 		//path = "C:\\Not Backed Up\\data_phrase_science\\BarnettPhraseAlign";
 		ds.stat(RevisionDocumentReader.readDocs(path));
 	}

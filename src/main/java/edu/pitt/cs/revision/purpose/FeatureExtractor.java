@@ -2084,45 +2084,58 @@ public class FeatureExtractor {
 		if (remove == -1)
 			return;
 		if (remove == 0 || remove == 10 || remove == 11 || remove == 2
-				|| remove == 3 || remove == 6 || remove == 7 || remove == 8 || remove == 9 || remove == 12 || remove == 14 || remove == 15)
+				|| remove == 3 || remove == 6 || remove == 7 || remove == 8 || remove == 9 || remove == 12 || remove == 14 || remove == 15 || remove == 16 || remove == 17 || remove == 18 || remove == 19)
 			insertLocGroup();
 		if (remove == 1 || remove == 10 || remove == 11 || remove == 2
-				|| remove == 3 || remove == 6 || remove == 7 || remove == 8 || remove == 9 || remove == 12 || remove == 14 || remove == 15)
+				|| remove == 3 || remove == 6 || remove == 7 || remove == 8 || remove == 9 || remove == 12 || remove == 14 || remove == 15 || remove == 16 || remove == 17 || remove == 18 || remove == 19)
 			insertTextGroup();
 		if (remove == 2 || remove == 10 || remove == 22 ) {
 			//PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
 			PDTBFeatureExtractorV2.getInstance().insertFeature(features);
 		}
-		if (remove == 10 || remove == 22 || remove == 8 ) {
+		if (remove == 10 || remove == 23 || remove == 8 ) {
 			//PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
 			PDTBFeatureExtractorV4.getInstance().insertFeature(features);
 		}
-		if(remove == 6 || remove == 10 || remove == 14) {
+		if(remove == 6 || remove == 10 || remove == 14 || remove == 16) {
 			//PDTBFeatureExtractorV2.getInstance().insertPDTBEntityFeatures(features);
 			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesWeighted(features);
 			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesGroupWeighted(features);
 			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesPostWeighted(features);
-			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesPostGroupWeighted(features);
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesPostGroupWeighted(features);	
+		} 
+		if(remove == 16 || remove == 14) {
 			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesDiffWeighted(features);
 			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesDiffWeightedPost(features);
 		}
-		if(remove == 7 || remove == 10 || remove == 15) {
+		if(remove == 7 || remove == 10 || remove == 15 || remove == 17) {
 			//PDTBFeatureExtractorV2.getInstance().insertPDTBEntityFeatures(features);
 			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesWeighted(features);
 			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesPostWeighted(features);
-			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesDiffWeighted(features);
-			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesDiffWeightedPost(features);
 			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesPostGroupWeighted(features);
 			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesGroupWeighted(features);
 		}
-		if(remove == 9 || remove == 10 || remove == 14) {
-			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesWeightedTree(features,3);
-			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesPostWeightedTree(features,3);
+		if(remove == 17 || remove == 15) {
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesDiffWeighted(features);
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesDiffWeightedPost(features);
 		}
-		if(remove == 12 || remove == 10 || remove == 15) {
-			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesWeightedTree(features,3);
-			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesPostWeightedTree(features,3);
+		if(remove == 9 || remove == 10 || remove == 14 || remove == 18) {
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesWeightedTree(features,4);
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesPostWeightedTree(features,4);
 		}
+		if(remove == 18 || remove == 14) {
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesWeightedTreeDiff(features, 4);
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesPostWeightedTreeDiff(features, 4);
+		}
+		if(remove == 12 || remove == 10 || remove == 15 || remove == 19) {
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesWeightedTree(features,4);
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesPostWeightedTree(features,4);	
+		}
+		if(remove == 19 || remove == 15) {
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesWeightedTreeDiff(features, 4);
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesPostWeightedTreeDiff(features, 4);
+		}
+		
 		if (remove == 3 || remove == 10) {
 			// insertMetaGroup();
 			SentenceEmbeddingFeatureExtractor.getInstance().insertCohesion(
@@ -2160,7 +2173,7 @@ public class FeatureExtractor {
 			//PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
 			PDTBFeatureExtractorV2.getInstance().insertFeature(features);
 		}
-		if (remove == 10 || remove == 22 || remove == 8 )  {
+		if (remove == 10 || remove == 23 || remove == 8 )  {
 			//PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
 			PDTBFeatureExtractorV4.getInstance().insertFeature(features);
 		}
@@ -2193,12 +2206,16 @@ public class FeatureExtractor {
 			//insertPriorPostFeatures(1);
 		}
 		if(remove == 9 || remove == 10) {
-			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesWeightedTree(features,3);
-			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesPostWeightedTree(features,3);
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesWeightedTree(features,4);
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesPostWeightedTree(features,4);
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesWeightedTreeDiff(features, 4);
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesPostWeightedTreeDiff(features, 4);
 		}
 		if(remove == 12 || remove == 10) {
-			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesWeightedTree(features,3);
-			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesPostWeightedTree(features,3);
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesWeightedTree(features,4);
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesPostWeightedTree(features,4);
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesWeightedTreeDiff(features, 4);
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesPostWeightedTreeDiff(features, 4);
 		}
 		// insertLanguageGroup();
 		// insertOtherGroup();
@@ -2228,10 +2245,10 @@ public class FeatureExtractor {
 		if (remove == -1)
 			return featureVector;
 		if (remove == 0 || remove == 10 || remove == 11 || remove == 3
-				|| remove == 2 || remove == 6 || remove == 7 || remove == 8 || remove == 9 || remove == 12 || remove == 14 || remove == 15)
+				|| remove == 2 || remove == 6 || remove == 7 || remove == 8 || remove == 9 || remove == 12 || remove == 14 || remove == 15 || remove == 16 || remove == 17 || remove == 18 || remove == 19)
 			extractLocGroup(doc, ru);
 		if (remove == 1 || remove == 10 || remove == 11 || remove == 3
-				|| remove == 2 || remove == 6 || remove == 7 || remove == 8 || remove == 9 || remove == 12 || remove == 14 || remove == 15)
+				|| remove == 2 || remove == 6 || remove == 7 || remove == 8 || remove == 9 || remove == 12 || remove == 14 || remove == 15 || remove == 16 || remove == 17 || remove == 18 || remove == 19)
 			extractTextGroup(doc, ru);
 		if (remove == 2 || remove == 10 || remove == 22) {
 			// extractLanguageGroup(doc, ru);
@@ -2246,7 +2263,7 @@ public class FeatureExtractor {
 					featureVector, doc, ru.getNewSentenceIndex(),
 					ru.getOldSentenceIndex());*/
 		}
-		if (remove == 8 || remove == 10 || remove == 22 ) {
+		if (remove == 8 || remove == 10 || remove == 23 ) {
 			// extractLanguageGroup(doc, ru);
 			ArrayList<Integer> newSents = ru.getNewSentenceIndex();
 			ArrayList<Integer> oldSents = ru.getOldSentenceIndex();
@@ -2259,7 +2276,7 @@ public class FeatureExtractor {
 					featureVector, doc, ru.getNewSentenceIndex(),
 					ru.getOldSentenceIndex());*/
 		}
-		if(remove == 6 || remove == 10 || remove == 14) {
+		if(remove == 6 || remove == 10 || remove == 14 || remove == 16) {
 			ArrayList<Integer> newSents = ru.getNewSentenceIndex();
 			ArrayList<Integer> oldSents = ru.getOldSentenceIndex();
 			
@@ -2269,8 +2286,12 @@ public class FeatureExtractor {
 					oldSents);*/
 			PDTBFeatureExtractorV2.getInstance().extractWeightedFeature(features, featureVector, doc, newSents, oldSents);
 		}
-		
-		if(remove == 7 || remove == 10 || remove == 15) {
+		if(remove == 16 || remove == 14) {
+			ArrayList<Integer> newSents = ru.getNewSentenceIndex();
+			ArrayList<Integer> oldSents = ru.getOldSentenceIndex();
+			PDTBFeatureExtractorV2.getInstance().extractWeightedFeatureChange(features, featureVector, doc, newSents, oldSents);
+		}
+		if(remove == 7 || remove == 10 || remove == 15 || remove == 17) {
 			ArrayList<Integer> newSents = ru.getNewSentenceIndex();
 			ArrayList<Integer> oldSents = ru.getOldSentenceIndex();
 			
@@ -2280,17 +2301,12 @@ public class FeatureExtractor {
 					oldSents);*/
 			PDTBFeatureExtractorV4.getInstance().extractWeightedFeature(features, featureVector, doc, newSents, oldSents);
 		}
-		if(remove == 9 || remove == 10 || remove == 14) {
+		if(remove == 17 || remove == 15) {
 			ArrayList<Integer> newSents = ru.getNewSentenceIndex();
 			ArrayList<Integer> oldSents = ru.getOldSentenceIndex();
-			
-		
-			/*PDTBFeatureExtractorV2.getInstance().extractPDTBEntityGridFeature(features,
-					featureVector, doc, newSents,
-					oldSents);*/
-			PDTBFeatureExtractorV2.getInstance().extractWeightedFeatureTree(features, featureVector, doc, newSents, oldSents,3);
+			PDTBFeatureExtractorV4.getInstance().extractWeightedFeatureChange(features, featureVector, doc, newSents, oldSents);
 		}
-		if(remove == 12 || remove == 10 || remove == 15) {
+		if(remove == 9 || remove == 10 || remove == 14 || remove == 18) {
 			ArrayList<Integer> newSents = ru.getNewSentenceIndex();
 			ArrayList<Integer> oldSents = ru.getOldSentenceIndex();
 			
@@ -2298,7 +2314,33 @@ public class FeatureExtractor {
 			/*PDTBFeatureExtractorV2.getInstance().extractPDTBEntityGridFeature(features,
 					featureVector, doc, newSents,
 					oldSents);*/
-			PDTBFeatureExtractorV4.getInstance().extractWeightedFeatureTree(features, featureVector, doc, newSents, oldSents,3);
+			PDTBFeatureExtractorV2.getInstance().extractWeightedFeatureTree(features, featureVector, doc, newSents, oldSents,4);
+		}
+		if(remove == 18 || remove == 14) {
+			ArrayList<Integer> newSents = ru.getNewSentenceIndex();
+			ArrayList<Integer> oldSents = ru.getOldSentenceIndex();
+		
+			PDTBFeatureExtractorV2.getInstance().extractWeightedFeatureTreeChange(features, featureVector, doc, newSents, oldSents,4);
+		}
+		if(remove == 12 || remove == 10 || remove == 15 || remove == 19) {
+			ArrayList<Integer> newSents = ru.getNewSentenceIndex();
+			ArrayList<Integer> oldSents = ru.getOldSentenceIndex();
+			
+		
+			/*PDTBFeatureExtractorV2.getInstance().extractPDTBEntityGridFeature(features,
+					featureVector, doc, newSents,
+					oldSents);*/
+			PDTBFeatureExtractorV4.getInstance().extractWeightedFeatureTree(features, featureVector, doc, newSents, oldSents,4);
+		}
+		if(remove == 19 || remove == 15) {
+			ArrayList<Integer> newSents = ru.getNewSentenceIndex();
+			ArrayList<Integer> oldSents = ru.getOldSentenceIndex();
+			
+		
+			/*PDTBFeatureExtractorV2.getInstance().extractPDTBEntityGridFeature(features,
+					featureVector, doc, newSents,
+					oldSents);*/
+			PDTBFeatureExtractorV4.getInstance().extractWeightedFeatureTreeChange(features, featureVector, doc, newSents, oldSents,4);		
 		}
 		if (remove == 3 || remove == 10)
 			// extractMetaGroup(doc, ru);

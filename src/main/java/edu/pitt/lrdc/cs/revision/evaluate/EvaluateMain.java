@@ -64,9 +64,13 @@ public class EvaluateMain {
 		// RevisionDocumentReader.readDocs(anotherPath);
 
 		ArrayList<RevisionDocument> allData = new ArrayList<RevisionDocument>();
-		allData.addAll(trainFolder);
-		// allData.addAll(testFolder);
-		// allData.addAll(trainFolder);
+		boolean c1Mode = true;
+		if(c1Mode) {
+			allData.addAll(trainFolder);
+		} else {
+			allData.addAll(testFolder);
+		}
+		
 		String resultPath = "dummy";
 		if (option == ALIGN) {
 			evaluateMethod = 2;// modify later to allow human input
@@ -98,7 +102,7 @@ public class EvaluateMain {
 			// highLevel);
 			// Open this for jumbo classification
 			// resultPath = "/Users/faz23/Desktop/34/annotated/allResults2";
-			//crossValidateClassifyJumbo(allData, folder, true, resultPath);
+			// crossValidateClassifyJumbo(allData, folder, true, resultPath);
 			crossValidateClassifyJumbo2(allData, folder, true, resultPath);
 			// trainTestClassifyJumbo2(trainFolder, testFolder, true,
 			// resultPath);
@@ -229,32 +233,39 @@ public class EvaluateMain {
 		experiments.add("All features-OLD");
 		options.add(11);
 
-		//experiments.add("PDTB_Only");
-		//options.add(22);
+		// experiments.add("PDTB_Only");
+		// options.add(22);
 
-		experiments.add("PDTB+OLD");
-		options.add(2);
-		
-		experiments.add("AutoPDTB+OLD");
-		options.add(8);
-
-		experiments.add("PDTBGraph");
-		options.add(6);
-		
-		experiments.add("AutoPDTBGraph");
-		options.add(7);
-		
-		experiments.add("PDTBTree");
-		options.add(9);
-		
-		experiments.add("AutoPDTBTree");
-		options.add(12);
-		
-		experiments.add("PDTBMix");
-		options.add(14);
-		
-		experiments.add("AutoPDTBMix");
-		options.add(15);
+		// experiments.add("Auto_PDTB_Only");
+		// options.add(23);
+		boolean isAuto = false;
+		if (!isAuto) {
+			experiments.add("PDTB+OLD");
+			options.add(2);
+			experiments.add("PDTBSegment");
+			options.add(6);
+			experiments.add("PDTBTree");
+			options.add(9);
+			experiments.add("PDTBMix");
+			options.add(14);
+			experiments.add("PDTBSegmentChange");
+			options.add(16);
+			experiments.add("PDTBTreeChange");
+			options.add(18);
+		} else {
+			experiments.add("AutoPDTB+OLD");
+			options.add(8);
+			experiments.add("AutoPDTBSegment");
+			options.add(7);
+			experiments.add("AutoPDTBTree");
+			options.add(12);
+			experiments.add("AutoPDTBMix");
+			options.add(15);
+			experiments.add("AutoPDTBSegmentChange");
+			options.add(17);
+			experiments.add("AutoPDTBTreeChange");
+			options.add(19);
+		}
 		// experiments.add("Language features");
 		// options.add(4);
 
@@ -344,7 +355,7 @@ public class EvaluateMain {
 								}
 							}
 						}
-					} else if (experiment.equals("PDTBGraph")) {
+					} else if (experiment.equals("PDTBSegment")) {
 						double[][] cm = eval.confusionMatrix();
 						for (int ii = 0; ii < cm.length; ii++) {
 							for (int jj = 0; jj < cm.length; jj++) {
@@ -359,8 +370,7 @@ public class EvaluateMain {
 								}
 							}
 						}
-					}
-					else if (experiment.equals("PDTBTree")) {
+					} else if (experiment.equals("PDTBTree")) {
 						double[][] cm = eval.confusionMatrix();
 						for (int ii = 0; ii < cm.length; ii++) {
 							for (int jj = 0; jj < cm.length; jj++) {
@@ -375,8 +385,7 @@ public class EvaluateMain {
 								}
 							}
 						}
-					}
-					else if (experiment.equals("PDTBMix")) {
+					} else if (experiment.equals("PDTBMix")) {
 						double[][] cm = eval.confusionMatrix();
 						for (int ii = 0; ii < cm.length; ii++) {
 							for (int jj = 0; jj < cm.length; jj++) {
@@ -749,23 +758,21 @@ public class EvaluateMain {
 		experiments.add("All features-OLD");
 		options.add(11);
 
-		//experiments.add("PDTB_Only");
-		//options.add(22);
+		// experiments.add("PDTB_Only");
+		// options.add(22);
 
 		experiments.add("PDTB+OLD");
 		options.add(2);
-		
+
 		experiments.add("AutoPDTB+OLD");
 		options.add(8);
-		
+
 		experiments.add("PDTBGraph");
 		options.add(6);
-		
+
 		experiments.add("AutoPDTBGraph");
 		options.add(7);
 		allAddRow(writers, experiments);
-		
-		
 
 		allMakeTable(writers);
 		ArrayList<String> purposes = new ArrayList<String>();

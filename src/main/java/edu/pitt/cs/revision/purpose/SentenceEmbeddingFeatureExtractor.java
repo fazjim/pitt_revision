@@ -699,8 +699,20 @@ public class SentenceEmbeddingFeatureExtractor {
 	}
 
 	public static void main(String[] args) throws IOException {
-		String sentence1 = "I like your examples, however, the thesis of each paragraph is not very clear. ";
-		String sentence2 = "Some of them appear in the top of the paragraph while others are in the bottom.";
+		String sentence1 = "The lustful are those who long and crave for one another.";
+		String sentence2 = "The person guilty of lust is put in this layer of hell because of his over indulgence of sexual-pleasure.";
+		String sentence3 = "The man who is stuck in this layer is Hue Heffner.";
+		String sentence4 = "He has devoted his entire life for other people's lustful pleasure and his own.";
+		String sentence5 = "He has spent millions on working on his mansion which is for the purpose of other lustful desires.";
+		String sentence6 = "People who were stuck in this layer are constantly whipped around and banging into one another.";
+		String sentence7 = "What you do in your Earthly presence follows with you into Hell.";
+		String sentence8 = "For him and like many others he is now tortured in a whirlwind of torment with others lustful accommodators with himself";
 		System.out.println("Value:"+SentenceEmbeddingFeatureExtractor.getInstance().calculateSim(sentence1, sentence2));
+		System.out.println("Value:"+SentenceEmbeddingFeatureExtractor.getInstance().calculateSim(sentence2, sentence3));
+		System.out.println("Value:"+SentenceEmbeddingFeatureExtractor.getInstance().calculateSim(sentence3, sentence4));
+		System.out.println("Value:"+SentenceEmbeddingFeatureExtractor.getInstance().calculateSim(sentence4, sentence5));
+		System.out.println("Value:"+SentenceEmbeddingFeatureExtractor.getInstance().calculateSim(sentence5, sentence6));
+		System.out.println("Value:"+SentenceEmbeddingFeatureExtractor.getInstance().calculateSim(sentence6, sentence7));
+		System.out.println("Value:"+SentenceEmbeddingFeatureExtractor.getInstance().calculateSim(sentence7, sentence8));
 	}
 }

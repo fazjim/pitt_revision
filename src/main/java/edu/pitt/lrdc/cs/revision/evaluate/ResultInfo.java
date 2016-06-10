@@ -19,6 +19,18 @@ public class ResultInfo {
 	public double recall1;
 	public double f1;
 	
+	public double prec2;
+	public double recall2;
+	public double f2;
+	
+	public double prec3;
+	public double recall3;
+	public double f3;
+	
+	public double prec4;
+	public double recall4;
+	public double f4;
+	
 	public double kappa;
 	public double unweightedAvgPrec;
 	public double unweightedAvgRecall;
@@ -126,6 +138,114 @@ public class ResultInfo {
 
 
 
+	public double getPrec2() {
+		return prec2;
+	}
+
+
+
+	public void setPrec2(double prec2) {
+		this.prec2 = prec2;
+	}
+
+
+
+	public double getRecall2() {
+		return recall2;
+	}
+
+
+
+	public void setRecall2(double recall2) {
+		this.recall2 = recall2;
+	}
+
+
+
+	public double getF2() {
+		return f2;
+	}
+
+
+
+	public void setF2(double f2) {
+		this.f2 = f2;
+	}
+
+
+
+	public double getPrec3() {
+		return prec3;
+	}
+
+
+
+	public void setPrec3(double prec3) {
+		this.prec3 = prec3;
+	}
+
+
+
+	public double getRecall3() {
+		return recall3;
+	}
+
+
+
+	public void setRecall3(double recall3) {
+		this.recall3 = recall3;
+	}
+
+
+
+	public double getF3() {
+		return f3;
+	}
+
+
+
+	public void setF3(double f3) {
+		this.f3 = f3;
+	}
+
+
+
+	public double getPrec4() {
+		return prec4;
+	}
+
+
+
+	public void setPrec4(double prec4) {
+		this.prec4 = prec4;
+	}
+
+
+
+	public double getRecall4() {
+		return recall4;
+	}
+
+
+
+	public void setRecall4(double recall4) {
+		this.recall4 = recall4;
+	}
+
+
+
+	public double getF4() {
+		return f4;
+	}
+
+
+
+	public void setF4(double f4) {
+		this.f4 = f4;
+	}
+
+
+
 	public double getKappa() {
 		return kappa;
 	}
@@ -203,6 +323,20 @@ public class ResultInfo {
 		prec1 = eval.precision(1);
 		recall1 = eval.recall(1);
 		f1 = eval.fMeasure(1);
+		
+		if(classNum > 2) {
+			prec2 = eval.precision(2);
+			recall2 = eval.recall(2);
+			f2 = eval.fMeasure(2);
+			
+			prec3 = eval.precision(3);
+			recall3 = eval.recall(3);
+			f3 = eval.fMeasure(3);
+			
+			prec4 = eval.precision(4);
+			recall4 = eval.recall(4);
+			f4 = eval.fMeasure(4);
+		}
 		
 		kappa = eval.kappa();
 		

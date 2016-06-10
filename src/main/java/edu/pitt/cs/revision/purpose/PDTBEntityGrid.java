@@ -818,6 +818,10 @@ class RelationGrid {
 
 	public void setValue(String relationType, String senseType, boolean isArg1,
 			double distance) {
+		if(relationType==null) {
+			System.err.println("Wrong output:"+senseType);
+			return;
+		}
 		if (relationType.equals("EntRel")) {
 			if (isArg1) {
 				this.setEntRel_ARG1(true);

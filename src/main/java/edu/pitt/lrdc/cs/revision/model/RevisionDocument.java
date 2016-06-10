@@ -1003,4 +1003,38 @@ public class RevisionDocument {
 		drafts[1] = draft2;
 		return drafts;
 	}
+	
+	public String getOriginalTxtOld() {
+		String oldTxt = "";
+		int oldNum = this.getOldParagraphNum();
+		for(int i = 1;i<=oldNum;i++) {
+			int start = this.getFirstOfOldParagraph(i);
+			int end = this.getLastOfOldParagraph(i);
+			for(int j = start;j<=end;j++) {
+				String sentence = this.getOldSentence(j);
+				sentence = sentence.replaceAll("\\s\\.", ".");
+				sentence = sentence.replaceAll("\\s,", ",");
+				oldTxt += sentence+ " ";
+			}
+			oldTxt+="\n\n";
+		}
+		return oldTxt;
+	}
+	
+	public String getOriginalTxtNew() {
+		String newTxt = "";
+		int newNum = this.getNewParagraphNum();
+		for(int i = 1;i<=newNum;i++) {
+			int start = this.getFirstOfNewParagraph(i);
+			int end = this.getLastOfNewParagraph(i);
+			for(int j = start;j<=end;j++) {
+				String sentence = this.getNewSentence(j);
+				sentence = sentence.replaceAll("\\s\\.", ".");
+				sentence = sentence.replaceAll("\\s\\.", ".");
+				newTxt += sentence + " ";
+			}
+			newTxt+="\n\n";
+		}
+		return newTxt;
+	}
 }

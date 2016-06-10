@@ -47,56 +47,7 @@ class PDTBRelationStruct {
 	}
 }
 
-class PDTBRelation {
-	int preIndex;
-	int postIndex;
-	String sense;
-	String elementType;
-	boolean isParallel;
 
-	public String toString() {
-		return preIndex+":"+postIndex+", Type:"+elementType+", Sense:"+sense;
-	}
-	public String getElementType() {
-		return elementType;
-	}
-
-	public void setElementType(String elementType) {
-		this.elementType = elementType;
-	}
-
-	public int getPreIndex() {
-		return preIndex;
-	}
-
-	public void setPreIndex(int preIndex) {
-		this.preIndex = preIndex;
-	}
-
-	public int getPostIndex() {
-		return postIndex;
-	}
-
-	public void setPostIndex(int postIndex) {
-		this.postIndex = postIndex;
-	}
-
-	public String getSense() {
-		return sense;
-	}
-
-	public void setSense(String sense) {
-		this.sense = sense;
-	}
-
-	public boolean isParallel() {
-		return isParallel;
-	}
-
-	public void setParallel(boolean isParallel) {
-		this.isParallel = isParallel;
-	}
-}
 
 class PDTBNode {
 	int sentenceIndex;
@@ -767,8 +718,8 @@ public class PDTBGraph {
 				}
 			}
 		}
-		MyLogger.getInstance().log(
-				getMatrixStr(impactMatrix, startSentenceIndex) + "\n");
+		//MyLogger.getInstance().log(
+		//		getMatrixStr(impactMatrix, startSentenceIndex) + "\n");
 	}
 
 	public void setRatio(String tag, ImpactStruct struct, double ratio) {
@@ -1091,6 +1042,7 @@ public class PDTBGraph {
 			}
 		}
 
+		
 		// build matrix
 		buildMatrix();
 	}
@@ -1150,8 +1102,8 @@ public class PDTBGraph {
 				nextSim = sims.get(j + 1);
 			}
 
-			if (currentSim < cutoff || (currentSim < (avg-std) && currentSim < lastSim && currentSim < nextSim)) {
-			//if (currentSim < cutoff ||((currentSim < lastSim  && currentSim < nextSim))) {
+			//if (currentSim < cutoff || (currentSim < (avg-std) && currentSim < lastSim && currentSim < nextSim)) {
+			if (currentSim < cutoff ||((currentSim < lastSim  && currentSim < nextSim))) {
 				int pre = j;
 				int post = j + 1;
 				int preIndex = sentences.get(pre);

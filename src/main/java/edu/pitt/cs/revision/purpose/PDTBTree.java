@@ -130,7 +130,64 @@ public class PDTBTree {
 	public PDTBTreeNode getRoot() {
 		return rootNode;
 	}
+	
+	public PDTBTreeNode getRootNode() {
+		return rootNode;
+	}
 
+	public void setRootNode(PDTBTreeNode rootNode) {
+		this.rootNode = rootNode;
+	}
+
+	public Hashtable<String, PDTBRelation> getRelationIndex() {
+		return relationIndex;
+	}
+
+	public void setRelationIndex(Hashtable<String, PDTBRelation> relationIndex) {
+		this.relationIndex = relationIndex;
+	}
+
+	public Hashtable<Integer, HashSet<Integer>> getRelationIndexStart() {
+		return relationIndexStart;
+	}
+
+	public void setRelationIndexStart(
+			Hashtable<Integer, HashSet<Integer>> relationIndexStart) {
+		this.relationIndexStart = relationIndexStart;
+	}
+
+	public Hashtable<Integer, HashSet<Integer>> getRelationIndexEnd() {
+		return relationIndexEnd;
+	}
+
+	public void setRelationIndexEnd(
+			Hashtable<Integer, HashSet<Integer>> relationIndexEnd) {
+		this.relationIndexEnd = relationIndexEnd;
+	}
+
+	public Hashtable<String, Integer> getRelationLevelInformation() {
+		return relationLevelInformation;
+	}
+
+	public void setRelationLevelInformation(
+			Hashtable<String, Integer> relationLevelInformation) {
+		this.relationLevelInformation = relationLevelInformation;
+	}
+
+	
+	public HashSet<PDTBRelation> getTopLevelRelations(int level) {
+		HashSet<PDTBRelation> relations = new HashSet<PDTBRelation>();
+		Iterator<String> it = relationLevelInformation.keySet().iterator();
+		while(it.hasNext()) {
+			String key = it.next();
+			int relation = relationLevelInformation.get(key);
+			if(relation==level) {
+				relations.add(relationIndex.get(key));
+			}
+		}
+		return relations;
+	}
+	
 	private Hashtable<String, PDTBRelation> relationIndex;
 	private Hashtable<Integer, HashSet<Integer>> relationIndexStart;
 	private Hashtable<Integer, HashSet<Integer>> relationIndexEnd;
@@ -149,7 +206,9 @@ public class PDTBTree {
 		if (root.isLeaf()) {
 			int sentenceIndex = root.getSentenceIndex();
 			String key = sentenceIndex + "-" + sentenceIndex;
-			relationLevelInformation.put(key, level);
+			if(relationIndex.containsKey(key)) {
+				relationLevelInformation.put(key, level);
+			}
 		} else {
 			PDTBTreeNode left = root.getLeft();
 			PDTBTreeNode right = root.getRight();

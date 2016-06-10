@@ -57,7 +57,7 @@ public class RevisionMapFileGenerator {
 
 	public static ArrayList<ArrayList<HeatMapUnit>> getUnits4CRF(
 			RevisionDocument doc) {
-		//List<HeatMapUnit> units = generateUnits4Tagging(doc);
+		// List<HeatMapUnit> units = generateUnits4Tagging(doc);
 		List<HeatMapUnit> units = generateUnitsGeneric(doc);
 		adjustUnits(units);
 		ArrayList<ArrayList<HeatMapUnit>> segmentedUnits = new ArrayList<ArrayList<HeatMapUnit>>();
@@ -159,6 +159,7 @@ public class RevisionMapFileGenerator {
 		txt += unit.rPurpose + "\t";
 		txt += unit.scD1 + "\t";
 		txt += unit.scD2;
+
 		txt += "\n";
 		return txt;
 	}
@@ -178,7 +179,7 @@ public class RevisionMapFileGenerator {
 					while (j < units.size() && units.get(j).pD1 == -1) {
 						j++;
 					}
-					if (j<units.size() && units.get(j).pD1 == unit.pD1) {
+					if (j < units.size() && units.get(j).pD1 == unit.pD1) {
 						shiftUp(units, i + 1);
 					}
 				}
@@ -355,25 +356,30 @@ public class RevisionMapFileGenerator {
 		while (cursorOld <= oldIndexMax || cursorNew <= newIndexMax) {
 			ArrayList<Integer> newIndices = null;
 			ArrayList<Integer> oldIndices = null;
-			if(!isOldEnded && cursorOld>oldIndexMax) isOldEnded = true;
-			if(!isOldEnded) {
+			if (!isOldEnded && cursorOld > oldIndexMax)
+				isOldEnded = true;
+			if (!isOldEnded) {
 				newIndices = doc.getNewFromOld(cursorOld);
 			}
-			if(!isNewEnded && cursorNew >newIndexMax) isNewEnded = true;
-			if(!isNewEnded) {
-				oldIndices= doc.getOldFromNew(cursorNew);
+			if (!isNewEnded && cursorNew > newIndexMax)
+				isNewEnded = true;
+			if (!isNewEnded) {
+				oldIndices = doc.getOldFromNew(cursorNew);
 			}
 			removeNegativeOne(newIndices);
 			removeNegativeOne(oldIndices);
 			boolean moveOld = false;
 			boolean moveNew = false;
-			if (!isOldEnded && (newIndices == null || newIndices.size() == 0 || isNewEnded)) {
+			//If there is only old left and new index is null(Delete)
+			if (!isOldEnded
+					&& (newIndices == null || newIndices.size() == 0 || isNewEnded)) {
 				moveOld = true;
 				HeatMapUnit hmu = new HeatMapUnit();
-				if(oldIndices!=null&& oldIndices.size()>0)
+				/*if (oldIndices != null && oldIndices.size() > 0)
 					hmu.realOldIndex = oldIndices.get(0);
-				else 
-					hmu.realOldIndex = -1;
+				else
+					hmu.realOldIndex = -1;*/
+				hmu.realOldIndex = cursorOld;
 				hmu.realNewIndex = -1;
 				hmu.oldIndex = cursorOld;
 				hmu.newIndex = -1;
@@ -410,14 +416,18 @@ public class RevisionMapFileGenerator {
 				cursorOld++;
 				unitList.add(hmu);
 			}
-			if (!isNewEnded && (oldIndices == null || oldIndices.size() == 0 || isOldEnded)) {
+			//If there is new left and old is none (ADD)
+			if (!isNewEnded
+					&& (oldIndices == null || oldIndices.size() == 0 || isOldEnded)) {
 				moveNew = true;
 				HeatMapUnit hmu = new HeatMapUnit();
 				hmu.realOldIndex = -1;
-				if(newIndices!=null&&newIndices.size()>0)
-				hmu.realNewIndex = newIndices.get(0);
-				else 
-					hmu.realNewIndex = -1;
+/*
+				if (newIndices != null && newIndices.size() > 0)
+					hmu.realNewIndex = cursorNew;
+				else
+					hmu.realNewIndex = -1;*/
+				hmu.realNewIndex = cursorNew;
 				hmu.oldIndex = -1;
 				hmu.newIndex = cursorNew;
 				hmu.sD1 = -1;
@@ -453,16 +463,17 @@ public class RevisionMapFileGenerator {
 				cursorNew++;
 				unitList.add(hmu);
 			}
+			//When there is still items
 			if (moveOld == false && moveNew == false) {
 				HeatMapUnit hmu = new HeatMapUnit();
-				if(oldIndices!=null&&oldIndices.size()>0) 
+				if (oldIndices != null && oldIndices.size() > 0)
 					hmu.realOldIndex = oldIndices.get(0);
 				else
 					hmu.realOldIndex = -1;
-				if(newIndices!=null&&newIndices.size()>0)
+				if (newIndices != null && newIndices.size() > 0)
 					hmu.realNewIndex = newIndices.get(0);
-				else 
-						hmu.realNewIndex = -1;
+				else
+					hmu.realNewIndex = -1;
 				hmu.oldIndex = cursorOld;
 				hmu.newIndex = cursorNew;
 				hmu.sD1 = oldParaIndices.get(cursorOld);
@@ -614,13 +625,13 @@ public class RevisionMapFileGenerator {
 							hmu.realNewIndex = newIndices.get(0);
 							unitList.add(hmu);
 
-							
 							for (Integer newIndex : newIndices) {
-								if (newIndex != -1 && newIndex!=cursorNew) {
+								if (newIndex != -1 && newIndex != cursorNew) {
 									if (newIndex - cursorNew == 1) {
 										cursorNew = newIndex;
 										HeatMapUnit hmuNext = new HeatMapUnit();
-										hmuNext.realOldIndex = oldIndices.get(0);
+										hmuNext.realOldIndex = oldIndices
+												.get(0);
 										hmuNext.realNewIndex = newIndex;
 										hmuNext.oldIndex = cursorOld;
 										hmuNext.newIndex = cursorNew;
@@ -742,14 +753,14 @@ public class RevisionMapFileGenerator {
 							hmu.realNewIndex = newIndices.get(0);
 							unitList.add(hmu);
 
-							
 							for (Integer oldIndex : oldIndices) {
-								if (oldIndex != -1 && oldIndex!=cursorOld) {
+								if (oldIndex != -1 && oldIndex != cursorOld) {
 									if (oldIndex - cursorOld == 1) {
 										cursorOld = oldIndex;
 										HeatMapUnit hmuNext = new HeatMapUnit();
 										hmuNext.realOldIndex = oldIndex;
-										hmuNext.realNewIndex = newIndices.get(0);
+										hmuNext.realNewIndex = newIndices
+												.get(0);
 										hmuNext.oldIndex = cursorOld;
 										hmuNext.newIndex = cursorNew;
 										hmuNext.sD1 = oldParaIndices

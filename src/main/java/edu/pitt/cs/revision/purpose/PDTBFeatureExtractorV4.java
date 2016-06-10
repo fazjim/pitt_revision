@@ -36,7 +36,9 @@ public class PDTBFeatureExtractorV4 {
 
 	private Hashtable<String, ParseResultFile> resultMap_OLD;
 	private Hashtable<String, ParseResultFile> resultMap_NEW;
-	private String path = "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus\\Braverman";
+	
+	private String path =
+	 "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus\\Braverman";
 	private Hashtable<String, String> oldTextTable;
 	private Hashtable<String, String> newTextTable;
 
@@ -55,7 +57,7 @@ public class PDTBFeatureExtractorV4 {
 																// topic
 	private Hashtable<String, Hashtable<Integer, PDTBGraph>> graphDocIndex_OLD;
 	private Hashtable<String, Hashtable<Integer, PDTBGraph>> graphDocIndex_NEW;
-	
+
 	private Hashtable<String, Hashtable<Integer, PDTBTree>> treeDocIndex_OLD;
 	private Hashtable<String, Hashtable<Integer, PDTBTree>> treeDocIndex_NEW;
 
@@ -125,15 +127,15 @@ public class PDTBFeatureExtractorV4 {
 				return lineMap.get(line);
 			}
 		}
-		
-		//Find the most similar one
+
+		// Find the most similar one
 		Iterator<String> it2 = lineMap.keySet().iterator();
 		int sim = Integer.MAX_VALUE;
 		int index = -1;
-		while(it2.hasNext()) {
+		while (it2.hasNext()) {
 			String line = it2.next();
 			int val = LDCalculator.calc(line, searchStr);
-			if(val<sim) {
+			if (val < sim) {
 				index = lineMap.get(line);
 				val = sim;
 			}
@@ -331,7 +333,8 @@ public class PDTBFeatureExtractorV4 {
 		String text = txtTable.get(name);
 
 		for (int i = 0; i < sentences.size(); i++) {
-			System.err.println("Compressed sentences:"+compressStr(sentences.get(i)));
+			System.err.println("Compressed sentences:"
+					+ compressStr(sentences.get(i)));
 			lineMap.put(compressStr(sentences.get(i)), i + 1);
 		}
 
@@ -415,21 +418,19 @@ public class PDTBFeatureExtractorV4 {
 			 * pdtb_line_map.get(arg1LineNo);
 			 */
 
-			
 			String searchStrArg1 = compressStr(arg1RawText);
 			String searchStrArg2 = compressStr(arg2RawText);
-			
-			
+
 			realLineArg1No = getRealArgNo(lineMap, searchStrArg1);
 			realLineArg2No = getRealArgNo(lineMap, searchStrArg2);
 
-			if(realLineArg1No == -1) {
+			if (realLineArg1No == -1) {
 				System.err.println(searchStrArg1);
 			}
-			if(realLineArg2No == -1) {
+			if (realLineArg2No == -1) {
 				System.err.println(searchStrArg2);
 			}
-			
+
 			if (realLineArg1No != realLineArg2No) {
 				if (realLineArg1No != -1)
 					pdtbArg1.put(realLineArg1No, argType);
@@ -457,6 +458,7 @@ public class PDTBFeatureExtractorV4 {
 
 	public void readInfo(RevisionDocument doc) throws IOException {
 		String name = getRealNameRevision(doc.getDocumentName());
+		System.err.println("Reading:" + name);
 		Hashtable<Integer, Integer> pdtbArg1_OLD = pdtbArg1Results_OLD
 				.get(name);
 		Hashtable<Integer, Integer> pdtbArg2_OLD = pdtbArg2Results_OLD
@@ -489,13 +491,10 @@ public class PDTBFeatureExtractorV4 {
 				.get(name);
 		readGraph(doc, resultMap_OLD, resultMap_NEW, graphTableOld,
 				graphTableNew);
-		
-		Hashtable<Integer, PDTBTree> treeTableOld = treeDocIndex_OLD
-				.get(name);
-		Hashtable<Integer, PDTBTree> treeTableNew = treeDocIndex_NEW
-				.get(name);
-		readTree(doc, resultMap_OLD, resultMap_NEW, treeTableOld,
-				treeTableNew);
+
+		Hashtable<Integer, PDTBTree> treeTableOld = treeDocIndex_OLD.get(name);
+		Hashtable<Integer, PDTBTree> treeTableNew = treeDocIndex_NEW.get(name);
+		readTree(doc, resultMap_OLD, resultMap_NEW, treeTableOld, treeTableNew);
 	}
 
 	/**
@@ -520,7 +519,6 @@ public class PDTBFeatureExtractorV4 {
 		readGraph(doc, newFile, graphNew, false);
 	}
 
-	
 	/**
 	 * Constructing the tree
 	 * 
@@ -542,9 +540,8 @@ public class PDTBFeatureExtractorV4 {
 		readTree(doc, oldFile, treeOld, true);
 		readTree(doc, newFile, treeNew, false);
 	}
-	
-	public void readGraph(RevisionDocument doc,
-			ParseResultFile parseFile,
+
+	public void readGraph(RevisionDocument doc, ParseResultFile parseFile,
 			Hashtable<Integer, PDTBGraph> graphIndex, boolean isOld)
 			throws IOException {
 		int paragraphNums = 0;
@@ -581,14 +578,13 @@ public class PDTBFeatureExtractorV4 {
 			graph.setStartSentenceIndex(firstIndex);
 			graph.setEndSentenceIndex(lastIndex);
 			graph.buildGraph(units, doc, isOld, sentences);
-			String headline = doc.getDocumentName() + ", isOld:"+ isOld + "\n";
-			//MyLogger.getInstance().log(headline + graph.toString());
+			String headline = doc.getDocumentName() + ", isOld:" + isOld + "\n";
+			// MyLogger.getInstance().log(headline + graph.toString());
 			graphIndex.put(i, graph);
 		}
 	}
 
-	public void readTree(RevisionDocument doc,
-			ParseResultFile parseFile,
+	public void readTree(RevisionDocument doc, ParseResultFile parseFile,
 			Hashtable<Integer, PDTBTree> treeIndex, boolean isOld)
 			throws IOException {
 		int paragraphNums = 0;
@@ -622,14 +618,13 @@ public class PDTBFeatureExtractorV4 {
 					units.add(unit);
 				}
 			}
-			//graph.setStartSentenceIndex(firstIndex);
-			//graph.setEndSentenceIndex(lastIndex);
+			// graph.setStartSentenceIndex(firstIndex);
+			// graph.setEndSentenceIndex(lastIndex);
 			tree.buildTree(units, doc, isOld, sentences);
 			treeIndex.put(i, tree);
 		}
 	}
 
-	
 	/**
 	 * Read in all the grids
 	 * 
@@ -960,6 +955,7 @@ public class PDTBFeatureExtractorV4 {
 	public String getRealNamePipe(String fileName) {
 		File f = new File(fileName);
 		String fName = f.getName();
+		fName = fName.replace("Annotation_", "");
 		int index = fName.indexOf(".txt");
 		fName = fName.substring(0, index);
 		if (fName.contains("-")) {
@@ -1004,12 +1000,20 @@ public class PDTBFeatureExtractorV4 {
 		return fName.trim();
 	}
 
+	boolean C1Mode = true;
+	
+
 	private PDTBFeatureExtractorV4() throws Exception {
 		// List<ManualParseResultFile> results =
 		// ManualParseResultReader.readFiles(path);
-		List<ParseResultFile> results = ParseResultReader
-				.readFiles(path);
-		String refPath = "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus\\Braverman\\Braverman_raw_txt";
+		
+		String refPath =
+		 "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus\\Braverman\\Braverman_raw_txt";
+		if(!C1Mode) {
+			refPath = "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus\\C2Data";
+			path = "C:\\Not Backed Up\\discourse_parse_results\\litman_corpus\\C2Data";
+		}
+		List<ParseResultFile> results = ParseResultReader.readFiles(path);
 		constructTopicEntitites(filePath);
 		resultMap_OLD = new Hashtable<String, ParseResultFile>();
 		resultMap_NEW = new Hashtable<String, ParseResultFile>();
@@ -1026,7 +1030,7 @@ public class PDTBFeatureExtractorV4 {
 
 		treeDocIndex_OLD = new Hashtable<String, Hashtable<Integer, PDTBTree>>();
 		treeDocIndex_NEW = new Hashtable<String, Hashtable<Integer, PDTBTree>>();
-		
+
 		gridTables = new Hashtable<String, Hashtable<String, PDTBEntityGrid>>();
 
 		readAll(path);
@@ -1271,7 +1275,8 @@ public class PDTBFeatureExtractorV4 {
 		features.insertFeature("OLD_PDTB_IsAltLex_Weighted_Group", Double.TYPE);
 		features.insertFeature("NEW_PDTB_IsAltLex_Weighted_Group", Double.TYPE);
 
-		features.insertFeature("OLD_PDTB_IsComparison_Weighted_Group", Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsComparison_Weighted_Group",
+				Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsComparison_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1279,7 +1284,8 @@ public class PDTBFeatureExtractorV4 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsComparison_Weighted_Group", Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsComparison_Weighted_Group",
+				Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsComparison_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1287,7 +1293,8 @@ public class PDTBFeatureExtractorV4 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("OLD_PDTB_IsContingency_Weighted_Group", Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsContingency_Weighted_Group",
+				Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsContingency_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1295,7 +1302,8 @@ public class PDTBFeatureExtractorV4 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsContingency_Weighted_Group", Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsContingency_Weighted_Group",
+				Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsContingency_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1303,7 +1311,8 @@ public class PDTBFeatureExtractorV4 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("OLD_PDTB_IsExpansion_Weighted_Group", Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsExpansion_Weighted_Group",
+				Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsExpansion_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1311,7 +1320,8 @@ public class PDTBFeatureExtractorV4 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsExpansion_Weighted_Group", Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsExpansion_Weighted_Group",
+				Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsExpansion_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1319,7 +1329,8 @@ public class PDTBFeatureExtractorV4 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("OLD_PDTB_IsTemporal_Weighted_Group", Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsTemporal_Weighted_Group",
+				Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsTemporal_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1327,7 +1338,8 @@ public class PDTBFeatureExtractorV4 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsTemporal_Weighted_Group", Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Weighted_Group",
+				Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsTemporal_Explicit_Weighted",
 		 * Double.TYPE);
@@ -1335,7 +1347,7 @@ public class PDTBFeatureExtractorV4 {
 		 * Double.TYPE);
 		 */
 	}
-	
+
 	public void insertSelectedFeaturesWeighted(FeatureName features) {
 		features.insertFeature("OLD_PDTB_IsEntRel_Weighted", Double.TYPE);
 		features.insertFeature("NEW_PDTB_IsEntRel_Weighted", Double.TYPE);
@@ -1496,13 +1508,16 @@ public class PDTBFeatureExtractorV4 {
 		}
 	}
 
-	
 	public void insertSelectedFeaturesPostGroupWeighted(FeatureName features) {
-		features.insertFeature("OLD_PDTB_IsEntRel_Post_Weighted_Group", Double.TYPE);
-		features.insertFeature("NEW_PDTB_IsEntRel_Post_Weighted_Group", Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsEntRel_Post_Weighted_Group",
+				Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsEntRel_Post_Weighted_Group",
+				Double.TYPE);
 
-		features.insertFeature("OLD_PDTB_IsAltLex_Post_Weighted_Group", Double.TYPE);
-		features.insertFeature("NEW_PDTB_IsAltLex_Post_Weighted_Group", Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsAltLex_Post_Weighted_Group",
+				Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsAltLex_Post_Weighted_Group",
+				Double.TYPE);
 
 		features.insertFeature("OLD_PDTB_IsComparison_Post_Weighted_Group",
 				Double.TYPE);
@@ -1558,7 +1573,8 @@ public class PDTBFeatureExtractorV4 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("OLD_PDTB_IsTemporal_Post_Weighted_Group", Double.TYPE);
+		features.insertFeature("OLD_PDTB_IsTemporal_Post_Weighted_Group",
+				Double.TYPE);
 		/*
 		 * features.insertFeature("OLD_PDTB_IsTemporal_Explicit_Post_Weighted",
 		 * Double.TYPE);
@@ -1566,7 +1582,8 @@ public class PDTBFeatureExtractorV4 {
 		 * Double.TYPE);
 		 */
 
-		features.insertFeature("NEW_PDTB_IsTemporal_Post_Weighted_Group", Double.TYPE);
+		features.insertFeature("NEW_PDTB_IsTemporal_Post_Weighted_Group",
+				Double.TYPE);
 		/*
 		 * features.insertFeature("NEW_PDTB_IsTemporal_Explicit_Post_Weighted",
 		 * Double.TYPE);
@@ -1574,7 +1591,290 @@ public class PDTBFeatureExtractorV4 {
 		 * Double.TYPE);
 		 */
 	}
-	
+
+	public void insertSelectedFeaturesWeightedTreeDiff(FeatureName features,
+			int levels) {
+		for (int i = 1; i <= levels; i++) {
+			String key = "_Level_" + i + "_DIFF";
+			features.insertFeature("Treechange_PDTB_IsEntRel_Weighted" + key,
+					Double.TYPE);
+			features.insertFeature("Treechange_PDTB_IsAltLex_Weighted" + key,
+					Double.TYPE);
+			features.insertFeature("Treechange_PDTB_IsComparison_Weighted"
+					+ key, Double.TYPE);
+			features.insertFeature("Treechange_PDTB_IsContingency_Weighted"
+					+ key, Double.TYPE);
+			features.insertFeature(
+					"Treechange_PDTB_IsExpansion_Weighted" + key, Double.TYPE);
+			features.insertFeature("Treechange_PDTB_IsTemporal_Weighted" + key,
+					Double.TYPE);
+		}
+	}
+
+	public void insertSelectedFeaturesPostWeightedTreeDiff(
+			FeatureName features, int levels) {
+		for (int i = 1; i <= levels; i++) {
+			String key = "_Level_" + i + "_DIFF";
+			features.insertFeature("Treechange_PDTB_IsEntRel_Post_Weighted"
+					+ key, Double.TYPE);
+			features.insertFeature("Treechange_PDTB_IsAltLex_Post_Weighted"
+					+ key, Double.TYPE);
+			features.insertFeature("Treechange_PDTB_IsComparison_Post_Weighted"
+					+ key, Double.TYPE);
+			features.insertFeature(
+					"Treechange_PDTB_IsContingency_Post_Weighted" + key,
+					Double.TYPE);
+			features.insertFeature("Treechange_PDTB_IsExpansion_Post_Weighted"
+					+ key, Double.TYPE);
+			features.insertFeature("Treechange_PDTB_IsTemporal_Post_Weighted"
+					+ key, Double.TYPE);
+		}
+	}
+
+	public Hashtable<String, Double> getDiffOfTreeWeights(
+			Hashtable<String, Double> weights2,
+			Hashtable<String, Double> weights1) {
+		Hashtable<String, Double> diff = new Hashtable<String, Double>();
+		Iterator<String> iter = weights1.keySet().iterator();
+		while (iter.hasNext()) {
+			String key = iter.next();
+			diff.put(key, -weights1.get(key));
+		}
+		Iterator<String> iter2 = weights2.keySet().iterator();
+		while (iter2.hasNext()) {
+			String key = iter2.next();
+			if (diff.containsKey(key)) {
+				diff.put(key, weights2.get(key) + diff.get(key));
+			} else {
+				diff.put(key, weights2.get(key));
+			}
+		}
+		return diff;
+	}
+
+	public void mergeDiffTreeWeights(Hashtable<String, Double> original,
+			Hashtable<String, Double> toMerge) {
+		Iterator<String> iter = toMerge.keySet().iterator();
+		while (iter.hasNext()) {
+			String key = iter.next();
+			if (original.containsKey(key)
+					&& toMerge.get(key) < original.get(key)) {
+				// do nothing
+			} else {
+				original.put(key, toMerge.get(key));
+			}
+		}
+	}
+
+	/**
+	 * Algorithm in the paper
+	 * 
+	 * @param doc
+	 * @param newIndexes
+	 * @param oldIndexes
+	 * @param newTree
+	 * @param oldTree
+	 */
+	public void extractTreeChanges(FeatureName features,
+			Object[] featureVector, RevisionDocument doc,
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes,
+			PDTBTree newTree, PDTBTree oldTree, int levels) {
+		Hashtable<String, Double> changeIndexArg2 = new Hashtable<String, Double>();
+		Hashtable<String, Double> changeIndexArg1 = new Hashtable<String, Double>();
+
+		if (oldIndexes == null || oldIndexes.size() == 0
+				|| oldIndexes.get(0) == -1) {
+			int newIndex = newIndexes.get(0);
+			HashSet<Integer> relatedArg2 = newTree.getRelationIndexStart().get(
+					newIndex);
+			HashSet<Integer> affectedNodes = new HashSet<Integer>();
+			if (relatedArg2 != null) {
+				for (Integer arg2 : relatedArg2) {
+					if (arg2 <= newTree.getRoot().getEndingIndex()
+							&& arg2 >= newTree.getRoot().getStartingIndex()) {
+						ArrayList<Integer> olds = doc.getOldFromNew(arg2);
+						if (olds != null && olds.size() != 0) {
+							affectedNodes.add(arg2);
+						}
+					}
+				}
+				for (Integer affectedNode : affectedNodes) {
+					ArrayList<Integer> other = doc.getOldFromNew(affectedNode);
+					if (other.size() != 0) {
+						int oldIndex = other.get(0);
+						Hashtable<String, Double> newRelations = new Hashtable<String, Double>();
+						if (newTree != null) {
+							newRelations = newTree.getValueArg2(affectedNode);
+						}
+						Hashtable<String, Double> oldRelations = new Hashtable<String, Double>();
+						if (oldTree != null) {
+							oldRelations = oldTree.getValueArg2(oldIndex);
+						}
+						Hashtable<String, Double> diffRelations = getDiffOfTreeWeights(
+								newRelations, oldRelations);
+						mergeDiffTreeWeights(changeIndexArg2, diffRelations);
+					}
+				}
+			}
+
+			HashSet<Integer> relatedArg1 = newTree.getRelationIndexEnd().get(
+					newIndex);
+			HashSet<Integer> affectedNodesArg1 = new HashSet<Integer>();
+			if (relatedArg1 != null) {
+				for (Integer arg1 : relatedArg1) {
+					if (arg1 <= newTree.getRoot().getEndingIndex()
+							&& arg1 >= newTree.getRoot().getStartingIndex()) {
+						ArrayList<Integer> olds = doc.getOldFromNew(arg1);
+						if (olds != null && olds.size() != 0) {
+							affectedNodesArg1.add(arg1);
+						}
+					}
+				}
+				for (Integer affectedNode : affectedNodesArg1) {
+					ArrayList<Integer> other = doc.getOldFromNew(affectedNode);
+					if (other.size() != 0) {
+						int oldIndex = other.get(0);
+						Hashtable<String, Double> newRelations = new Hashtable<String, Double>();
+						if (newTree != null)
+							newRelations = newTree.getValueArg1(affectedNode);
+						Hashtable<String, Double> oldRelations = new Hashtable<String, Double>();
+						if (oldTree != null)
+							oldRelations = oldTree.getValueArg1(oldIndex);
+						Hashtable<String, Double> diffRelations = getDiffOfTreeWeights(
+								newRelations, oldRelations);
+						mergeDiffTreeWeights(changeIndexArg1, diffRelations);
+					}
+				}
+			}
+		} else if (newIndexes == null || newIndexes.size() == 0
+				|| newIndexes.get(0) == -1) {
+			int oldIndex = oldIndexes.get(0);
+			HashSet<Integer> relatedArg2 = oldTree.getRelationIndexStart().get(
+					oldIndex);
+			HashSet<Integer> affectedNodes = new HashSet<Integer>();
+			if (relatedArg2 != null) {
+				for (Integer arg2 : relatedArg2) {
+					if (arg2 <= oldTree.getRoot().getEndingIndex()
+							&& arg2 >= oldTree.getRoot().getStartingIndex()) {
+						ArrayList<Integer> olds = doc.getNewFromOld(arg2);
+						if (olds != null && olds.size() != 0) {
+							affectedNodes.add(arg2);
+						}
+					}
+				}
+				for (Integer affectedNode : affectedNodes) {
+					ArrayList<Integer> other = doc.getNewFromOld(affectedNode);
+					if (other.size() != 0) {
+						int newIndex = other.get(0);
+						Hashtable<String, Double> newRelations = new Hashtable<String, Double>();
+						if (newTree != null)
+							newRelations = newTree.getValueArg2(newIndex);
+						Hashtable<String, Double> oldRelations = new Hashtable<String, Double>();
+						if (oldTree != null)
+							oldRelations = oldTree.getValueArg2(affectedNode);
+						Hashtable<String, Double> diffRelations = getDiffOfTreeWeights(
+								newRelations, oldRelations);
+						mergeDiffTreeWeights(changeIndexArg2, diffRelations);
+					}
+				}
+			}
+
+			HashSet<Integer> relatedArg1 = oldTree.getRelationIndexEnd().get(
+					oldIndex);
+			HashSet<Integer> affectedNodesArg1 = new HashSet<Integer>();
+			if (relatedArg1 != null) {
+				for (Integer arg1 : relatedArg1) {
+					if (arg1 <= oldTree.getRoot().getEndingIndex()
+							&& arg1 >= oldTree.getRoot().getStartingIndex()) {
+						ArrayList<Integer> olds = doc.getNewFromOld(arg1);
+						if (olds != null && olds.size() != 0) {
+							affectedNodesArg1.add(arg1);
+						}
+					}
+				}
+				for (Integer affectedNode : affectedNodesArg1) {
+					ArrayList<Integer> other = doc.getNewFromOld(affectedNode);
+					if (other.size() != 0) {
+						int newIndex = other.get(0);
+						Hashtable<String, Double> newRelations = new Hashtable<String, Double>();
+						if (newTree != null)
+							newRelations = newTree.getValueArg1(newIndex);
+						Hashtable<String, Double> oldRelations = new Hashtable<String, Double>();
+						if (oldTree != null)
+							oldRelations = oldTree.getValueArg1(affectedNode);
+						Hashtable<String, Double> diffRelations = getDiffOfTreeWeights(
+								newRelations, oldRelations);
+						mergeDiffTreeWeights(changeIndexArg1, diffRelations);
+					}
+				}
+			}
+		} else {
+			int newIndex = newIndexes.get(0);
+			int oldIndex = oldIndexes.get(0);
+			Hashtable<String, Double> newRelations = new Hashtable<String, Double>();
+			if (newTree != null)
+				newRelations = newTree.getValueArg1(newIndex);
+			Hashtable<String, Double> oldRelations = new Hashtable<String, Double>();
+			if (oldTree != null)
+				oldRelations = oldTree.getValueArg1(oldIndex);
+			Hashtable<String, Double> diffRelations = getDiffOfTreeWeights(
+					newRelations, oldRelations);
+			mergeDiffTreeWeights(changeIndexArg1, diffRelations);
+
+			Hashtable<String, Double> newRelationsArg2 = new Hashtable<String, Double>();
+			if (newTree != null)
+				newRelationsArg2 = newTree.getValueArg2(newIndex);
+			Hashtable<String, Double> oldRelationsArg2 = new Hashtable<String, Double>();
+			if (oldTree != null)
+				oldRelationsArg2 = oldTree.getValueArg2(oldIndex);
+			Hashtable<String, Double> diffRelationsArg2 = getDiffOfTreeWeights(
+					newRelationsArg2, oldRelationsArg2);
+			mergeDiffTreeWeights(changeIndexArg2, diffRelationsArg2);
+		}
+
+		String prefix = "Treechange_";
+		String postFix = "_Weighted";
+		for (int i = 1; i <= levels; i++) {
+			String key = "_Level_" + i + "_DIFF";
+			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
+					+ postFix + key, getValue(changeIndexArg2, "EntRel-" + i));
+			fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
+					+ postFix + key, getValue(changeIndexArg2, "AltLex-" + i));
+			fillInVector(features, featureVector, prefix + "PDTB_IsComparison"
+					+ postFix + key,
+					getValue(changeIndexArg2, "Comparison-" + i));
+			fillInVector(features, featureVector, prefix + "PDTB_IsContingency"
+					+ postFix + key,
+					getValue(changeIndexArg2, "Contingency-" + i));
+			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion"
+					+ postFix + key,
+					getValue(changeIndexArg2, "Expansion-" + i));
+			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal"
+					+ postFix + key, getValue(changeIndexArg2, "Temporal-" + i));
+		}
+
+		postFix = "_Post_Weighted";
+		for (int i = 1; i <= levels; i++) {
+			String key = "_Level_" + i + "_DIFF";
+			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
+					+ postFix + key, getValue(changeIndexArg1, "EntRel-" + i));
+			fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
+					+ postFix + key, getValue(changeIndexArg1, "AltLex-" + i));
+			fillInVector(features, featureVector, prefix + "PDTB_IsComparison"
+					+ postFix + key,
+					getValue(changeIndexArg1, "Comparison-" + i));
+			fillInVector(features, featureVector, prefix + "PDTB_IsContingency"
+					+ postFix + key,
+					getValue(changeIndexArg1, "Contingency-" + i));
+			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion"
+					+ postFix + key,
+					getValue(changeIndexArg1, "Expansion-" + i));
+			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal"
+					+ postFix + key, getValue(changeIndexArg1, "Temporal-" + i));
+		}
+
+	}
+
 	public void insertSelectedFeaturesPostWeightedTree(FeatureName features,
 			int levels) {
 		for (int i = 1; i <= levels; i++) {
@@ -1665,7 +1965,6 @@ public class PDTBFeatureExtractorV4 {
 		}
 	}
 
-	
 	public void insertSelectedFeaturesPostWeighted(FeatureName features) {
 		features.insertFeature("OLD_PDTB_IsEntRel_Post_Weighted", Double.TYPE);
 		features.insertFeature("NEW_PDTB_IsEntRel_Post_Weighted", Double.TYPE);
@@ -1897,45 +2196,49 @@ public class PDTBFeatureExtractorV4 {
 		if (graph != null) {
 			Hashtable<String, Double> weights = null;
 			if (upwards)
-				//weights = graph.getValueArg2(sentenceIndex);
+				// weights = graph.getValueArg2(sentenceIndex);
 				weights = graph.getOutGroupValueArg2(sentenceIndex);
 			else
-				//weights = graph.getValueArg1(sentenceIndex);
+				// weights = graph.getValueArg1(sentenceIndex);
 				weights = graph.getOutGroupValueArg1(sentenceIndex);
-			
-			String logStr = "index:"+sentenceIndex + "\n";
+
+			String logStr = "index:" + sentenceIndex + "\n";
 			Iterator<String> it = weights.keySet().iterator();
 			while (it.hasNext()) {
 				String key = it.next();
 				double value = weights.get(key);
 				logStr += key + ":" + value + ",";
 			}
-			//MyLogger.getInstance().log(logStr);
-			
+			// MyLogger.getInstance().log(logStr);
+
 			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
 					+ postFix + "_Group", weights.get("EntRel"));
 			fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
-					+ postFix+ "_Group", weights.get("AltLex"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsComparison" + postFix+ "_Group",
-					weights.get("Comparison"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsContingency" + postFix+ "_Group",
-					weights.get("Contingency"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion" + postFix+ "_Group",
-					weights.get("Expansion"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal" + postFix+ "_Group",
-					weights.get("Temporal"));
+					+ postFix + "_Group", weights.get("AltLex"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsComparison"
+					+ postFix + "_Group", weights.get("Comparison"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsContingency"
+					+ postFix + "_Group", weights.get("Contingency"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion"
+					+ postFix + "_Group", weights.get("Expansion"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal"
+					+ postFix + "_Group", weights.get("Temporal"));
 		} else {
 			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
-					+ postFix+ "_Group", 0);
+					+ postFix + "_Group", 0);
 			fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
-					+ postFix+ "_Group", 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsComparison" + postFix+ "_Group", 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsContingency" + postFix+ "_Group", 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion" + postFix+ "_Group", 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal" + postFix+ "_Group", 0);
+					+ postFix + "_Group", 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsComparison"
+					+ postFix + "_Group", 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsContingency"
+					+ postFix + "_Group", 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion"
+					+ postFix + "_Group", 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal"
+					+ postFix + "_Group", 0);
 		}
 	}
-	
+
 	public void extractSelectedFeature(FeatureName features,
 			Object[] featureVector, HashSet<Integer> arg2Type_OLD,
 			HashSet<Integer> arg2Type_NEW) {
@@ -2090,14 +2393,14 @@ public class PDTBFeatureExtractorV4 {
 			}
 		}
 
-//		Hashtable<Integer, Integer> pdtbArg1_OLD = pdtbArg1Results_OLD
-//				.get(name);
-//		Hashtable<Integer, Integer> pdtbArg2_OLD = pdtbArg2Results_OLD
-//				.get(name);
-//		Hashtable<Integer, Integer> pdtbArg1_NEW = pdtbArg1Results_NEW
-//				.get(name);
-//		Hashtable<Integer, Integer> pdtbArg2_NEW = pdtbArg2Results_NEW
-//				.get(name);
+		// Hashtable<Integer, Integer> pdtbArg1_OLD = pdtbArg1Results_OLD
+		// .get(name);
+		// Hashtable<Integer, Integer> pdtbArg2_OLD = pdtbArg2Results_OLD
+		// .get(name);
+		// Hashtable<Integer, Integer> pdtbArg1_NEW = pdtbArg1Results_NEW
+		// .get(name);
+		// Hashtable<Integer, Integer> pdtbArg2_NEW = pdtbArg2Results_NEW
+		// .get(name);
 		Hashtable<Integer, PDTBGraph> graph_OLD = graphDocIndex_OLD.get(name);
 		Hashtable<Integer, PDTBGraph> graph_NEW = graphDocIndex_NEW.get(name);
 
@@ -2121,7 +2424,6 @@ public class PDTBFeatureExtractorV4 {
 		extractSelectedFeatureWeightedGroup(features, featureVector, oldGraph,
 				prefix, postFix, upwards, oldIndex);
 
-
 		// Act as arg2, new
 		prefix = "NEW_";
 		postFix = "_Weighted";
@@ -2130,10 +2432,10 @@ public class PDTBFeatureExtractorV4 {
 		extractSelectedFeatureWeightedGroup(features, featureVector, newGraph,
 				prefix, postFix, upwards, newIndex);
 
-		prefix = "DIFF_";
-		postFix = "_Weighted";
-		extractSelectedFeatureWeightedDiff(features, featureVector, oldGraph,
-				newGraph, prefix, postFix, upwards, oldIndex, newIndex);
+//		prefix = "DIFF_";
+//		postFix = "_Weighted";
+//		extractSelectedFeatureWeightedDiff(features, featureVector, oldGraph,
+//				newGraph, prefix, postFix, upwards, oldIndex, newIndex);
 
 		// Act as arg1, old
 		prefix = "OLD_";
@@ -2152,6 +2454,108 @@ public class PDTBFeatureExtractorV4 {
 		extractSelectedFeatureWeightedGroup(features, featureVector, newGraph,
 				prefix, postFix, upwards, newIndex);
 
+//		prefix = "DIFF_";
+//		postFix = "_Post_Weighted";
+//		extractSelectedFeatureWeightedDiff(features, featureVector, oldGraph,
+//				newGraph, prefix, postFix, upwards, oldIndex, newIndex);
+
+	}
+
+	public void extractWeightedFeatureChange(FeatureName features,
+			Object[] featureVector, RevisionDocument doc,
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes)
+			throws IOException {
+		String name = getRealNameRevision(doc.getDocumentName());
+		// System.out.println(name);
+		/*if (pdtbArg1Results_OLD.get(name).size() == 0
+				&& pdtbArg2Results_OLD.get(name).size() == 0
+				&& pdtbArg1Results_NEW.get(name).size() == 0
+				&& pdtbArg2Results_NEW.get(name).size() == 0) {
+			readInfo(doc);
+		}*/
+
+		int oldIndex = -1;
+		int newIndex = -1;
+		if (oldIndexes != null) {
+			Collections.sort(oldIndexes);
+			for (Integer i : oldIndexes) {
+				if (i != -1) {
+					oldIndex = i;
+					break;
+				}
+			}
+		}
+		if (newIndexes != null) {
+			Collections.sort(newIndexes);
+			for (Integer i : newIndexes) {
+				if (i != -1) {
+					newIndex = i;
+					break;
+				}
+			}
+		}
+
+		// Hashtable<Integer, Integer> pdtbArg1_OLD = pdtbArg1Results_OLD
+		// .get(name);
+		// Hashtable<Integer, Integer> pdtbArg2_OLD = pdtbArg2Results_OLD
+		// .get(name);
+		// Hashtable<Integer, Integer> pdtbArg1_NEW = pdtbArg1Results_NEW
+		// .get(name);
+		// Hashtable<Integer, Integer> pdtbArg2_NEW = pdtbArg2Results_NEW
+		// .get(name);
+		Hashtable<Integer, PDTBGraph> graph_OLD = graphDocIndex_OLD.get(name);
+		Hashtable<Integer, PDTBGraph> graph_NEW = graphDocIndex_NEW.get(name);
+
+		PDTBGraph oldGraph = null;
+		PDTBGraph newGraph = null;
+		if (oldIndex != -1) {
+			int oldParagraph = doc.getParaNoOfOldSentence(oldIndex);
+			oldGraph = graph_OLD.get(oldParagraph);
+		}
+		if (newIndex != -1) {
+			int newParagraph = doc.getParaNoOfNewSentence(newIndex);
+			newGraph = graph_NEW.get(newParagraph);
+		}
+
+		// Act as arg2, old
+		String prefix = "OLD_";
+		String postFix = "_Weighted";
+		boolean upwards = true;
+//		extractSelectedFeatureWeighted(features, featureVector, oldGraph,
+//				prefix, postFix, upwards, oldIndex);
+//		extractSelectedFeatureWeightedGroup(features, featureVector, oldGraph,
+//				prefix, postFix, upwards, oldIndex);
+//
+//		// Act as arg2, new
+//		prefix = "NEW_";
+//		postFix = "_Weighted";
+//		extractSelectedFeatureWeighted(features, featureVector, newGraph,
+//				prefix, postFix, upwards, newIndex);
+//		extractSelectedFeatureWeightedGroup(features, featureVector, newGraph,
+//				prefix, postFix, upwards, newIndex);
+
+		prefix = "DIFF_";
+		postFix = "_Weighted";
+		extractSelectedFeatureWeightedDiff(features, featureVector, oldGraph,
+				newGraph, prefix, postFix, upwards, oldIndex, newIndex);
+
+		// Act as arg1, old
+//		prefix = "OLD_";
+//		postFix = "_Post_Weighted";
+		upwards = false;
+//		extractSelectedFeatureWeighted(features, featureVector, oldGraph,
+//				prefix, postFix, upwards, oldIndex);
+//		extractSelectedFeatureWeightedGroup(features, featureVector, oldGraph,
+//				prefix, postFix, upwards, oldIndex);
+//
+//		prefix = "NEW_";
+//		postFix = "_Post_Weighted";
+//		// Act as arg1, new
+//		extractSelectedFeatureWeighted(features, featureVector, newGraph,
+//				prefix, postFix, upwards, newIndex);
+//		extractSelectedFeatureWeightedGroup(features, featureVector, newGraph,
+//				prefix, postFix, upwards, newIndex);
+
 		prefix = "DIFF_";
 		postFix = "_Post_Weighted";
 		extractSelectedFeatureWeightedDiff(features, featureVector, oldGraph,
@@ -2159,6 +2563,7 @@ public class PDTBFeatureExtractorV4 {
 
 	}
 
+	
 	public void extractWeightedFeatureTree(FeatureName features,
 			Object[] featureVector, RevisionDocument doc,
 			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes,
@@ -2240,6 +2645,95 @@ public class PDTBFeatureExtractorV4 {
 		// Act as arg1, new
 		extractSelectedFeatureWeightedTree(features, featureVector, newTree,
 				prefix, postFix, upwards, newIndex, levels);
+
+//		extractTreeChanges(features, featureVector, doc, newIndexes,
+//				oldIndexes, newTree, oldTree, levels);
+	}
+
+	public void extractWeightedFeatureTreeChange(FeatureName features,
+			Object[] featureVector, RevisionDocument doc,
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes,
+			int levels) throws IOException {
+		String name = getRealNameRevision(doc.getDocumentName());
+		// System.out.println(name);
+		if (pdtbArg1Results_OLD.get(name).size() == 0
+				&& pdtbArg2Results_OLD.get(name).size() == 0
+				&& pdtbArg1Results_NEW.get(name).size() == 0
+				&& pdtbArg2Results_NEW.get(name).size() == 0) {
+			readInfo(doc);
+		}
+
+		int oldIndex = -1;
+		int newIndex = -1;
+		if (oldIndexes != null) {
+			Collections.sort(oldIndexes);
+			for (Integer i : oldIndexes) {
+				if (i != -1) {
+					oldIndex = i;
+					break;
+				}
+			}
+		}
+		if (newIndexes != null) {
+			Collections.sort(newIndexes);
+			for (Integer i : newIndexes) {
+				if (i != -1) {
+					newIndex = i;
+					break;
+				}
+			}
+		}
+
+		// Hashtable<Integer, Integer> pdtbArg1_OLD = pdtbArg1Results_OLD
+		// .get(name);
+		// Hashtable<Integer, Integer> pdtbArg2_OLD = pdtbArg2Results_OLD
+		// .get(name);
+		// Hashtable<Integer, Integer> pdtbArg1_NEW = pdtbArg1Results_NEW
+		// .get(name);
+		// Hashtable<Integer, Integer> pdtbArg2_NEW = pdtbArg2Results_NEW
+		// .get(name);
+		Hashtable<Integer, PDTBTree> tree_OLD = treeDocIndex_OLD.get(name);
+		Hashtable<Integer, PDTBTree> tree_NEW = treeDocIndex_NEW.get(name);
+
+		PDTBTree oldTree = null;
+		PDTBTree newTree = null;
+		if (oldIndex != -1) {
+			int oldParagraph = doc.getParaNoOfOldSentence(oldIndex);
+			oldTree = tree_OLD.get(oldParagraph);
+		}
+		if (newIndex != -1) {
+			int newParagraph = doc.getParaNoOfNewSentence(newIndex);
+			newTree = tree_NEW.get(newParagraph);
+		}
+
+//		// Act as arg2, old
+//		String prefix = "OLD_";
+//		String postFix = "_Weighted";
+//		boolean upwards = true;
+//		extractSelectedFeatureWeightedTree(features, featureVector, oldTree,
+//				prefix, postFix, upwards, oldIndex, levels);
+//
+//		// Act as arg2, new
+//		prefix = "NEW_";
+//		postFix = "_Weighted";
+//		extractSelectedFeatureWeightedTree(features, featureVector, newTree,
+//				prefix, postFix, upwards, newIndex, levels);
+//
+//		// Act as arg1, old
+//		prefix = "OLD_";
+//		postFix = "_Post_Weighted";
+//		upwards = false;
+//		extractSelectedFeatureWeightedTree(features, featureVector, oldTree,
+//				prefix, postFix, upwards, oldIndex, levels);
+//
+//		prefix = "NEW_";
+//		postFix = "_Post_Weighted";
+//		// Act as arg1, new
+//		extractSelectedFeatureWeightedTree(features, featureVector, newTree,
+//				prefix, postFix, upwards, newIndex, levels);
+
+		extractTreeChanges(features, featureVector, doc, newIndexes,
+				oldIndexes, newTree, oldTree, levels);
 	}
 	
 	public void extractSelectedFeatureWeighted(FeatureName features,
@@ -2254,37 +2748,41 @@ public class PDTBFeatureExtractorV4 {
 				weights = graph.getValueArg2(sentenceIndex);
 			else
 				weights = graph.getValueArg1(sentenceIndex);
-			
-			String logStr = "index:"+sentenceIndex + "\n";
+
+			String logStr = "index:" + sentenceIndex + "\n";
 			Iterator<String> it = weights.keySet().iterator();
 			while (it.hasNext()) {
 				String key = it.next();
 				double value = weights.get(key);
 				logStr += key + ":" + value + ",";
 			}
-			//MyLogger.getInstance().log(logStr);
-			
+			// MyLogger.getInstance().log(logStr);
+
 			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
 					+ postFix, weights.get("EntRel"));
 			fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
 					+ postFix, weights.get("AltLex"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsComparison" + postFix,
-					weights.get("Comparison"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsContingency" + postFix,
-					weights.get("Contingency"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion" + postFix,
-					weights.get("Expansion"));
-			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal" + postFix,
-					weights.get("Temporal"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsComparison"
+					+ postFix, weights.get("Comparison"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsContingency"
+					+ postFix, weights.get("Contingency"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion"
+					+ postFix, weights.get("Expansion"));
+			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal"
+					+ postFix, weights.get("Temporal"));
 		} else {
 			fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
 					+ postFix, 0);
 			fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
 					+ postFix, 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsComparison" + postFix, 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsContingency" + postFix, 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion" + postFix, 0);
-			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal" + postFix, 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsComparison"
+					+ postFix, 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsContingency"
+					+ postFix, 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsExpansion"
+					+ postFix, 0);
+			fillInVector(features, featureVector, prefix + "PDTB_IsTemporal"
+					+ postFix, 0);
 		}
 	}
 
@@ -2295,7 +2793,7 @@ public class PDTBFeatureExtractorV4 {
 			return 0;
 		}
 	}
-	
+
 	public void extractSelectedFeatureWeightedTree(FeatureName features,
 			Object[] featureVector, PDTBTree tree, String prefix,
 			String postFix, boolean upwards, int sentenceIndex, int levels) {
@@ -2316,7 +2814,7 @@ public class PDTBFeatureExtractorV4 {
 				double value = weights.get(key);
 				logStr += key + ":" + value + ",";
 			}
-			MyLogger.getInstance().log(logStr);
+			// MyLogger.getInstance().log(logStr);
 			for (int i = 1; i <= levels; i++) {
 				String key = "_Level_" + i;
 				fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
@@ -2354,10 +2852,11 @@ public class PDTBFeatureExtractorV4 {
 			}
 		}
 	}
-	
+
 	public void extractSelectedFeatureWeightedDiff(FeatureName features,
-			Object[] featureVector, PDTBGraph oldGraph, PDTBGraph newGraph, String prefix,
-			String postFix, boolean upwards, int oldIndex, int newIndex) {
+			Object[] featureVector, PDTBGraph oldGraph, PDTBGraph newGraph,
+			String prefix, String postFix, boolean upwards, int oldIndex,
+			int newIndex) {
 		// IsEntRel, IsAltLex, IsComparison_Explicit, IsComparison_Implicit,
 		// IsContigency_Explicit, IsContigency_Implicit, IsExpansion_Explicit,
 		// IsExpansion_Implicit, IsTemporal_Explicit, IsTemporal_Implicit
@@ -2368,18 +2867,20 @@ public class PDTBFeatureExtractorV4 {
 		double contingency_OLD = 0;
 		double expansion_OLD = 0;
 		double temporal_OLD = 0;
-		
+
 		double entRel_NEW = 0;
 		double altLex_NEW = 0;
 		double comparison_NEW = 0;
 		double contingency_NEW = 0;
 		double expansion_NEW = 0;
 		double temporal_NEW = 0;
-		
-		if(oldGraph!=null) {
+
+		if (oldGraph != null) {
 			Hashtable<String, Double> weights = null;
-			if(upwards) weights = oldGraph.getValueArg2(oldIndex);
-			else weights = oldGraph.getValueArg1(oldIndex);
+			if (upwards)
+				weights = oldGraph.getValueArg2(oldIndex);
+			else
+				weights = oldGraph.getValueArg1(oldIndex);
 			entRel_OLD = weights.get("EntRel");
 			altLex_OLD = weights.get("AltLex");
 			comparison_OLD = weights.get("Comparison");
@@ -2387,11 +2888,13 @@ public class PDTBFeatureExtractorV4 {
 			expansion_OLD = weights.get("Expansion");
 			temporal_OLD = weights.get("Temporal");
 		}
-		
-		if(newGraph!=null) {
+
+		if (newGraph != null) {
 			Hashtable<String, Double> weights = null;
-			if(upwards) weights = newGraph.getValueArg2(newIndex);
-			else weights = newGraph.getValueArg1(newIndex);
+			if (upwards)
+				weights = newGraph.getValueArg2(newIndex);
+			else
+				weights = newGraph.getValueArg1(newIndex);
 			entRel_NEW = weights.get("EntRel");
 			altLex_NEW = weights.get("AltLex");
 			comparison_NEW = weights.get("Comparison");
@@ -2400,22 +2903,24 @@ public class PDTBFeatureExtractorV4 {
 			temporal_NEW = weights.get("Temporal");
 		}
 		fillInVector(features, featureVector, prefix + "PDTB_IsEntRel"
-				+ postFix, entRel_NEW-entRel_OLD);
+				+ postFix, entRel_NEW - entRel_OLD);
 		fillInVector(features, featureVector, prefix + "PDTB_IsAltLex"
 				+ postFix, altLex_NEW - altLex_OLD);
-		fillInVector(features, featureVector, prefix + "PDTB_IsComparison" + postFix,
-				comparison_NEW - comparison_OLD);
-		fillInVector(features, featureVector, prefix + "PDTB_IsContingency" + postFix,
-				contingency_NEW - contingency_OLD);
-		fillInVector(features, featureVector, prefix + "PDTB_IsExpansion" + postFix, expansion_NEW-expansion_OLD);
-		fillInVector(features, featureVector, prefix + "PDTB_IsTemporal" + postFix, temporal_NEW-temporal_OLD);
+		fillInVector(features, featureVector, prefix + "PDTB_IsComparison"
+				+ postFix, comparison_NEW - comparison_OLD);
+		fillInVector(features, featureVector, prefix + "PDTB_IsContingency"
+				+ postFix, contingency_NEW - contingency_OLD);
+		fillInVector(features, featureVector, prefix + "PDTB_IsExpansion"
+				+ postFix, expansion_NEW - expansion_OLD);
+		fillInVector(features, featureVector, prefix + "PDTB_IsTemporal"
+				+ postFix, temporal_NEW - temporal_OLD);
 	}
 
 	public void extractFeature(FeatureName features, Object[] featureVector,
 			RevisionDocument doc, ArrayList<Integer> newIndexes,
 			ArrayList<Integer> oldIndexes) throws IOException {
 		String name = getRealNameRevision(doc.getDocumentName());
-		// System.out.println(name);
+		System.out.println(name);
 		if (pdtbArg1Results_OLD.get(name).size() == 0
 				&& pdtbArg2Results_OLD.get(name).size() == 0
 				&& pdtbArg1Results_NEW.get(name).size() == 0
