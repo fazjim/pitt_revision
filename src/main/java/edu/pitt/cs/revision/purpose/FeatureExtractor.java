@@ -18,6 +18,7 @@ import edu.pitt.cs.revision.batch.BatchFeatureReader;
 import edu.pitt.cs.revision.batch.BatchFeatureWriter;
 import edu.pitt.cs.revision.batch.InfoStore;
 import edu.pitt.cs.revision.batch.SentenceInfo;
+import edu.pitt.cs.revision.joint.EditStep;
 import edu.pitt.cs.revision.machinelearning.FeatureName;
 import edu.pitt.cs.revision.machinelearning.JOrthoAssist;
 import edu.pitt.cs.revision.machinelearning.StanfordParserAssist;
@@ -1470,6 +1471,21 @@ public class FeatureExtractor {
 		featureVector[featureIndex] = val;
 	}
 
+	public void extractOpFeatures2(int op1, int op2) {
+		int featureIndex = features.getIndex("REVISION_OP");
+		double val = 0;
+		/*
+		if ((op1 == EditStep.EDIT_MOVE && op2 == EditStep.EDIT_MOVE)) {
+			val = 0;
+		} else if (op1 == EditStep.EDIT_KEEP && op2 == EditStep.EDIT_MOVE) {
+			val = 1;
+		} else {
+			val = -1;
+		}*/
+		//Actually, when we are predicting the value, the op information should not be available
+		featureVector[featureIndex] = val;
+	}
+	
 	// --------------------------insert categories for
 	// classification------------------
 	public void insertCategory(ArrayList<String> categories) {
@@ -2019,6 +2035,61 @@ public class FeatureExtractor {
 		// extractComplexPOSFeatures(sentence);
 		// extractKeywordOverlap(sentence, extractTopKeywords(doc));
 	}
+	
+	public Object[] extractFeatures(RevisionDocument doc,
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes, int newStep, int oldStep, 
+			boolean usingNgram, int option) throws Exception {
+		featureVector = new Object[features.getSize()];
+		if (usingNgram) {
+			String sentence = extractSentence(doc, newIndexes, oldIndexes, true);
+			extractTextFeatures(sentence);
+			extractTextFeatures2(doc, newIndexes, oldIndexes);
+		}
+		extractLocGroup(doc, newIndexes, oldIndexes);
+		extractTextGroup(doc, newIndexes, oldIndexes);
+		extractOpFeatures2(oldStep, newStep);
+		// extractLanguageGroup(doc, newIndexes, oldIndexes);
+		extractMetaGroup(doc, newIndexes, oldIndexes);
+		// extractOtherGroup(doc, ru);
+		// PDTBFeatureExtractor.getInstance().extractFeature(features,
+		// featureVector, doc, newIndexes, oldIndexes);
+		if (!isOnline) {
+			if (option == 3 || option == 10) {
+				SentenceEmbeddingFeatureExtractor.getInstance()
+						.extractCohesion(features, featureVector, doc,
+								newIndexes, oldIndexes);
+			}
+			extractLanguageGroup(doc, newIndexes, oldIndexes);
+			// extractOtherGroup(doc, ru);
+			if (option == 2 || option == 10) {
+				PDTBFeatureExtractorV2.getInstance().extractFeature(features,
+						featureVector, doc, newIndexes, oldIndexes);
+				PDTBFeatureExtractorV2.getInstance().extractFeatureARG1ARG2(
+						features, featureVector, doc, newIndexes, oldIndexes);
+			}
+		}
+		if (option == 4 || option == 10 || option == 11 || option == 2
+				|| option == 3) {
+			extractFeaturesPriorPost(doc, newIndexes, oldIndexes, 1);
+		}
+		return featureVector;
+		// String sentence = extractSentence(doc, ru);
+		// if (usingNgram)
+		// extractTextFeatures(sentence);
+		// extractLocFeature(doc, ru);
+		// extractNERFeature(sentence);
+		// extractLENFeature(sentence);
+		// extractSimplePOSFeatures(sentence);
+		//
+		// extractReasoningKeywords(sentence);
+		// extractCommaFeatures(sentence);
+		// extractOpFeatures(ru);
+		//
+		// extractDaTextualFeature(doc, ru);
+
+		// extractComplexPOSFeatures(sentence);
+		// extractKeywordOverlap(sentence, extractTopKeywords(doc));
+	}
 
 	public Object[] extractFeatures(RevisionDocument doc,
 			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes,
@@ -2231,6 +2302,87 @@ public class FeatureExtractor {
 		// insertComplexPOSFeatures();
 		// insertKeywordOverlap();
 	}
+	
+	
+	public void buildFeaturesCRF2(boolean usingNgram,
+			ArrayList<String> categories, int remove) throws Exception {
+		features = new FeatureName();
+		insertCategory(categories);
+		System.out.println("=======================REMOVE IS:" + remove);
+		if (usingNgram)
+			insertText(); // Text always start from the first
+		if (remove == -1)
+			return;
+		if (remove == 0 || remove == 10 || remove == 11 || remove == 3
+				|| remove == 2 || remove == 5 || remove == 6 || remove == 7 || remove == 8 || remove == 9 || remove == 12)
+			insertLocGroup();
+		if (remove == 1 || remove == 10 || remove == 11 || remove == 3
+				|| remove == 2 || remove == 5 || remove == 6 || remove == 7 || remove == 8 || remove == 9 || remove == 12) {
+			insertTextGroup();
+		}
+		if (remove == 2 || remove == 10 || remove == 22 )  {
+			//PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
+			PDTBFeatureExtractorV2.getInstance().insertFeature(features);
+		}
+		if (remove == 10 || remove == 23 || remove == 8 )  {
+			//PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
+			PDTBFeatureExtractorV4.getInstance().insertFeature(features);
+		}
+		if(remove == 6 || remove == 10) {
+			//PDTBFeatureExtractorV2.getInstance().insertPDTBEntityFeatures(features);
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesWeighted(features);
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesPostWeighted(features);
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesDiffWeighted(features);
+		}
+		if(remove == 7 || remove == 10) {
+			//PDTBFeatureExtractorV2.getInstance().insertPDTBEntityFeatures(features);
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesWeighted(features);
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesPostWeighted(features);
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesDiffWeighted(features);
+		}
+		if (remove == 5 || remove == 10) {
+			// PDTBFeatureExtractor.getInstance().insertARG1ARG2(features);
+			// PDTBFeatureExtractor.getInstance().insertFeature(features);
+			ArgumentZoningFeatureExtractor.getInstance()
+					.insertFeature(features);
+		}
+		if (remove == 3 || remove == 10) {
+			// insertMetaGroup();
+			// SentenceEmbeddingFeatureExtractor.getInstance().insertFeature(
+			// features);
+			SentenceEmbeddingFeatureExtractor.getInstance().insertCohesion(
+					features);
+		}
+		if (remove == 4 || remove == 10 || remove == 2) {
+			//insertPriorPostFeatures(1);
+		}
+		if(remove == 9 || remove == 10) {
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesWeightedTree(features,4);
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesPostWeightedTree(features,4);
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesWeightedTreeDiff(features, 4);
+			PDTBFeatureExtractorV2.getInstance().insertSelectedFeaturesPostWeightedTreeDiff(features, 4);
+		}
+		if(remove == 12 || remove == 10) {
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesWeightedTree(features,4);
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesPostWeightedTree(features,4);
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesWeightedTreeDiff(features, 4);
+			PDTBFeatureExtractorV4.getInstance().insertSelectedFeaturesPostWeightedTreeDiff(features, 4);
+		}
+		// insertLanguageGroup();
+		// insertOtherGroup();
+		// insertLocationFeature();
+		// insertNERFeature();
+		// insertLenFeature();
+		// insertSimplePOSFeatureRatio();
+		//
+		// insertReasoningKeywords();
+		// insertComma();
+		// insertOp();
+		// insertDaTextualFeature();
+		// insertComplexPOSFeatures();
+		// insertKeywordOverlap();
+	}
+
 
 	// extract features
 	public Object[] extractFeatures(RevisionDocument doc, RevisionUnit ru,
@@ -2387,6 +2539,10 @@ public class FeatureExtractor {
 		// extractKeywordOverlap(sentence, extractTopKeywords(doc));
 	}
 
+	
+	
+	
+	
 	// ---------------------------Utils used in this
 	// file-------------------------------
 	public double getStartVal(CoreMap cm, String tag) {

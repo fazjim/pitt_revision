@@ -11,6 +11,32 @@ public class EditStep {
 	private int currentD1; //current sentence index in D1
 	private int currentD2; //current sentence index in D2	
 	
+	public String getStr(int move) {
+		if(move == EDIT_MOVE) return "M";
+		else  return "K";
+	}
+	
+	public String toString() {
+		String str = "";
+		str += getStr(d1Move) + ":" + currentD1;
+		str += "," + getStr(d2Move) + ":" + currentD2;
+		str += "-" + RevisionPurpose.getPurposeName(type);
+		return str;
+	}
+	
+	public String toID() {
+		String str = "";
+		//str += getStr(d1Move) + ":" + currentD1;
+		//str += "_" + getStr(d2Move) + ":" + currentD2;
+		str = currentD1 + "-"+currentD2;
+		return str;
+	}
+	
+	public String toLabel() {
+	   String label = getStr(d1Move) + "-" + getStr(d2Move) + "-" + type;
+	   return label;
+	}
+ 	
 	private int type = RevisionPurpose.NOCHANGE;//types
 
 	public int getD1Move() {

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -200,6 +201,19 @@ public class WekaAssist {
 		System.err.println("Test is null:" + (test == null));
 		InstancesPair p = ngramWrapper.applyStringVectorFilter(train, "Text",
 				"TEXTDIFF", test);
+		Instances[] ins = new Instances[2];
+		ins[0] = p.a;
+		ins[1] = p.b;
+		return ins;
+	}
+	
+	// Adding ngrams2
+	public Instances[] addNgram(Instances train, Instances test, List<String> textAttributes)
+			throws Exception {
+		StringVectorWrapper ngramWrapper = new StringVectorWrapper();
+		System.err.println("Train is null:" + (train == null));
+		System.err.println("Test is null:" + (test == null));
+		InstancesPair p = ngramWrapper.applyStringVectorFilter(train, textAttributes, test);
 		Instances[] ins = new Instances[2];
 		ins[0] = p.a;
 		ins[1] = p.b;

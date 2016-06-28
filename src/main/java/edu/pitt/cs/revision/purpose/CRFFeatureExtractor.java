@@ -40,6 +40,10 @@ public class CRFFeatureExtractor extends FeatureExtractor {
 
 	private EssayInfo essayInfo = new EssayInfo();
 
+	public FeatureName getFeatures() {
+		return this.features;
+	}
+	
 	public EssayInfo getEssayInfo(ArrayList<ArrayList<HeatMapUnit>> essay) {
 		if (essayInfo.parsed == false) {
 			int pD1Num = 1;

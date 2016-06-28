@@ -39,6 +39,53 @@ public class RevisionDocument {
 		this.documentName = documentName;
 	}
 
+	private Hashtable<Integer, Integer> oldPurposeMap;
+	private Hashtable<Integer, Integer> newPurposeMap;
+	
+	public int getPurposeofOld(int oldIndex) {
+		if(oldPurposeMap == null) {
+			oldPurposeMap = new Hashtable<Integer, Integer>();
+			ArrayList<RevisionUnit> revisions = this.root.getRevisionUnitAtLevel(0);
+			for(RevisionUnit unit: revisions) {
+				ArrayList<Integer> oldSents = unit.getOldSentenceIndex();
+				int revPurpose = unit.getRevision_purpose();
+				for(Integer oldSent: oldSents) {
+					if(oldSent != -1) {
+						oldPurposeMap.put(oldSent, revPurpose);
+					}
+				}
+			}
+		}
+		
+	    if(!oldPurposeMap.containsKey(oldIndex)) {
+	    	return RevisionPurpose.NOCHANGE;
+	    } else {
+	    	return oldPurposeMap.get(oldIndex);
+	    }
+	}
+	
+	public int getPurposeofNew(int newIndex) {
+		if(newPurposeMap == null) {
+			newPurposeMap = new Hashtable<Integer, Integer>();
+			ArrayList<RevisionUnit> revisions = this.root.getRevisionUnitAtLevel(0);
+			for(RevisionUnit unit: revisions) {
+				ArrayList<Integer> newSents = unit.getNewSentenceIndex();
+				int revPurpose = unit.getRevision_purpose();
+				for(Integer newSent: newSents) {
+					if(newSent != -1) {
+						newPurposeMap.put(newSent, revPurpose);
+					}
+				}
+			}
+		}
+		
+		if(!newPurposeMap.containsKey(newIndex)) {
+			return RevisionPurpose.NOCHANGE;
+		} else {
+			return newPurposeMap.get(newIndex);
+		}
+	}
+	
 	/**
 	 * it contains all the contents of sentences in the old draft
 	 */
@@ -227,7 +274,37 @@ public class RevisionDocument {
 		}
 		return sent.trim();
 	}
-
+	
+	/**
+	 * Copy the document for evaluation or for full-stack prediction
+	 * @return
+	 * @throws Exception 
+	 */
+	public RevisionDocument copy() throws Exception {
+		RevisionDocument copyDoc = new RevisionDocument();
+		ArrayList<String> olds = copyDoc.getOldDraftSentences();
+		ArrayList<String> news = copyDoc.getNewDraftSentences();
+		for(String oldSent : oldDraftSentences) {
+			olds.add(oldSent);
+		}
+		for(String newSent : newDraftSentences) {
+			news.add(newSent);
+		}
+		copyDoc.setDocumentName(this.documentName);
+		int oldDraftNum = olds.size();
+		int newDraftNum = news.size();
+		for(int i = 1;i<=oldDraftNum;i++) {
+			copyDoc.addOldSentenceParaMap(i, this.getParaNoOfOldSentence(i));
+		}
+		for(int i = 1;i<=newDraftNum;i++) {
+			copyDoc.addNewSentenceParaMap(i, this.getParaNoOfNewSentence(i));
+		}
+		RevisionUnit rootUnit = new RevisionUnit(true);
+		rootUnit.setRevision_level(3);
+		copyDoc.setRoot(rootUnit);
+		return copyDoc;
+	}
+ 
 	/**
 	 * At a sentence to the old draft
 	 * 
@@ -415,7 +492,7 @@ public class RevisionDocument {
 	public ArrayList<Integer> getOldFromNew(int newSentIndex) {
 		if (this.mapNewtoOld.containsKey(newSentIndex))
 			return this.mapNewtoOld.get(newSentIndex);
-		return null;
+		return new ArrayList<Integer>();
 	}
 
 	/**
@@ -427,7 +504,7 @@ public class RevisionDocument {
 	public ArrayList<Integer> getNewFromOld(int oldSentIndex) {
 		if (this.mapOldtoNew.containsKey(oldSentIndex))
 			return this.mapOldtoNew.get(oldSentIndex);
-		return null;
+		return new ArrayList<Integer>();
 	}
 
 	/**

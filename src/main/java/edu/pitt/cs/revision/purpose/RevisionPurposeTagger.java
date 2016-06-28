@@ -101,6 +101,7 @@ public class RevisionPurposeTagger {
 		tagger = new CrfTagger(modelPath);
 
 		List<List<Pair<String, Double>>> tagProbLists = tagger.tag(testPath);
+		
 
 		// Compute accuracy
 		int total = 0;
@@ -182,7 +183,7 @@ public class RevisionPurposeTagger {
 			br.close();
 		}
 	}
-
+	
 	public Instances[] prepareForLabelling(
 			ArrayList<RevisionDocument> trainDocs,
 			ArrayList<RevisionDocument> testDocs, boolean usingNgram, int remove)
@@ -514,7 +515,7 @@ public class RevisionPurposeTagger {
 						writer.write(instance.classValue() + "\t");
 						for (int i = 0; i < instance.numAttributes(); i++) {
 							if (i != classIndex) {
-								writer.write(instance.attribute(i).name() + "="
+								writer.write(instance.attribute(i).name() + ":"
 										+ instance.value(i) + "\t");
 							}
 						}
@@ -546,7 +547,7 @@ public class RevisionPurposeTagger {
 					writer.write(instance.classValue() + "\t");
 					for (int i = 0; i < instance.numAttributes(); i++) {
 						if (i != classIndex) {
-							writer.write(instance.attribute(i).name() + "="
+							writer.write(instance.attribute(i).name() + ":"
 									+ instance.value(i) + "\t");
 						}
 					}

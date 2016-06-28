@@ -14,7 +14,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<nd4j.version>0.4-rc3.6</nd4j.version>
-		<dl4j.version>0.4-rc3.6</dl4j.version>
+		<dl4j.version>0.4-rc3.9</dl4j.version>
 
 	</properties>
 
@@ -71,18 +71,14 @@
 			<groupId>org.deeplearning4j</groupId>
 			<artifactId>deeplearning4j-nlp</artifactId>
 			<version>${dl4j.version}</version> 
-		</dependency> 
-	
-
-<!-- block ends -->
-
+		</dependency>
 		<dependency>
 			<groupId>org.nd4j</groupId>
 			<artifactId>nd4j-jblas</artifactId>
 
 			<version>${nd4j.version}</version>
 		</dependency>
-
+<!-- block ends -->
 
 		<dependency>
 			<groupId>edu.stanford.nlp</groupId>

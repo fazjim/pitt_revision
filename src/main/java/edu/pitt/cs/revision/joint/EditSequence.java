@@ -7,9 +7,18 @@ import edu.pitt.lrdc.cs.revision.model.RevisionPurpose;
 
 public class EditSequence {
 	private int oldParagraphStartNo;
-	private int oldParagrahEndNo;
+	private int oldParagraphEndNo;
 	private int newParagraphStartNo;
 	private int newParagraphEndNo;
+
+	public String toString() {
+		String str = "Sequence from : OLD(" + oldParagraphStartNo +"," +oldParagraphEndNo+"), NEW("+newParagraphStartNo +","
+ +newParagraphEndNo+")"+"\n";
+		for(EditStep step: labelSequence) {
+			str += step.toString() +"\n";
+		}
+		return str;
+	}
 	
 	public int getOldParagraphStartNo() {
 		return oldParagraphStartNo;
@@ -19,12 +28,12 @@ public class EditSequence {
 		this.oldParagraphStartNo = oldParagraphStartNo;
 	}
 
-	public int getOldParagrahEndNo() {
-		return oldParagrahEndNo;
+	public int getOldParagrahpEndNo() {
+		return oldParagraphEndNo;
 	}
 
-	public void setOldParagrahEndNo(int oldParagrahEndNo) {
-		this.oldParagrahEndNo = oldParagrahEndNo;
+	public void setOldParagraphEndNo(int oldParagrahEndNo) {
+		this.oldParagraphEndNo = oldParagrahEndNo;
 	}
 
 	public int getNewParagraphStartNo() {
@@ -47,6 +56,13 @@ public class EditSequence {
 	
 	public List<EditStep> getLabelSequence() {
 		return labelSequence;
+	}
+	
+	public void setLabels(List<Integer> labels) {
+		for(int i = 0;i<labelSequence.size();i++) {
+			EditStep step = labelSequence.get(i);
+			step.setType(labels.get(i));
+		}
 	}
 	
 	public void addAdd(int oldIndex, int newIndex, int revPurpose) {
