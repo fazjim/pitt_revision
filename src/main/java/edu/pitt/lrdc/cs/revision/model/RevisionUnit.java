@@ -275,6 +275,19 @@ public class RevisionUnit {
 		this.newSentence = newSentence;
 	}
 
+	public String toStringBrief() {
+		String oldIndexStr = "";
+		String newIndexStr = "";
+		for(Integer oldIndex: this.oldSentenceIndex) {
+			oldIndexStr += oldIndex + ",";
+		}
+		for(Integer newIndex: this.newSentenceIndex) {
+			newIndexStr += newIndex + ",";
+		}
+		String msg = "OLD: "+ oldIndexStr + " NEW: " + newIndexStr + RevisionPurpose.getPurposeName(this.revision_purpose); 
+		return msg;
+	}
+	
 	public String toString() {
 		String msg = "Level " + this.revision_level + ":\n";
 		String revPurpose = RevisionPurpose

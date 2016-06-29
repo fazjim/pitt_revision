@@ -269,8 +269,14 @@ public class SequenceTransformer {
 		return sequence;
 	}
 
+	/**
+	 * Utilize beamsearch to select the possible segments here
+	 * @param doc
+	 * @return
+	 */
 	public static List<List<EditSequence>> tranformToAllPossibleSequences(RevisionDocument doc) {
 		List<List<EditSequence>> editSequences = new ArrayList<List<EditSequence>>();
+		
 		return editSequences;
 	}
 	

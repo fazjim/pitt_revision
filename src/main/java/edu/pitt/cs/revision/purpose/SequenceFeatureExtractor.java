@@ -90,6 +90,34 @@ public class SequenceFeatureExtractor {
 		return sentence;
 	}
 
+	public String extractSentence(RevisionDocument doc,
+			ArrayList<Integer> newIndexes, ArrayList<Integer> oldIndexes, int k) {
+		String sentence = "";
+		if (newIndexes != null) {
+			for (Integer newIndex : newIndexes) {
+				newIndex = newIndex + (k - 1);
+				if (newIndex > 0
+						&& newIndex <= doc.getNewDraftSentences().size()) {
+					sentence += doc.getNewSentence(newIndex);
+				}
+			}
+		}
+		if(sentence.length()>0) sentence += " ";
+		if (oldIndexes != null) {
+			for (Integer oldIndex : oldIndexes) {
+				oldIndex = oldIndex + (k - 1);
+				if (oldIndex > 0
+						&& oldIndex <= doc.getOldDraftSentences().size()) {
+					sentence += doc.getOldSentence(oldIndex);
+				}
+			}
+		}
+
+		if (sentence.length() == 0)
+			sentence = "Dummy";
+		return sentence;
+	}
+
 	/**
 	 * Extracting the sentence from the text
 	 * 
@@ -707,10 +735,7 @@ public class SequenceFeatureExtractor {
 	// --------------------------insert Text for generating ngram
 	// features-------------------------
 	public void insertText(int k) {
-		for (int i = 1; i <= k; i++) {
-			String postFix = "_" + i;
-			features.insertFeature("Text" + postFix, String.class);
-		}
+		features.insertFeature("Text", String.class);
 		for (int i = 1; i <= k; i++) {
 			for (int j = 1; j <= k; j++) {
 				String postFix = "_" + i + "_" + j;
@@ -719,14 +744,11 @@ public class SequenceFeatureExtractor {
 		}
 	}
 
-	public void extractTextFeatures(String text, int k) {
-		for (int i = 1; i <= k; i++) {
-			String postFix = "_" + i;
-			int TEXT = features.getIndex("Text" + postFix);
-			text = text.replaceAll(",", " ");
-			text = text.replaceAll("_", " ");
-			featureVector[TEXT] = text;
-		}
+	public void extractTextFeatures(String text) {
+		int TEXT = features.getIndex("Text");
+		text = text.replaceAll(",", " ");
+		text = text.replaceAll("_", " ");
+		featureVector[TEXT] = text;
 	}
 
 	public void extractTextFeatures2(RevisionDocument doc,
@@ -893,9 +915,8 @@ public class SequenceFeatureExtractor {
 			boolean usingNgram, int k) throws IOException {
 		featureVector = new Object[features.getSize()];
 		if (usingNgram) {
-			String sentence = extractSentence(doc, newIndexes, oldIndexes, k,
-					true);
-			extractTextFeatures(sentence, k);
+			String sentence = extractSentence(doc, newIndexes, oldIndexes, k);
+			extractTextFeatures(sentence);
 			extractTextFeatures2(doc, newIndexes, oldIndexes, k);
 		}
 		extractLocGroup(doc, newIndexes, oldIndexes, k);
@@ -923,9 +944,8 @@ public class SequenceFeatureExtractor {
 			throws Exception {
 		featureVector = new Object[features.getSize()];
 		if (usingNgram) {
-			String sentence = extractSentence(doc, newIndexes, oldIndexes, k,
-					true);
-			extractTextFeatures(sentence, k);
+			String sentence = extractSentence(doc, newIndexes, oldIndexes, k);
+			extractTextFeatures(sentence);
 			extractTextFeatures2(doc, newIndexes, oldIndexes, k);
 		}
 		extractLocGroup(doc, newIndexes, oldIndexes, k);
@@ -952,9 +972,8 @@ public class SequenceFeatureExtractor {
 			boolean usingNgram, int k, int option) throws Exception {
 		featureVector = new Object[features.getSize()];
 		if (usingNgram) {
-			String sentence = extractSentence(doc, newIndexes, oldIndexes, k,
-					true);
-			extractTextFeatures(sentence, k);
+			String sentence = extractSentence(doc, newIndexes, oldIndexes, k);
+			extractTextFeatures(sentence);
 			extractTextFeatures2(doc, newIndexes, oldIndexes, k);
 		}
 		extractLocGroup(doc, newIndexes, oldIndexes, k);

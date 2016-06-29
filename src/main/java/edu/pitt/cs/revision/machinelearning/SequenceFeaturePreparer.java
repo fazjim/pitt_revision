@@ -6,6 +6,7 @@ import java.util.List;
 
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentReader;
 import edu.pitt.lrdc.cs.revision.model.RevisionDocument;
+import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 
@@ -116,28 +117,28 @@ public class SequenceFeaturePreparer {
 		}
 
 		List<String> textColumns = new ArrayList<String>();
-		for (int i = 1; i <= k; i++) {
-			textColumns.add("Text_" + i);
-		}
+		textColumns.add("Text");
 		for (int i = 1; i <= k; i++) {
 			for (int j = 1; j <= k; j++) {
 				textColumns.add("TEXTDIFF_" + i + "_" + j);
 			}
 		}
 		WekaAssist wa = new WekaAssist();
-		trainInstances = wa.removeID(trainInstances);
-		testInstances = wa.removeID(testInstances);
+		// trainInstances = wa.removeID(trainInstances);
+		// testInstances = wa.removeID(testInstances);
 		Instances[] trainTestInstances = new Instances[2];
+
+		/*
+		 * Attribute textAttr = trainInstances.attribute("Text"); for(int i = 0;
+		 * i<500; i++) { Instance test = trainInstances.get(i);
+		 * System.out.println(test.stringValue(textAttr)); }
+		 */
+		trainInstances = WekaAssist.removeID(trainInstances);
+		testInstances = WekaAssist.removeID(testInstances);
+		
 		if (usingNgram) {
 			trainTestInstances = wa.addNgram(trainInstances, testInstances,
 					textColumns);
-			// Instances trainDataRem =
-			// WekaAssist.removeID(trainTestInstances[0]);
-			// Instances testDataRem =
-			// WekaAssist.removeID(trainTestInstances[1]);
-
-			// trainTestInstances[0] = trainDataRem;
-			// trainTestInstances[1] = testDataRem;
 			trainTestInstances = WekaAssist.selectFeatures(
 					trainTestInstances[0], trainTestInstances[1]);
 		} else {

@@ -94,18 +94,19 @@ public class StringVectorWrapper {
 
 		for (String attribute : attributeStrs) {
 			Attribute ngram = data.attribute(attribute);
-			System.out.println("Getting ngram of attribute "+attribute);
 			if (ngram != null) {
 				int attributes[] = new int[1];
 				attributes[0] = ngram.index();
+
 				filter_ngram.setAttributeIndicesArray(attributes);
 				filter_ngram.setUseStoplist(false);
 				filter_ngram.setLowerCaseTokens(true);
-				filter_ngram.setAttributeNamePrefix(attribute + "@");
+				filter_ngram.setAttributeNamePrefix(attribute + "=");
 				NGramTokenizer tokenizer_pos = new NGramTokenizer();
 				tokenizer_pos.setOptions(weka.core.Utils
 						.splitOptions("-min 1 -max 1"));
 				filter_ngram.setTokenizer(tokenizer_pos);
+
 				filter_ngram.setInputFormat(data);
 				data = Filter.useFilter(data, filter_ngram);
 
@@ -113,6 +114,7 @@ public class StringVectorWrapper {
 					otherData = Filter.useFilter(otherData, filter_ngram);
 			}
 		}
+
 		return new InstancesPair(data, otherData);
 	}
 

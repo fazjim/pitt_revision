@@ -166,6 +166,7 @@ public class SequenceProcessor {
 				String newTag = move + "-" + category;
 				newCategories.add(newTag);
 				indexBindings.put(categoryIndex, newTag);
+				categoryIndex++;
 			}
 		}
 		fe.buildFeatures(usingNgram, newCategories, k, remove);
@@ -193,7 +194,7 @@ public class SequenceProcessor {
 	}
 
 	/**
-	 * Given a sequence, generate all the features
+	 * Given a sequence of the training data, generate the features
 	 * 
 	 * @param doc
 	 * @param sequence
@@ -246,6 +247,7 @@ public class SequenceProcessor {
 				String newTag = move + "-" + category;
 				newCategories.add(newTag);
 				indexBindings.put(categoryIndex, newTag);
+				categoryIndex++;
 			}
 		}
 		fe.buildFeatures(usingNgram, newCategories, k, remove);
@@ -302,8 +304,9 @@ public class SequenceProcessor {
 					String realTag = step.getStr(step.getD1Move()) + "-"
 							+ step.getStr(step.getD2Move()) + "-" + revTag;
 					realTagTable.put(instanceID, realTag);
+					System.err.println(instanceID);
 					wa.addInstance(features, fe.getFeatures(), usingNgram,
-							dataset, revTag,
+							dataset, realTag,
 							doc.getDocumentName() + "_" + step.toID());
 				}
 			}
