@@ -41,8 +41,9 @@ public class EvaluateMain {
 	public static void main(String[] args) throws Exception {
 		int option = CLASSIFY; // modify later to allow human input
 		// int option = SURFACECLASSIFY;
-		// option = ALIGN;
+		 option = ALIGN;
 		int evaluateMethod = 4;
+		evaluateMethod = TRAINTEST;
 		// String trainPath = "D:/annotationTool/annotated/class3";
 		// String trainPath = "/Users/faz23/Desktop/34/annotated/allData";
 		// String trainPath = "C:\\Not Backed Up\\data\\trainData2";

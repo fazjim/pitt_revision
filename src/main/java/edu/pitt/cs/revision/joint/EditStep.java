@@ -16,6 +16,16 @@ public class EditStep {
 		else  return "K";
 	}
 	
+	public EditStep copy() {
+		EditStep copy = new EditStep();
+		copy.setD1Move(this.getD1Move());
+		copy.setD2Move(this.getD2Move());
+		copy.setCurrentD1(this.getCurrentD1());
+		copy.setCurrentD2(this.getCurrentD2());
+		copy.setType(this.getType());
+		return copy;
+	}
+	
 	public String toString() {
 		String str = "";
 		str += getStr(d1Move) + ":" + currentD1;

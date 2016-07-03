@@ -2,6 +2,7 @@ package edu.pitt.cs.revision.machinelearning;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 
 import edu.pitt.lrdc.cs.revision.io.RevisionDocumentReader;
@@ -20,6 +21,64 @@ public class SequenceFeaturePreparer {
 		String label = oldIndex + "-" + newIndex;
 		label = doc.getDocumentName() + "_" + label;
 		double[] features = featureTable.get(label);
+		double classValue = classValues.get(label);
+		featuresAndLabels = new double[features.length + 1];
+		featuresAndLabels[0] = classValue;
+		for (int i = 0; i < features.length; i++) {
+			featuresAndLabels[i + 1] = features[i];
+		}
+		return featuresAndLabels;
+	}
+	
+	public double[] binNumeric(double[] values) {
+		double[] vals = new double[values.length];
+		for(int i = 0;i<vals.length;i++) {
+			double val = values[i];
+			double binValue = 0;
+			if(val==0) {
+				binValue = 0;
+			} else if(val<=0.1) {
+				binValue = 0.1;
+			} else if(val >0.1 && val <= 0.2) {
+				binValue = 0.2;
+			} else if(val> 0.2 && val <= 0.3) {
+				binValue = 0.3;
+			} else if(val>0.3 && val <= 0.4) {
+				binValue = 0.4;
+			} else if(val > 0.4 && val <= 0.5) {
+				binValue = 0.5;
+			} else if(val >0.5 && val <= 0.6) {
+				binValue = 0.6;
+			} else if(val > 0.6 && val <= 0.7) {
+				binValue = 0.7;
+			} else if(val > 0.7 && val <= 0.8) {
+				binValue = 0.8;
+			} else if(val>0.8 && val<= 0.9) {
+				binValue = 0.9;
+			} else {
+				binValue = 1;
+			}
+			vals[i] = binValue;
+		}
+		return vals;
+	}
+	
+	/**
+	 * CRFSuite does not support numeric values!!!!!!!!!! WHY!!!!
+	 * Should implement my own crf when I got time
+	 * 
+	 * 
+	 * @param doc
+	 * @param oldIndex
+	 * @param newIndex
+	 * @return
+	 */
+	public double[] fetchFeaturesBin(RevisionDocument doc, int oldIndex,
+			int newIndex) {
+		double[] featuresAndLabels;
+		String label = oldIndex + "-" + newIndex;
+		label = doc.getDocumentName() + "_" + label;
+		double[] features = binNumeric(featureTable.get(label));
 		double classValue = classValues.get(label);
 		featuresAndLabels = new double[features.length + 1];
 		featuresAndLabels[0] = classValue;
@@ -180,6 +239,48 @@ public class SequenceFeaturePreparer {
 				}
 				featureTable.put(id, featureValues);
 				classValues.put(id, ins.classValue());
+			}
+		}
+		
+		normalize();
+	}
+	
+	public void normalize() {
+		double[] maxValue = new double[0];
+		double[] minValue = new double[0];
+		double[] base = new double[0];
+		boolean startCount = false;
+		Iterator<String> it = featureTable.keySet().iterator();
+		while(it.hasNext()) {
+			String id = it.next();
+			double[] table = featureTable.get(id);
+			if(startCount == false) {
+				maxValue = new double[table.length];
+				minValue = new double[table.length];
+				base = new double[table.length];
+				startCount = true;
+			}
+			for(int i = 0;i<table.length;i++) {
+				double val = table[i];
+				if(val>maxValue[i]) maxValue[i] = val;
+				if(val<minValue[i]) minValue[i] = val;
+			}
+		}
+		
+		for(int i = 0;i<maxValue.length;i++) {
+			base[i] = maxValue[i]-minValue[i];
+		}
+		it = featureTable.keySet().iterator();
+		while(it.hasNext()) {
+			String id = it.next();
+			double[] table = featureTable.get(id);
+			for(int i = 0;i<table.length;i++) {
+				double div = base[i];
+				if(div!=0) {
+					table[i] = (table[i]-minValue[i])/div;
+				} else {
+					table[i] = 0;
+				}
 			}
 		}
 	}

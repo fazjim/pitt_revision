@@ -30,49 +30,56 @@ public class SequenceProcessor {
 	}
 
 	public int getRevType(String categoryName, int option) {
-		if(option == 1) {
-			if(categoryName.endsWith("Content")) {
+		//System.err.println("Category Name string is:"+categoryName);
+		if (option == 1) {
+			if (categoryName.endsWith("Content")) {
 				return RevisionPurpose.CLAIMS_IDEAS;
-			} else if(categoryName.endsWith("Surface")) {
+			} else if (categoryName.endsWith("Surface")) {
 				return RevisionPurpose.WORDUSAGE_CLARITY;
-			} else if(categoryName.endsWith("Nochange")) {
+			} else if (categoryName.endsWith("Nochange")) {
 				return RevisionPurpose.NOCHANGE;
 			}
-		} else if(option == 2) {
-			if(categoryName.endsWith(RevisionPurpose.getPurposeName(RevisionPurpose.CLAIMS_IDEAS))) {
-				return RevisionPurpose.CLAIMS_IDEAS;
-			} else if(categoryName.endsWith("Support")) {
-				return RevisionPurpose.CD_WARRANT_REASONING_BACKING;
-			} else if(categoryName.endsWith("Surface")) {
-				return RevisionPurpose.WORDUSAGE_CLARITY;
-			} else if(categoryName.endsWith("Nochange")) {
-				return RevisionPurpose.NOCHANGE;
-			}
-		} else if(option == 3) {
-			if(categoryName.endsWith("Nochange")) {
-				return RevisionPurpose.NOCHANGE;
-			} else if(categoryName.endsWith(RevisionPurpose
-						.getPurposeName(RevisionPurpose.CD_WARRANT_REASONING_BACKING))) {
-				return RevisionPurpose.CD_WARRANT_REASONING_BACKING;
-			} else if(categoryName.endsWith(RevisionPurpose.getPurposeName(RevisionPurpose.EVIDENCE))) {
-				return RevisionPurpose.EVIDENCE;
-			} else if(categoryName.endsWith(RevisionPurpose
-					.getPurposeName(RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT))) {
-				return RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT;
-			} else if(categoryName.endsWith(RevisionPurpose
+		} else if (option == 2) {
+			if (categoryName.endsWith(RevisionPurpose
 					.getPurposeName(RevisionPurpose.CLAIMS_IDEAS))) {
 				return RevisionPurpose.CLAIMS_IDEAS;
-			} else if(categoryName.endsWith(RevisionPurpose.getPurposeName(RevisionPurpose.SURFACE))) {
-				return RevisionPurpose.SURFACE;
+			} else if (categoryName.endsWith("Support")) {
+				return RevisionPurpose.CD_WARRANT_REASONING_BACKING;
+			} else if (categoryName.endsWith("Surface")) {
+				return RevisionPurpose.WORDUSAGE_CLARITY;
+			} else if (categoryName.endsWith("Nochange")) {
+				return RevisionPurpose.NOCHANGE;
+			}
+		} else if (option == 3) {
+			if (categoryName.endsWith("Nochange")) {
+				return RevisionPurpose.NOCHANGE;
+			} else if (categoryName
+					.endsWith(RevisionPurpose
+							.getPurposeName(RevisionPurpose.CD_WARRANT_REASONING_BACKING))) {
+				return RevisionPurpose.CD_WARRANT_REASONING_BACKING;
+			} else if (categoryName.endsWith(RevisionPurpose
+					.getPurposeName(RevisionPurpose.EVIDENCE))) {
+				return RevisionPurpose.EVIDENCE;
+			} else if (categoryName
+					.endsWith(RevisionPurpose
+							.getPurposeName(RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT))) {
+				return RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT;
+			} else if (categoryName.endsWith(RevisionPurpose
+					.getPurposeName(RevisionPurpose.CLAIMS_IDEAS))) {
+				return RevisionPurpose.CLAIMS_IDEAS;
+			} else if (categoryName.endsWith(RevisionPurpose
+					.getPurposeName(RevisionPurpose.SURFACE))) {
+				return RevisionPurpose.WORDUSAGE_CLARITY;
 			}
 		}
 		return RevisionPurpose.NOCHANGE;
 	}
-	
+
 	public String getCategoryName(double val) {
 		int valInt = (int) val;
 		return indexBindings.get(valInt);
 	}
+
 	public String getCategoryName(double val, int option) {
 		int valInt = (int) val;
 		if (option == 1) {
@@ -294,6 +301,9 @@ public class SequenceProcessor {
 										.getPurposeName(RevisionPurpose.CD_GENERAL_CONTENT_DEVELOPMENT);
 							} else if (revPurpose == RevisionPurpose.EVIDENCE) {
 								revTag = RevisionPurpose
+										.getPurposeName(RevisionPurpose.EVIDENCE);
+							} else if (revPurpose == RevisionPurpose.CD_WARRANT_REASONING_BACKING) {
+								revTag = RevisionPurpose
 										.getPurposeName(RevisionPurpose.CD_WARRANT_REASONING_BACKING);
 							}
 						}
@@ -304,10 +314,10 @@ public class SequenceProcessor {
 					String realTag = step.getStr(step.getD1Move()) + "-"
 							+ step.getStr(step.getD2Move()) + "-" + revTag;
 					realTagTable.put(instanceID, realTag);
-					System.err.println(instanceID);
+					// System.err.println(instanceID);
 					wa.addInstance(features, fe.getFeatures(), usingNgram,
-							dataset, realTag,
-							doc.getDocumentName() + "_" + step.toID());
+							dataset, realTag, doc.getDocumentName() + "_"
+									+ step.toID());
 				}
 			}
 		}
